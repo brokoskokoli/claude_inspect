@@ -1,0 +1,4224 @@
+{
+ "transcript-2.1.114.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  }
+ ],
+ "transcript-2.1.231.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  }
+ ],
+ "transcript-2.1.246.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  }
+ ],
+ "transcript-2.1.247.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  }
+ ],
+ "transcript-2.1.255.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking",
+    "tool-use"
+   ]
+  }
+ ],
+ "transcript-2.1.258.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "image",
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  }
+ ],
+ "transcript-2.1.259.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  }
+ ],
+ "transcript-2.1.260.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "image",
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking",
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "image"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  }
+ ],
+ "transcript-2.1.261.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "image",
+    "user-text"
+   ]
+  }
+ ],
+ "transcript-2.1.263.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  }
+ ],
+ "transcript-2.1.265.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  }
+ ],
+ "transcript-2.1.266.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  }
+ ],
+ "transcript-2.1.268.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  }
+ ],
+ "transcript-2.1.270.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  }
+ ],
+ "transcript-2.1.271.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text",
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  }
+ ],
+ "transcript-2.1.274.jsonl": [
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "image",
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  }
+ ],
+ "transcript-2.1.275.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  }
+ ],
+ "transcript-2.1.278.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  }
+ ],
+ "transcript-2.1.280.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  }
+ ],
+ "transcript-2.1.281.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  }
+ ],
+ "transcript-2.1.282.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking",
+    "tool-use"
+   ]
+  }
+ ],
+ "transcript-2.1.283.jsonl": [
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "assistant-text"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "tool-result"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "system",
+   "decoder": "transcript.system@2",
+   "kinds": [
+    "system"
+   ]
+  },
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "assistant",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "thinking",
+    "tool-use"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  },
+  {
+   "recordType": "attachment",
+   "decoder": "transcript.attachment@2",
+   "kinds": [
+    "attachment"
+   ]
+  }
+ ],
+ "transcript-2.1.72.jsonl": [
+  {
+   "recordType": "user",
+   "decoder": "transcript.message@2",
+   "kinds": [
+    "user-text"
+   ]
+  }
+ ],
+ "transcript-none.jsonl": [
+  {
+   "recordType": "mode",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "permission-mode",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "atis-latch",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "file-history-snapshot",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "last-prompt",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "ai-title",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "queue-operation",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "cost-state",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "bridge-session",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "custom-title",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "agent-name",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "file-history-delta",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "relocated",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "frame-link",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "artifact-comment-monitor",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "artifact-autoreact-ledger",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "continued-in",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "worktree-state",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  },
+  {
+   "recordType": "agent-setting",
+   "decoder": "transcript.meta@2",
+   "kinds": [
+    "meta"
+   ]
+  }
+ ]
+}

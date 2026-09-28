@@ -1,0 +1,57 @@
+{
+  "name": "claude-inspect",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local live dashboard for Claude Code agents: see running sessions, subagents, spawned claude processes, tool calls, timelines, token usage and full history – read passively from ~/.claude, no hooks.",
+  "keywords": [
+    "claude-code",
+    "claude",
+    "anthropic",
+    "ai-agents",
+    "agent-observability",
+    "subagents",
+    "observability",
+    "dashboard",
+    "developer-tools",
+    "llm",
+    "transcripts",
+    "token-usage",
+    "svelte",
+    "typescript"
+  ],
+  "homepage": "https://github.com/brokoskokoli/claude_inspect#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brokoskokoli/claude_inspect.git"
+  },
+  "bugs": {
+    "url": "https://github.com/brokoskokoli/claude_inspect/issues"
+  },
+  "license": "MIT",
+  "author": "brokoskokoli",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server/main.ts --open",
+    "dev": "tsx watch src/server/main.ts --dev",
+    "dev:web": "vite",
+    "build": "vite build",
+    "check": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.web.json",
+    "test": "tsx --test \"src/**/*.test.ts\" \"tests/**/*.test.ts\"",
+    "snapshot": "tsx src/server/cli-snapshot.ts",
+    "fixtures": "tsx scripts/make-fixtures.ts",
+    "test:update": "UPDATE_SNAPSHOTS=1 tsx --test \"tests/**/*.test.ts\"",
+    "demo": "tsx scripts/make-demo.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.1.1",
+    "@types/node": "^26.6.3",
+    "svelte": "^5.57.1",
+    "svelte-check": "^4.7.6",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "vite": "^6.4.3"
+  }
+}
