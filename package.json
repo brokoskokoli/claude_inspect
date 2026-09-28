@@ -1,7 +1,6 @@
 {
   "name": "claude-inspect",
   "version": "0.1.0",
-  "private": true,
   "description": "Local live dashboard for Claude Code agents: see running sessions, subagents, spawned claude processes, tool calls, timelines, token usage and full history – read passively from ~/.claude, no hooks.",
   "keywords": [
     "claude-code",
@@ -30,20 +29,30 @@
   "license": "MIT",
   "author": "brokoskokoli",
   "type": "module",
+  "bin": {
+    "claude-inspect": "dist/app/server/cli.js"
+  },
+  "files": [
+    "dist/app",
+    "dist/web",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "start": "node dist/app/server/main.js --open",
+    "start": "node dist/app/server/cli.js --open",
     "build": "vite build && tsc -p tsconfig.build.json",
-    "dev": "tsx watch src/server/main.ts --dev",
+    "dev": "tsx watch src/server/cli.ts --dev",
     "dev:web": "vite",
-    "demo": "tsx scripts/make-demo.ts",
-    "service:install": "tsx scripts/service.ts install",
-    "service:uninstall": "tsx scripts/service.ts uninstall",
-    "service:status": "tsx scripts/service.ts status",
+    "demo": "tsx src/server/cli.ts demo --open",
+    "service:install": "tsx src/server/cli.ts service install",
+    "service:uninstall": "tsx src/server/cli.ts service uninstall",
+    "service:status": "tsx src/server/cli.ts service status",
     "check": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.web.json",
     "test": "tsx --test \"src/**/*.test.ts\" \"tests/**/*.test.ts\"",
     "test:update": "UPDATE_SNAPSHOTS=1 tsx --test \"tests/**/*.test.ts\"",
     "snapshot": "tsx src/server/cli-snapshot.ts",
-    "fixtures": "tsx scripts/make-fixtures.ts"
+    "fixtures": "tsx scripts/make-fixtures.ts",
+    "prepublishOnly": "npm run check && npm test && npm run build"
   },
   "engines": {
     "node": ">=20"

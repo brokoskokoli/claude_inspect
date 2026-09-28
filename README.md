@@ -1,6 +1,7 @@
 # claude-inspect – live dashboard & history viewer for Claude Code agents
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![npm](https://img.shields.io/npm/v/claude-inspect)](https://www.npmjs.com/package/claude-inspect)
 ![Node.js ≥ 20](https://img.shields.io/badge/node-%E2%89%A5%2020-green)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Svelte%205-3178c6)
 ![Dark mode](https://img.shields.io/badge/dark%20mode-%E2%9C%93-2b2a27)
@@ -64,42 +65,36 @@ becomes hard to tell *who is doing what*. claude-inspect answers:
 </tr>
 </table>
 
-*All screenshots show the built-in demo data set (`npm run demo`), not real sessions.*
+*All screenshots show the built-in demo data set (`claude-inspect demo`), not real sessions.*
 
 ## Quick start
 
 Requirements: Node.js ≥ 20, macOS or Linux, Claude Code writing to `~/.claude`.
 
 ```bash
-git clone https://github.com/brokoskokoli/claude_inspect.git
-cd claude_inspect
-npm install
-npm run build   # builds the web UI and compiles the server to plain JavaScript
-npm start       # http://localhost:7717 – opens the browser
+npx claude-inspect --open        # try it once
 ```
 
-`npm start` prints a URL with a random access token (`?t=…`); the browser keeps it as a cookie.
-For a stable URL use a fixed token (`CLAUDE_INSPECT_TOKEN=my-secret npm start`) or none at all
-(`node dist/app/server/main.js --no-auth`, see *Security* below).
-Other data directory: `CLAUDE_CONFIG_DIR=/path/to/.claude`.
-
-### Run it permanently (autostart)
+or install it permanently:
 
 ```bash
-npm run build
-npm run service:install              # port 47717, or: npm run service:install -- --port 50000
+npm install -g claude-inspect
+claude-inspect service install   # starts at login → http://localhost:47717 (bookmark it)
 ```
 
-This registers a user service – a LaunchAgent on macOS, a `systemd --user` unit on Linux – that
-starts at login, restarts after a crash and serves **http://localhost:47717** without a token,
-ready for a bookmark. `npm run service:status` shows state and log file,
-`npm run service:uninstall` removes it. After pulling updates, run `npm run build` and the service
-picks them up on its next restart (`npm run service:install` again restarts it immediately).
+The autostart service is a LaunchAgent on macOS and a `systemd --user` unit on Linux. It restarts
+after crashes and serves the dashboard without a token (still only reachable from localhost).
+`claude-inspect service status` shows state and log file, `claude-inspect service uninstall` removes it.
+After `npm install -g claude-inspect@latest`, run `claude-inspect service install` once more to restart it.
+
+Started manually, `claude-inspect` prints a URL with a random access token (`?t=…`) that the browser
+keeps as a cookie. Use `--token <t>` for a fixed token or `--no-auth` for none, `--port` for another port,
+`CLAUDE_CONFIG_DIR=/path/to/.claude` for another data directory. `claude-inspect --help` lists everything.
 
 ### Try it without your own data
 
 ```bash
-npm run demo    # fictional ~/.claude with running agents + 2 weeks of history, http://127.0.0.1:7718/?t=demo
+npx claude-inspect demo --open   # fictional ~/.claude with running agents + 2 weeks of history
 ```
 
 Light, dark or follow the OS – switch with the button in the header (the choice is remembered).
@@ -136,6 +131,12 @@ FormatRegistry → versioned decoders → normalized model → REST + SSE → Sv
 ## Development
 
 ```bash
+git clone https://github.com/brokoskokoli/claude_inspect.git && cd claude_inspect
+npm install
+npm run build      # web UI (dist/web) + compiled server (dist/app)
+npm start          # run the build
+npm run demo       # demo data from the sources
+npm run service:install   # autostart pointing at this checkout's build
 npm run dev        # API without token on :7717 (tsx watch, no build needed)
 npm run dev:web    # Vite dev server on :5173 with proxy to the API
 npm run check      # type checks (server + Svelte)
@@ -150,7 +151,7 @@ src/server/   formats/ (decoders + registry) · sources/ (files, processes, jobs
               model/ (activity, timeline data) · history/ (aggregator, search) · http.ts, inspector.ts
 web/          Svelte 5 UI
 tests/        anonymized fixtures per Claude Code version, snapshots, tests
-scripts/      fixture generator, demo data generator
+scripts/      fixture generator (demo data: src/server/cli/demo.ts)
 ```
 
 Contributions welcome – especially decoders for new Claude Code versions (run `npm run fixtures` and

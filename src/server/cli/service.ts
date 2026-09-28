@@ -1,9 +1,9 @@
 /**
  * Autostart for claude-inspect (runs the compiled build with plain node).
  *
- *   npm run service:install [-- --port 47717]   install + start (login autostart, restart on crash)
- *   npm run service:uninstall                     stop + remove
- *   npm run service:status                        show state and URL
+ *   claude-inspect service install [--port 47717]   install + start (login autostart, restart on crash)
+ *   claude-inspect service uninstall                  stop + remove
+ *   claude-inspect service status                     show state and URL
  *
  * macOS: LaunchAgent in ~/Library/LaunchAgents, log in ~/Library/Logs/claude-inspect.log
  * Linux: systemd user unit in ~/.config/systemd/user, log via `journalctl --user -u claude-inspect`
@@ -14,20 +14,21 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, userInfo } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseArgs } from 'node:util';
 
-const { positionals, values } = parseArgs({
-  allowPositionals: true,
-  options: { port: { type: 'string', default: '47717' } },
-});
-const cmd = positionals[0] ?? 'status';
-const port = Number(values.port);
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const ENTRY = join(ROOT, 'dist', 'app', 'server', 'main.js');
+const HERE = dirname(fileURLToPath(import.meta.url));
+/**
+ * The service always runs the compiled cli.js: next to this file in a build/npm install
+ * (…/dist/app/server/cli), or the project's dist when started from the sources via tsx.
+ */
+const FROM_SOURCES = HERE.split(sep).slice(-3).join('/') === 'src/server/cli';
+const ROOT = FROM_SOURCES ? resolve(HERE, '..', '..', '..') : resolve(HERE, '..', '..', '..', '..');
+const ENTRY = FROM_SOURCES ? join(ROOT, 'dist', 'app', 'server', 'cli.js') : resolve(HERE, '..', 'cli.js');
+const WEB = FROM_SOURCES ? join(ROOT, 'dist', 'web') : resolve(HERE, '..', '..', '..', 'web');
 const LABEL = 'com.github.claude-inspect';
-const URL = `http://localhost:${port}/`;
+let port = 47717;
+let URL = `http://localhost:${port}/`;
 
 function run(bin: string, args: string[], quiet = false): string {
   try {
@@ -45,8 +46,8 @@ function nodePath(): string {
 }
 
 function requireBuild(): void {
-  if (!existsSync(ENTRY) || !existsSync(join(ROOT, 'dist', 'web', 'index.html'))) {
-    console.error('No build found – run `npm run build` first.');
+  if (!existsSync(ENTRY) || !existsSync(join(WEB, 'index.html'))) {
+    console.error(`No build found at ${ENTRY} – run \`npm run build\` first.`);
     process.exit(1);
   }
 }
@@ -88,7 +89,16 @@ ${args.map((a) => `    <string>${esc(a)}</string>`).join('\n')}
   mkdirSync(dirname(logPath), { recursive: true });
   run('launchctl', ['bootout', `${domain}/${LABEL}`], true); // replace an older install
   writeFileSync(plistPath, plist);
-  run('launchctl', ['bootstrap', domain, plistPath]);
+  // bootout finishes asynchronously; bootstrap fails with "Input/output error" until it has.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      execFileSync('launchctl', ['bootstrap', domain, plistPath], { stdio: 'pipe' });
+      break;
+    } catch (e) {
+      if (attempt >= 10) throw e;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
+    }
+  }
   console.log(`Installed LaunchAgent ${plistPath}\nLog: ${logPath}`);
 }
 
@@ -146,25 +156,29 @@ function linuxStatus(): void {
 
 // ---------------------------------------------------------------------------
 
-const mac = process.platform === 'darwin';
-if (!mac && process.platform !== 'linux') {
-  console.error('Autostart is only supported on macOS and Linux.');
-  process.exit(1);
-}
-switch (cmd) {
-  case 'install':
-    requireBuild();
-    (mac ? macInstall : linuxInstall)();
-    console.log(`\nDashboard: ${URL}  (bookmark it – no token needed)`);
-    break;
-  case 'uninstall':
-    (mac ? macUninstall : linuxUninstall)();
-    break;
-  case 'status':
-    (mac ? macStatus : linuxStatus)();
-    console.log(`URL:   ${URL}`);
-    break;
-  default:
-    console.error('Usage: service.ts install|uninstall|status [--port 47717]');
+export function service(cmd: string, servicePort: number): void {
+  port = servicePort;
+  URL = `http://localhost:${port}/`;
+  const mac = process.platform === 'darwin';
+  if (!mac && process.platform !== 'linux') {
+    console.error('Autostart is only supported on macOS and Linux.');
     process.exit(1);
+  }
+  switch (cmd) {
+    case 'install':
+      requireBuild();
+      (mac ? macInstall : linuxInstall)();
+      console.log(`\nDashboard: ${URL}  (bookmark it – no token needed)`);
+      break;
+    case 'uninstall':
+      (mac ? macUninstall : linuxUninstall)();
+      break;
+    case 'status':
+      (mac ? macStatus : linuxStatus)();
+      console.log(`URL:   ${URL}`);
+      break;
+    default:
+      console.error('Usage: claude-inspect service install|uninstall|status [--port 47717]');
+      process.exit(1);
+  }
 }

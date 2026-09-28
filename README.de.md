@@ -10,39 +10,23 @@ Lokales Live-Dashboard für Claude-Code-Agenten. Liest **passiv** die Dateien un
 ## Start
 
 ```bash
-npm install
-npm run build      # Oberfläche bauen und Server zu JavaScript kompilieren
-npm start          # Server auf localhost:7717, öffnet den Browser
+npx claude-inspect --open          # einmal ausprobieren
+npm install -g claude-inspect      # dauerhaft installieren
+claude-inspect service install     # Autostart → http://localhost:47717 (Lesezeichen)
+claude-inspect demo --open         # ohne eigene Daten ausprobieren
+claude-inspect --help              # alle Optionen
 ```
 
-Dauerhaft im Hintergrund (Autostart beim Login, Neustart nach Absturz, ohne Token):
+Der Autostart ist unter macOS ein LaunchAgent, unter Linux ein `systemd --user`-Dienst. Er startet
+beim Login und nach Abstürzen neu und läuft ohne Token (nur von localhost erreichbar).
+`claude-inspect service status` zeigt Zustand und Log, `claude-inspect service uninstall` entfernt ihn.
 
-```bash
-npm run build
-npm run service:install          # http://localhost:47717 – als Lesezeichen anlegen
-npm run service:status           # Zustand und Log-Datei
-npm run service:uninstall        # entfernen
-```
+Manuell gestartet gibt `claude-inspect` eine URL mit Zufallstoken (`?t=…`) aus; der Browser merkt
+es sich als Cookie. `--token` für einen festen Token, `--no-auth` für keinen, `--port` für einen
+anderen Port, `CLAUDE_CONFIG_DIR=/pfad` für ein anderes Datenverzeichnis.
 
-Die URL enthält ein Zufallstoken (`?t=…`). Nach dem ersten Aufruf merkt sich der Browser
-das Token als Cookie. Der Server ist nur lokal erreichbar und rein lesend.
-Für ein festes Lesezeichen: `CLAUDE_INSPECT_TOKEN=meingeheimnis npm start` (oder `--token`).
-
-Entwicklung mit Hot-Reload: `npm run dev` (API ohne Token) und parallel `npm run dev:web`
-(Vite auf http://127.0.0.1:5173).
-
-Weitere Befehle:
-
-- `npm run snapshot`: laufende Agenten und Drift-Report als Terminal-Ausgabe
-- `npm test`: Tests (Decoder-Snapshots je Version, Linker, History-Aggregator)
-- `npm run demo`: Demo-Datensatz erzeugen und Server darauf starten
-- `npm run fixtures`: Fixtures neu aus den lokalen Transcripts erzeugen (anonymisiert)
-- `npm run test:update`: Decoder-Snapshots nach gewollter Änderung aktualisieren
-- `npm run check`: Typprüfung für Server und Frontend
-
-Anderes Datenverzeichnis: `CLAUDE_CONFIG_DIR=/pfad npm start`.
-
-Ohne eigene Daten ausprobieren: `npm run demo` (fiktiver `~/.claude` mit laufenden Agenten und zwei Wochen History, http://127.0.0.1:7718/?t=demo).
+Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
+(`npm run dev` + `npm run dev:web` für die Entwicklung mit Hot-Reload).
 
 ## Was angezeigt wird
 
