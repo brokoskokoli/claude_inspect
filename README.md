@@ -74,21 +74,46 @@ Requirements: Node.js ≥ 20, macOS or Linux, Claude Code writing to `~/.claude`
 git clone https://github.com/brokoskokoli/claude_inspect.git
 cd claude_inspect
 npm install
-npm run build   # build the web UI once
-npm start       # starts on http://127.0.0.1:7717 and opens the browser
+npm run build   # builds the web UI and compiles the server to plain JavaScript
+npm start       # http://localhost:7717 – opens the browser
 ```
 
-The URL contains a random access token (`?t=…`); the browser keeps it as a cookie afterwards.
-For a stable bookmark: `CLAUDE_INSPECT_TOKEN=my-secret npm start` (or `--token my-secret`).
-Other data directory: `CLAUDE_CONFIG_DIR=/path/to/.claude npm start`.
+`npm start` prints a URL with a random access token (`?t=…`); the browser keeps it as a cookie.
+For a stable URL use a fixed token (`CLAUDE_INSPECT_TOKEN=my-secret npm start`) or none at all
+(`node dist/app/server/main.js --no-auth`, see *Security* below).
+Other data directory: `CLAUDE_CONFIG_DIR=/path/to/.claude`.
 
-**Try it without your own data:**
+### Run it permanently (autostart)
+
+```bash
+npm run build
+npm run service:install              # port 47717, or: npm run service:install -- --port 50000
+```
+
+This registers a user service – a LaunchAgent on macOS, a `systemd --user` unit on Linux – that
+starts at login, restarts after a crash and serves **http://localhost:47717** without a token,
+ready for a bookmark. `npm run service:status` shows state and log file,
+`npm run service:uninstall` removes it. After pulling updates, run `npm run build` and the service
+picks them up on its next restart (`npm run service:install` again restarts it immediately).
+
+### Try it without your own data
 
 ```bash
 npm run demo    # fictional ~/.claude with running agents + 2 weeks of history, http://127.0.0.1:7718/?t=demo
 ```
 
 Light, dark or follow the OS – switch with the button in the header (the choice is remembered).
+
+### Status indicators
+
+| | |
+|---|---|
+| green, pulsing dot | working right now |
+| amber dot | process alive, waiting for input |
+| grey check mark | finished normally |
+| red cross | ended with an API error (single failing tool calls don't count – the agent carries on) |
+| grey ring | no activity for 10 min and never finished, e.g. interrupted |
+| grey dot | process has ended |
 
 ## How it works
 
@@ -106,12 +131,12 @@ FormatRegistry → versioned decoders → normalized model → REST + SSE → Sv
 
 - **Per-record format detection:** every decoder scores a record (`type`, version range, structure); the best one wins, a fallback keeps unknown records. Adding support for a new Claude Code version = adding a decoder file. See [docs/FORMATS.md](docs/FORMATS.md).
 - **In memory only:** startup reads process/job data and file heads (< 1 s); the full history (hundreds of MB) is aggregated in the background in a few seconds and then followed incrementally.
-- **Privacy & security:** binds to `127.0.0.1` only, checks the `Host` header (DNS rebinding), requires the access token, never reads credential files (`*.key`, `daemon/auth`, `ide/*.lock`, …) and masks token/secret fields in the raw view. Cost figures are estimates from public API list prices – with a subscription you do not pay these amounts directly.
+- **Privacy & security:** listens on `127.0.0.1` only (never reachable from the network), rejects requests whose `Host` header isn't `localhost`/`127.0.0.1` (DNS rebinding), sends no CORS headers (other websites in your browser can't read the API), is read-only, never reads credential files (`*.key`, `daemon/auth`, `ide/*.lock`, …) and masks token/secret fields in the raw view. The access token is an extra layer against *other local processes or users* on the same machine; on a single-user machine `--no-auth` (used by the autostart service) is a reasonable trade-off. Cost figures are estimates from public API list prices – with a subscription you do not pay these amounts directly.
 
 ## Development
 
 ```bash
-npm run dev        # API without token on :7717 (tsx watch)
+npm run dev        # API without token on :7717 (tsx watch, no build needed)
 npm run dev:web    # Vite dev server on :5173 with proxy to the API
 npm run check      # type checks (server + Svelte)
 npm test           # decoder snapshots per Claude Code version, spawn linker, history aggregator

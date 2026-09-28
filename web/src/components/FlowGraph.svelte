@@ -221,7 +221,19 @@
     background: var(--error);
   }
   .st-done .dot {
-    background: color-mix(in srgb, var(--busy) 45%, var(--dead));
+    background: transparent;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+  }
+  .st-done .dot::before {
+    content: '✓';
+    color: var(--faint);
+    font-size: 11px;
+  }
+  .st-stale .dot {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--dead);
   }
   .t {
     font-weight: 600;

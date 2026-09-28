@@ -126,6 +126,9 @@
   .node :global(.dot) {
     margin-top: 6px;
   }
+  .node :global(.mark) {
+    margin-top: 3px;
+  }
   .node:hover {
     border-color: var(--border);
     text-decoration: none;

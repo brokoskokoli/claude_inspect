@@ -31,16 +31,19 @@
   "author": "brokoskokoli",
   "type": "module",
   "scripts": {
-    "start": "tsx src/server/main.ts --open",
+    "start": "node dist/app/server/main.js --open",
+    "build": "vite build && tsc -p tsconfig.build.json",
     "dev": "tsx watch src/server/main.ts --dev",
     "dev:web": "vite",
-    "build": "vite build",
+    "demo": "tsx scripts/make-demo.ts",
+    "service:install": "tsx scripts/service.ts install",
+    "service:uninstall": "tsx scripts/service.ts uninstall",
+    "service:status": "tsx scripts/service.ts status",
     "check": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.web.json",
     "test": "tsx --test \"src/**/*.test.ts\" \"tests/**/*.test.ts\"",
-    "snapshot": "tsx src/server/cli-snapshot.ts",
-    "fixtures": "tsx scripts/make-fixtures.ts",
     "test:update": "UPDATE_SNAPSHOTS=1 tsx --test \"tests/**/*.test.ts\"",
-    "demo": "tsx scripts/make-demo.ts"
+    "snapshot": "tsx src/server/cli-snapshot.ts",
+    "fixtures": "tsx scripts/make-fixtures.ts"
   },
   "engines": {
     "node": ">=20"

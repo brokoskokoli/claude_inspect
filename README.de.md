@@ -11,8 +11,17 @@ Lokales Live-Dashboard für Claude-Code-Agenten. Liest **passiv** die Dateien un
 
 ```bash
 npm install
-npm run build      # Frontend bauen (einmalig bzw. nach Änderungen)
-npm start          # Server auf 127.0.0.1:7717, öffnet den Browser
+npm run build      # Oberfläche bauen und Server zu JavaScript kompilieren
+npm start          # Server auf localhost:7717, öffnet den Browser
+```
+
+Dauerhaft im Hintergrund (Autostart beim Login, Neustart nach Absturz, ohne Token):
+
+```bash
+npm run build
+npm run service:install          # http://localhost:47717 – als Lesezeichen anlegen
+npm run service:status           # Zustand und Log-Datei
+npm run service:uninstall        # entfernen
 ```
 
 Die URL enthält ein Zufallstoken (`?t=…`). Nach dem ersten Aufruf merkt sich der Browser

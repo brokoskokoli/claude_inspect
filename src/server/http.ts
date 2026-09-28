@@ -89,7 +89,8 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
       }
       // Token aus der URL in ein Cookie übernehmen, damit Folgeaufrufe ohne ?t= funktionieren.
       if (!opts.noAuth && url.searchParams.has('t')) {
-        res.setHeader('set-cookie', `${COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/`);
+        // persistent for a year, so a bookmark without ?t= keeps working after browser restarts
+        res.setHeader('set-cookie', `${COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=31536000`);
       }
 
       const p = url.pathname;
