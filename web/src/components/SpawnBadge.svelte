@@ -2,7 +2,7 @@
   import type { SpawnLink } from '$shared/types';
 
   let { link }: { link: SpawnLink } = $props();
-  const tip = $derived(`Zuordnung ${link.confidence} – Indizien: ${link.evidence.join(', ')}`);
+  const tip = $derived(`Match ${link.confidence} – evidence: ${link.evidence.join(', ')}`);
 </script>
 
 <span class="conf {link.confidence}" title={tip}>{link.confidence}</span>
@@ -17,15 +17,15 @@
     background: var(--surface-2);
     color: var(--muted);
   }
-  .exakt {
+  .exact {
     background: color-mix(in srgb, var(--busy) 16%, transparent);
     color: var(--busy);
   }
-  .sicher {
+  .high {
     background: var(--info-soft);
     color: var(--info);
   }
-  .wahrscheinlich {
+  .likely {
     background: color-mix(in srgb, var(--idle) 18%, transparent);
     color: var(--idle);
   }

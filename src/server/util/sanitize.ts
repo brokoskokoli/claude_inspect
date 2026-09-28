@@ -24,9 +24,9 @@ export function sanitize(value: unknown, opts: SanitizeOptions = {}, key = ''): 
   if (typeof value === 'string') {
     if (key && isSecretKey(key)) return value ? '••••••' : value;
     if ((key === 'base64' || key === 'data') && value.length > 256 && /^[A-Za-z0-9+/=\s]+$/.test(value.slice(0, 256))) {
-      return `[base64, ${value.length} Zeichen ausgelassen]`;
+      return `[base64, ${value.length} characters omitted]`;
     }
-    if (value.length > max) return value.slice(0, max) + `\n… [${value.length - max} Zeichen gekürzt]`;
+    if (value.length > max) return value.slice(0, max) + `\n… [${value.length - max} characters truncated]`;
     return value;
   }
   if (Array.isArray(value)) return value.map((v) => sanitize(v, opts));
@@ -34,7 +34,7 @@ export function sanitize(value: unknown, opts: SanitizeOptions = {}, key = ''): 
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value)) {
       if (opts.dropKeys?.has(k)) {
-        out[k] = typeof v === 'string' ? `[${v.length} Zeichen ausgelassen]` : v === null ? null : '[ausgelassen]';
+        out[k] = typeof v === 'string' ? `[${v.length} characters omitted]` : v === null ? null : '[omitted]';
         continue;
       }
       out[k] = sanitize(v, opts, k);

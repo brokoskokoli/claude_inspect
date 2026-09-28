@@ -30,14 +30,14 @@
 
 <div class="head">
   <h2>Sessions</h2>
-  <span class="muted">{total} Transcripts</span>
-  <input type="search" placeholder="Projekt, Titel, Prompt, Session-Id …" bind:value={q} />
+  <span class="muted">{total} transcripts</span>
+  <input type="search" placeholder="Project, title, prompt, session id …" bind:value={q} />
 </div>
 
 <div class="card"><SessionTable sessions={items} /></div>
 
 {#if items.length < total}
-  <div class="more"><button class="btn" disabled={loading} onclick={() => load(false)}>{loading ? 'Lade …' : `Weitere laden (${total - items.length})`}</button></div>
+  <div class="more"><button class="btn" disabled={loading} onclick={() => load(false)}>{loading ? 'Loading …' : `Load more (${total - items.length})`}</button></div>
 {/if}
 
 <style>

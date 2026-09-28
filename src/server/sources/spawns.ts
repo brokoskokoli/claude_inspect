@@ -115,24 +115,24 @@ export function parseCall(raw: Record<string, unknown>, block: Record<string, un
 export function scoreSpawn(child: ChildInfo, call: SpawnCall): { score: number; evidence: string[] } {
   const evidence: string[] = [];
   let score = 0;
-  if (call.sessionFlags.includes(child.sessionId)) return { score: 1000, evidence: ['Session-Id im Befehl'] };
+  if (call.sessionFlags.includes(child.sessionId)) return { score: 1000, evidence: ['session id in command'] };
   if (child.prompt) {
     const np = normalize(child.prompt);
     const prefix = np.slice(0, 160);
     if (prefix.length >= 20 && call.normCommand.includes(prefix)) {
       score += 60;
-      evidence.push('Prompt');
+      evidence.push('prompt');
     } else if (prefix.length > 0 && prefix.length < 20 && new RegExp(`(?:^|\\s)-p ${prefix.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}(?:\\s|$)`).test(call.normCommand)) {
       // kurze Prompts wie "/usage": nur als exaktes -p-Argument werten
       score += 40;
-      evidence.push('Prompt');
+      evidence.push('prompt');
     } else {
       const pw = words(child.prompt).slice(0, 80);
       if (pw.length >= 5) {
         const ratio = pw.filter((w) => call.words.has(w)).length / pw.length;
         if (ratio >= 0.5) {
           score += Math.round(ratio * 45);
-          evidence.push(`Prompt ~${Math.round(ratio * 100)} %`);
+          evidence.push(`prompt ~${Math.round(ratio * 100)}%`);
         }
       }
     }
@@ -140,7 +140,7 @@ export function scoreSpawn(child: ChildInfo, call: SpawnCall): { score: number; 
   if (call.agentFlag || child.agentSetting) {
     if (call.agentFlag && call.agentFlag === child.agentSetting) {
       score += 15;
-      evidence.push('Agent');
+      evidence.push('agent');
     } else {
       score -= 25;
     }
@@ -149,15 +149,15 @@ export function scoreSpawn(child: ChildInfo, call: SpawnCall): { score: number; 
     const dt = (child.startTs - call.ts) / 1000;
     if (dt >= -2 && dt <= 30) {
       score += 15;
-      evidence.push('Zeit');
+      evidence.push('time');
     } else if (dt > 30 && dt <= 180) {
       score += 5;
-      evidence.push('Zeit (grob)');
+      evidence.push('time (rough)');
     }
   }
   if (child.cwd && call.cwd && child.cwd.replace(/\/$/, '') === call.cwd.replace(/\/$/, '')) {
     score += 5;
-    evidence.push('Verzeichnis');
+    evidence.push('directory');
   }
   return { score, evidence };
 }
@@ -291,14 +291,14 @@ export class SpawnIndex {
           parentSessionId: parentProc.sessionId,
           parentAgentId: call?.call.agentId,
           toolUseId: call?.call.toolUseId,
-          confidence: 'exakt',
-          evidence: ['Prozessbaum', ...(call?.evidence ?? [])],
+          confidence: 'exact',
+          evidence: ['process tree', ...(call?.evidence ?? [])],
           score: 1000 + (call?.score ?? 0),
         });
         continue;
       }
       if (!best || best.score < 40) continue;
-      const confidence: SpawnConfidence = best.score >= 1000 ? 'exakt' : best.score >= 70 ? 'sicher' : 'wahrscheinlich';
+      const confidence: SpawnConfidence = best.score >= 1000 ? 'exact' : best.score >= 70 ? 'high' : 'likely';
       links.set(child.sessionId, {
         childSessionId: child.sessionId,
         parentSessionId: best.call.sessionId,

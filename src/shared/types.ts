@@ -270,7 +270,7 @@ export interface DashboardProcess {
 // ---------------------------------------------------------------------------
 // Per Bash gestartete Claude-Sitzungen ("claude -p …", "claude --agent …")
 
-export type SpawnConfidence = 'exakt' | 'sicher' | 'wahrscheinlich';
+export type SpawnConfidence = 'exact' | 'high' | 'likely';
 
 export interface SpawnLink {
   childSessionId: string;

@@ -10,7 +10,7 @@ const ids = (v: unknown) => arr(v).map(String);
 export const taskDecoder: Decoder<TaskItem> = {
   id: 'task@1',
   source: 'task',
-  description: 'Aufgabe aus der Task-Liste einer Session (Status, Abhängigkeiten)',
+  description: 'task of a session task list (status, dependencies)',
   match: (raw) => ('subject' in raw || 'status' in raw) && 'id' in raw ? 10 : 0,
   decode(raw) {
     const extra = extraFields(raw, FIELDS);
@@ -32,7 +32,7 @@ export const taskDecoder: Decoder<TaskItem> = {
 export const taskFallback: Decoder<TaskItem> = {
   id: 'task.fallback',
   source: 'task',
-  description: 'Unbekanntes Task-Format',
+  description: 'unknown task format',
   match: () => 1,
   decode: (raw) => ({ id: String(raw.id ?? '?'), blocks: [], blockedBy: [], extra: sanitize(raw) as Raw }),
 };

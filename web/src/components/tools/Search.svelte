@@ -12,7 +12,7 @@
 </script>
 
 <div class="q"><span class="mono pattern">{s(use.input.pattern)}</span>{#each params as p (p)}<span class="badge">{p}</span>{/each}</div>
-{#if st?.numFiles !== undefined}<div class="muted small">{st.numFiles} Dateien{st.truncated ? ' (gekürzt)' : ''}</div>{/if}
+{#if st?.numFiles !== undefined}<div class="muted small">{st.numFiles} files{st.truncated ? ' (truncated)' : ''}</div>{/if}
 <Output text={resultText(result)} error={result?.isError} />
 
 <style>

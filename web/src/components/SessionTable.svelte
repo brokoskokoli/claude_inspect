@@ -13,12 +13,12 @@
     <thead>
       <tr>
         <th></th>
-        <th>Projekt</th>
-        <th>Titel / letzter Prompt</th>
-        <th>Zuletzt aktiv</th>
-        <th class="hide-s">Modell</th>
-        <th class="hide-s num">Subagenten</th>
-        <th class="hide-s num">Größe</th>
+        <th>Project</th>
+        <th>Title / last prompt</th>
+        <th>Last active</th>
+        <th class="hide-s">Model</th>
+        <th class="hide-s num">Subagents</th>
+        <th class="hide-s num">Size</th>
       </tr>
     </thead>
     <tbody>
@@ -30,7 +30,7 @@
             {#if s.gitBranch}<div class="faint mono small">⎇ {s.gitBranch}</div>{/if}
           </td>
           <td class="title">
-            <div class="ellipsis">{#if s.spawnedBy}<span class="spawned" title="per claude-Aufruf von einer anderen Session gestartet">↳</span>{/if}{s.title ?? s.sessionId}</div>
+            <div class="ellipsis">{#if s.spawnedBy}<span class="spawned" title="started by another session via a claude call">↳</span>{/if}{s.title ?? s.sessionId}</div>
             {#if s.lastPrompt}<div class="ellipsis muted small">{s.lastPrompt}</div>{/if}
           </td>
           <td class="when" title={dateTime(s.lastTimestamp ?? s.mtime)}>{ago(s.lastTimestamp ?? s.mtime, clock.now)}</td>

@@ -38,16 +38,16 @@
       {#if subtitle}<div class="subtitle ellipsis">{subtitle}</div>{/if}
     </div>
     <div class="badges">
-      {#if p.kind}<span class="badge" class:accent={p.kind === 'bg'}>{p.kind === 'bg' ? 'Hintergrund' : p.kind}</span>{/if}
-      {#if p.agent}<span class="badge info" title="Agent-Definition">{p.agent}</span>{/if}
-      {#if p.bridgeSessionId}<span class="badge info" title="Remote Control aktiv">remote</span>{/if}
+      {#if p.kind}<span class="badge" class:accent={p.kind === 'bg'}>{p.kind === 'bg' ? 'background' : p.kind}</span>{/if}
+      {#if p.agent}<span class="badge info" title="Agent definition">{p.agent}</span>{/if}
+      {#if p.bridgeSessionId}<span class="badge info" title="Remote Control active">remote</span>{/if}
     </div>
   </div>
 
   {#if spawnedBy}
     <div class="parent">
-      <span class="muted">gestartet von</span>
-      <!-- Karte ist selbst ein Link, darum hier ein Button statt <a> -->
+      <span class="muted">started by</span>
+      <!-- the card itself is a link, so a button instead of <a> -->
       <button
         class="link"
         onclick={(e) => {
@@ -98,8 +98,8 @@
   {#if s && (running.length || others.length)}
     <div class="subs">
       <div class="subs-head muted">
-        Subagenten
-        <span class="faint">{running.length} aktiv · {s.subagentTotal} gesamt</span>
+        Subagents
+        <span class="faint">{running.length} active · {s.subagentTotal} total</span>
       </div>
       {#each [...running, ...others] as a (a.agentId)}
         <div class="sub" class:finished={a.status !== 'running'}>
@@ -115,8 +115,8 @@
   {#if s && s.spawned.length}
     <div class="subs">
       <div class="subs-head muted">
-        Claude-Aufrufe
-        <span class="faint">{spawnedRunning.length} aktiv · {s.spawned.length} gesamt</span>
+        Spawned sessions
+        <span class="faint">{spawnedRunning.length} active · {s.spawned.length} total</span>
       </div>
       {#each [...spawnedRunning, ...spawnedDone] as c (c.childSessionId)}
         <div class="sub" class:finished={c.status === 'done'}>
@@ -131,14 +131,14 @@
 
   <div class="metrics">
     {#if s}
-      <span title="Modell">{modelName(s.model)}{s.effort ? ` · ${s.effort}` : ''}</span>
-      <span title="Kontext (Input-Tokens der letzten Anfrage)">ctx {tokens(s.contextTokens)}</span>
-      <span title="Output-Tokens gesamt">out {tokens(s.outputTokens)}</span>
-      <span title="Tool-Aufrufe">{s.toolCalls} Tools</span>
+      <span title="Model">{modelName(s.model)}{s.effort ? ` · ${s.effort}` : ''}</span>
+      <span title="Context (input tokens of the last request)">ctx {tokens(s.contextTokens)}</span>
+      <span title="Output tokens total">out {tokens(s.outputTokens)}</span>
+      <span title="Tool calls">{s.toolCalls} tools</span>
       {#if s.costUSD !== undefined}<span>{usd(s.costUSD)}</span>{/if}
       {#if s.permissionMode}<span class="perm" title="Permission-Mode">{s.permissionMode}</span>{/if}
     {:else}
-      <span class="faint">{p.alive ? 'kein Transcript gefunden' : `beendet · zuletzt ${ago(p.updatedAt ?? p.startedAt, clock.now)}`}</span>
+      <span class="faint">{p.alive ? 'no transcript found' : `ended · last seen ${ago(p.updatedAt ?? p.startedAt, clock.now)}`}</span>
     {/if}
     <span class="ver faint">v{p.version} · pid {p.pid}</span>
   </div>

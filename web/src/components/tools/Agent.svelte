@@ -15,33 +15,33 @@
   {#if use.input.subagent_type}<span class="badge accent">{s(use.input.subagent_type)}</span>{/if}
   {#if use.input.model}<span class="badge">{s(use.input.model)}</span>{/if}
   {#if st?.resolvedModel}<span class="badge">{modelName(s(st.resolvedModel))}</span>{/if}
-  {#if use.input.run_in_background || st?.isAsync}<span class="badge info">Hintergrund</span>{/if}
+  {#if use.input.run_in_background || st?.isAsync}<span class="badge info">background</span>{/if}
   {#if use.input.isolation}<span class="badge">{s(use.input.isolation)}</span>{/if}
   {#if agentId}
     <a class="open" href={href.session(sessionId, agentId)}>
       {#if subagent}<StatusDot state={subagent.status} size={7} />{/if}
-      Subagent öffnen →
+      Open subagent →
     </a>
   {/if}
 </div>
 {#if st && (st.totalDurationMs || st.totalTokens)}
   <div class="stats muted">
     {#if n(st.totalDurationMs)}<span>{duration(n(st.totalDurationMs)!)}</span>{/if}
-    {#if n(st.totalTokens)}<span>{tokens(n(st.totalTokens))} Tokens</span>{/if}
-    {#if n(st.totalToolUseCount) !== undefined}<span>{n(st.totalToolUseCount)} Tool-Aufrufe</span>{/if}
+    {#if n(st.totalTokens)}<span>{tokens(n(st.totalTokens))} tokens</span>{/if}
+    {#if n(st.totalToolUseCount) !== undefined}<span>{n(st.totalToolUseCount)} tool calls</span>{/if}
   </div>
 {/if}
 <details>
-  <summary>Auftrag (Prompt)</summary>
+  <summary>Task (prompt)</summary>
   <pre class="prompt">{s(use.input.prompt)}</pre>
 </details>
 {#if text && st?.status !== 'async_launched'}
   <details open>
-    <summary>Ergebnis</summary>
+    <summary>Result</summary>
     <div class="md">{@html markdown(text)}</div>
   </details>
 {:else if st?.status === 'async_launched'}
-  <div class="muted small">Im Hintergrund gestartet – Ergebnis kommt als Benachrichtigung.</div>
+  <div class="muted small">Started in the background – the result arrives as a notification.</div>
 {/if}
 
 <style>

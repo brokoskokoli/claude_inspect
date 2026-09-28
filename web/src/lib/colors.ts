@@ -22,7 +22,7 @@ export const TOOL_CATEGORIES = [
   { key: 'read', label: 'Read/Grep/Glob', color: 'var(--series-3)' },
   { key: 'agent', label: 'Agent', color: 'var(--series-7)' },
   { key: 'web', label: 'Web/Browser', color: 'var(--series-5)' },
-  { key: 'other', label: 'Sonstige', color: 'var(--series-other)' },
+  { key: 'other', label: 'Other', color: 'var(--series-other)' },
 ] as const;
 
 export type ToolCategory = (typeof TOOL_CATEGORIES)[number]['key'];

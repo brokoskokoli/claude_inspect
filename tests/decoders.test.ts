@@ -31,7 +31,7 @@ function current(): Snap {
   return out;
 }
 
-test('Decoder-Snapshots je Version', () => {
+test('decoder snapshots per version', () => {
   const now = current();
   if (process.env.UPDATE_SNAPSHOTS || !existsSync(SNAP)) {
     writeFileSync(SNAP, JSON.stringify(now, null, 1) + '\n');
@@ -40,14 +40,14 @@ test('Decoder-Snapshots je Version', () => {
   assert.deepEqual(now, JSON.parse(readFileSync(SNAP, 'utf8')));
 });
 
-test('kein bekannter Record-Typ landet beim Fallback', () => {
+test('no known record type ends up in the fallback', () => {
   const fallbacks = Object.entries(current()).flatMap(([f, rows]) =>
     rows.filter((r) => r.decoder === 'transcript.fallback').map((r) => `${f}: ${r.recordType}`),
   );
   assert.deepEqual(fallbacks, []);
 });
 
-test('jede Version liefert Nachrichten- und Tool-Einträge', () => {
+test('every version yields message and tool entries', () => {
   for (const [f, rows] of Object.entries(current())) {
     if (f.includes('none') || rows.length < 10) continue; // Dateien mit nur wenigen Records
     const kinds = new Set(rows.flatMap((r) => r.kinds));

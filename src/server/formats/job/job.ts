@@ -49,7 +49,7 @@ const STATE_FIELDS = [
 export const jobStateDecoder: Decoder<DecodedJobState> = {
   id: 'job-state@1',
   source: 'job-state',
-  description: 'Hintergrund-Job: Zustand, aktueller Schritt, laufende Shells/Monitore (fan)',
+  description: 'background job: state, current step, running shells/monitors (fan)',
   versions: '>=2.1.200',
   match: (raw) => (typeof raw.state === 'string' && 'sessionId' in raw ? 10 : 0),
   decode(raw) {
@@ -90,7 +90,7 @@ export const jobStateDecoder: Decoder<DecodedJobState> = {
 export const jobStateFallback: Decoder<DecodedJobState> = {
   id: 'job-state.fallback',
   source: 'job-state',
-  description: 'Unbekannter Job-Zustand',
+  description: 'unknown job state',
   match: () => 1,
   decode: (raw) => ({ fan: [], extra: sanitize(raw) as Raw }),
 };
@@ -98,7 +98,7 @@ export const jobStateFallback: Decoder<DecodedJobState> = {
 export const jobTimelineDecoder: Decoder<JobTimelineItem> = {
   id: 'job-timeline@1',
   source: 'job-timeline',
-  description: 'Statuswechsel eines Jobs',
+  description: 'job status changes',
   match: (raw) => (typeof raw.at === 'string' ? 10 : 0),
   decode: (raw) => ({ at: str(raw.at)!, state: str(raw.state), detail: str(raw.detail), text: str(raw.text) }),
   knownFields: () => ['at', 'state', 'detail', 'text'],
@@ -107,7 +107,7 @@ export const jobTimelineDecoder: Decoder<JobTimelineItem> = {
 export const jobTimelineFallback: Decoder<JobTimelineItem> = {
   id: 'job-timeline.fallback',
   source: 'job-timeline',
-  description: 'Unbekannter Timeline-Eintrag',
+  description: 'unknown timeline entry',
   match: () => 1,
   decode: (raw) => ({ at: str(raw.at) ?? '', text: JSON.stringify(sanitize(raw)) }),
 };
@@ -120,7 +120,7 @@ export type RosterLaunch = Record<string, NonNullable<JobInfo['launch']>>;
 export const rosterDecoder: Decoder<RosterLaunch> = {
   id: 'daemon-roster@1',
   source: 'daemon-roster',
-  description: 'Daemon-Worker mit Start-Information (resume/fork, Quell-Session)',
+  description: 'daemon workers with launch info (resume/fork, source session)',
   match: (raw) => (isObj(raw.workers) ? 10 : 0),
   decode(raw) {
     const out: RosterLaunch = {};
@@ -143,7 +143,7 @@ export const rosterDecoder: Decoder<RosterLaunch> = {
 export const rosterFallback: Decoder<RosterLaunch> = {
   id: 'daemon-roster.fallback',
   source: 'daemon-roster',
-  description: 'Unbekanntes Roster-Format',
+  description: 'unknown roster format',
   match: () => 1,
   decode: () => ({}),
 };

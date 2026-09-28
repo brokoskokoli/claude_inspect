@@ -194,7 +194,7 @@ function decodeAssistant(raw: Raw, ctx: DecodeContext): DecodedEntry[] {
 export const messageDecoder: Decoder<DecodedEntry[]> = {
   id: 'transcript.message@2',
   source: 'transcript',
-  description: 'user/assistant-Records mit Messages-API-Inhalt (Text, Thinking, Tool-Aufrufe und -Ergebnisse)',
+  description: 'user/assistant records with Messages API content (text, thinking, tool calls and results)',
   versions: '>=2.0.0',
   match(raw) {
     if ((raw.type !== 'user' && raw.type !== 'assistant') || !isObj(raw.message)) return 0;

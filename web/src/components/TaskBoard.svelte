@@ -4,15 +4,15 @@
   let { tasks }: { tasks: TaskItem[] } = $props();
 
   const COLS = [
-    { key: 'pending', label: 'Offen' },
-    { key: 'in_progress', label: 'In Arbeit' },
-    { key: 'completed', label: 'Erledigt' },
+    { key: 'pending', label: 'Open' },
+    { key: 'in_progress', label: 'In progress' },
+    { key: 'completed', label: 'Done' },
   ];
   const known = new Set(COLS.map((c) => c.key));
   const byCol = $derived(
     COLS.map((c) => ({ ...c, items: tasks.filter((t) => t.status === c.key) })).concat(
       tasks.some((t) => !known.has(t.status ?? ''))
-        ? [{ key: 'other', label: 'Sonstige', items: tasks.filter((t) => !known.has(t.status ?? '')) }]
+        ? [{ key: 'other', label: 'Other', items: tasks.filter((t) => !known.has(t.status ?? '')) }]
         : [],
     ),
   );
@@ -20,7 +20,7 @@
 </script>
 
 {#if !tasks.length}
-  <p class="muted">Diese Session hat keine Task-Liste angelegt.</p>
+  <p class="muted">This session did not create a task list.</p>
 {:else}
   <div class="board">
     {#each byCol as col (col.key)}
@@ -28,12 +28,12 @@
         <div class="col-head">{col.label} <span class="faint">{col.items.length}</span></div>
         {#each col.items as t (t.id)}
           <div class="task card" class:done={t.status === 'completed'}>
-            <div class="subj"><span class="faint">#{t.id}</span> {t.subject ?? '(ohne Titel)'}</div>
+            <div class="subj"><span class="faint">#{t.id}</span> {t.subject ?? '(untitled)'}</div>
             {#if t.status === 'in_progress' && t.activeForm}<div class="active">{t.activeForm} …</div>{/if}
-            {#if t.description}<details><summary>Beschreibung</summary><p>{t.description}</p></details>{/if}
-            {#if t.blockedBy.length}<div class="dep">⛔ wartet auf {t.blockedBy.map(subject).join(', ')}</div>{/if}
-            {#if t.blocks.length}<div class="dep faint">blockiert {t.blocks.map(subject).join(', ')}</div>{/if}
-            {#if t.owner}<div class="faint small">Besitzer: {t.owner}</div>{/if}
+            {#if t.description}<details><summary>Description</summary><p>{t.description}</p></details>{/if}
+            {#if t.blockedBy.length}<div class="dep">⛔ waiting for {t.blockedBy.map(subject).join(', ')}</div>{/if}
+            {#if t.blocks.length}<div class="dep faint">blocks {t.blocks.map(subject).join(', ')}</div>{/if}
+            {#if t.owner}<div class="faint small">Owner: {t.owner}</div>{/if}
           </div>
         {/each}
       </div>

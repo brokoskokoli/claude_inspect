@@ -10,7 +10,7 @@ const FIELDS = ['agentType', 'description', 'toolUseId', 'spawnDepth', 'requestS
 export const subagentMetaDecoder: Decoder<DecodedSubagentMeta> = {
   id: 'subagent-meta@1',
   source: 'subagent-meta',
-  description: 'Subagent-Metadaten: Typ, Beschreibung, aufrufender Tool-Aufruf, Tiefe',
+  description: 'subagent metadata: type, description, calling tool use, depth',
   match: (raw) => ('agentType' in raw || 'toolUseId' in raw ? 10 : 0),
   decode(raw) {
     const extra = extraFields(raw, FIELDS);
@@ -29,7 +29,7 @@ export const subagentMetaDecoder: Decoder<DecodedSubagentMeta> = {
 export const subagentMetaFallback: Decoder<DecodedSubagentMeta> = {
   id: 'subagent-meta.fallback',
   source: 'subagent-meta',
-  description: 'Unbekannte Subagent-Metadaten',
+  description: 'unknown subagent metadata',
   match: () => 1,
   decode: (raw) => ({ extra: sanitize(raw) as Raw }),
 };

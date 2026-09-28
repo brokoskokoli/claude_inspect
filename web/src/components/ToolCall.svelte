@@ -42,7 +42,7 @@
     return live ? duration(clock.now - a) : '';
   });
   const Renderer = $derived(rendererFor(use.name));
-  const statusLabel: Record<string, string> = { pending: 'läuft', open: 'ohne Ergebnis', denied: 'abgelehnt', error: 'Fehler', ok: '' };
+  const statusLabel: Record<string, string> = { pending: 'running', open: 'no result', denied: 'denied', error: 'error', ok: '' };
 </script>
 
 <div class="tool {status}" class:open>
@@ -52,7 +52,7 @@
     <span class="name">{mcp.tool}</span>
     <span class="summary ellipsis">{toolSummary(use.name, use.input)}</span>
     {#if spawned?.length}
-      <span class="spawn-hint" title="startet eine eigene Claude-Sitzung">⇢ {spawned.map((c) => c.agent ?? 'claude').join(', ')}</span>
+      <span class="spawn-hint" title="starts its own Claude session">⇢ {spawned.map((c) => c.agent ?? 'claude').join(', ')}</span>
     {/if}
     {#if statusLabel[status]}<span class="st">{statusLabel[status]}{status === 'denied' && result?.denied ? ` (${result.denied})` : ''}</span>{/if}
     <span class="took">{took}</span>
@@ -68,19 +68,19 @@
               <strong>{c.agent ?? 'claude'}</strong>
               <span class="ellipsis">{c.title ?? c.childSessionId}</span>
               <SpawnBadge link={c} />
-              <span class="open">Sitzung öffnen →</span>
+              <span class="open">Open session →</span>
             </a>
           {/each}
         </div>
       {/if}
       <Renderer {use} {result} {sessionId} {subagent} />
       <div class="foot">
-        {#if use.extra}<JsonView value={use.extra} label="weitere Felder (Aufruf)" />{/if}
-        {#if result?.extra}<JsonView value={result.extra} label="weitere Felder (Ergebnis)" />{/if}
+        {#if use.extra}<JsonView value={use.extra} label="more fields (call)" />{/if}
+        {#if result?.extra}<JsonView value={result.extra} label="more fields (result)" />{/if}
         <span class="spacer"></span>
         <span class="faint mono small">{use.toolUseId}</span>
-        <button class="icon-btn" title="Rohdaten Aufruf" onclick={() => showRaw(sessionId, agentId, use.line)}>{'{ }'} Aufruf</button>
-        {#if result}<button class="icon-btn" title="Rohdaten Ergebnis" onclick={() => showRaw(sessionId, agentId, result!.line)}>{'{ }'} Ergebnis</button>{/if}
+        <button class="icon-btn" title="Raw call" onclick={() => showRaw(sessionId, agentId, use.line)}>{'{ }'} call</button>
+        {#if result}<button class="icon-btn" title="Raw result" onclick={() => showRaw(sessionId, agentId, result!.line)}>{'{ }'} result</button>{/if}
       </div>
     </div>
   {/if}

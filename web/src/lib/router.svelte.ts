@@ -1,4 +1,4 @@
-export type SessionTab = 'verlauf' | 'zeitleiste' | 'graph' | 'tasks';
+export type SessionTab = 'transcript' | 'timeline' | 'graph' | 'tasks';
 
 export type Route =
   | { name: 'dashboard' }
@@ -26,7 +26,7 @@ function parse(hash: string): Route {
       name: 'session',
       id: parts[1],
       agent: params.get('agent') ?? undefined,
-      tab: (params.get('tab') as SessionTab) ?? 'verlauf',
+      tab: (params.get('tab') as SessionTab) ?? 'transcript',
       tool: params.get('tool') ?? undefined,
       line: line ? Number(line) : undefined,
     };
@@ -44,7 +44,7 @@ export const href = {
   session: (id: string, agent?: string, extra: { tab?: SessionTab; tool?: string; line?: number } = {}) => {
     const q = new URLSearchParams();
     if (agent) q.set('agent', agent);
-    if (extra.tab && extra.tab !== 'verlauf') q.set('tab', extra.tab);
+    if (extra.tab && extra.tab !== 'transcript') q.set('tab', extra.tab);
     if (extra.tool) q.set('tool', extra.tool);
     if (extra.line !== undefined) q.set('line', String(extra.line));
     const qs = q.toString();

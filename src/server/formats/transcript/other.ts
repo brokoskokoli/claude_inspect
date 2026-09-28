@@ -38,7 +38,7 @@ const SYSTEM_FIELDS = [
 export const systemDecoder: Decoder<DecodedEntry[]> = {
   id: 'transcript.system@2',
   source: 'transcript',
-  description: 'system-Records (Hooks, Turn-Dauer, API-Fehler, Kompaktierung, Remote-Control …)',
+  description: 'system records (hooks, turn duration, API errors, compaction, Remote Control …)',
   versions: '>=2.0.0',
   match: (raw) => (raw.type === 'system' && typeof raw.subtype === 'string' ? 10 : 0),
   decode(raw) {
@@ -65,7 +65,7 @@ const ATTACHMENT_FIELDS = [...ENVELOPE_FIELDS, 'attachment', 'rendered', 'render
 export const attachmentDecoder: Decoder<DecodedEntry[]> = {
   id: 'transcript.attachment@2',
   source: 'transcript',
-  description: 'attachment-Records (Dateien, Erinnerungen, Skill-/Tool-Listen, Hook-Kontext …)',
+  description: 'attachment records (files, reminders, skill/tool listings, hook context …)',
   versions: '>=2.1.0',
   match: (raw) => (raw.type === 'attachment' && isObj(raw.attachment) ? 10 : 0),
   decode(raw) {
@@ -112,7 +112,7 @@ export const META_TYPES = [
 export const metaDecoder: Decoder<DecodedEntry[]> = {
   id: 'transcript.meta@2',
   source: 'transcript',
-  description: `Zustands-Records (${META_TYPES.length} Typen: Titel, Modus, Kosten, Queue, Worktree …)`,
+  description: `state records (${META_TYPES.length} types: titles, mode, cost, queue, worktree …)`,
   versions: '>=2.1.0',
   match: (raw) => (typeof raw.type === 'string' && META_TYPES.includes(raw.type) ? 10 : 0),
   decode(raw) {
@@ -132,7 +132,7 @@ export const metaDecoder: Decoder<DecodedEntry[]> = {
 export const transcriptFallback: Decoder<DecodedEntry[]> = {
   id: 'transcript.fallback',
   source: 'transcript',
-  description: 'Unbekannte Records – werden roh angezeigt und im Drift-Report gemeldet',
+  description: 'unknown records – shown raw and reported as schema drift',
   match: () => 1,
   decode(raw) {
     return [{ ...envelope(raw), kind: 'unknown', raw: sanitize(raw) }];

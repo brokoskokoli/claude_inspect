@@ -212,7 +212,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
     const recent = subFiles.filter((s) => Date.now() - s.mtime < SUBAGENT_DASHBOARD_MS);
     const subagents = await this.resolveSubagents(f.path, recent, true);
     let current = a.current;
-    if (!busy && current && current.kind !== 'error') current = { kind: 'idle', label: current.kind === 'idle' ? current.label : 'wartet auf Eingabe', since: current.since };
+    if (!busy && current && current.kind !== 'error') current = { kind: 'idle', label: current.kind === 'idle' ? current.label : 'waiting for input', since: current.since };
     return {
       sessionId,
       title: a.title,

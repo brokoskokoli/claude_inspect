@@ -12,11 +12,11 @@ export function resultText(r: ToolResultEntry | undefined): string {
     .map((p) => {
       switch (p.type) {
         case 'text':
-          return p.text + (p.truncated ? `\n… [${p.truncated} Zeichen gekürzt]` : '');
+          return p.text + (p.truncated ? `\n… [${p.truncated} characters truncated]` : '');
         case 'image':
-          return `[Bild ${p.mediaType ?? ''}]`;
+          return `[image ${p.mediaType ?? ''}]`;
         case 'tool_reference':
-          return `[Tool geladen: ${p.toolName}]`;
+          return `[tool loaded: ${p.toolName}]`;
         default:
           return JSON.stringify(p.value);
       }

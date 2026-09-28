@@ -105,13 +105,13 @@
 <div class="toolbar">
   <div class="legend">
     {#each TOOL_CATEGORIES as c (c.key)}<span><span class="swatch" style:background={c.color}></span>{c.label}</span>{/each}
-    <span><span class="swatch err"></span>Fehler</span>
+    <span><span class="swatch err"></span>Error</span>
   </div>
   <div class="controls">
-    <label class="chk"><input type="checkbox" bind:checked={compress} /> Pausen &gt; 10 min zusammenschieben</label>
+    <label class="chk"><input type="checkbox" bind:checked={compress} /> Collapse pauses &gt; 10 min</label>
     <div class="seg">
       <button onclick={() => (zoom = Math.max(1, zoom / 2))} disabled={zoom <= 1}>−</button>
-      <button onclick={() => (zoom = 1)} class:on={zoom === 1}>Einpassen</button>
+      <button onclick={() => (zoom = 1)} class:on={zoom === 1}>Fit</button>
       <button onclick={() => (zoom = Math.min(256, zoom * 2))}>+</button>
     </div>
   </div>
@@ -129,7 +129,7 @@
     {/each}
   </div>
   <div class="scroller" bind:clientWidth={viewportW}>
-    <svg width={totalW} height={AXIS + lanes.length * ROW + 6} onmouseleave={() => (hover = null)} role="img" aria-label="Zeitleiste der Agenten">
+    <svg width={totalW} height={AXIS + lanes.length * ROW + 6} onmouseleave={() => (hover = null)} role="img" aria-label="Agent timeline">
       <!-- Zeitachse -->
       {#each ticks as tk, i (i)}
         <line x1={x(tk.t)} x2={x(tk.t)} y1={AXIS - 4} y2={AXIS + lanes.length * ROW} class="grid" />
@@ -185,9 +185,9 @@
   <div class="tip" style:left="{hover.x + 14}px" style:top="{hover.y + 12}px">
     {#if hover.span}
       {@const s = hover.span}
-      <div><span class="swatch" style:background={s.isError ? 'var(--status-critical)' : toolColor(s.name)}></span> <strong class="mono">{splitMcpName(s.name).tool}</strong>{s.isError ? ' · ⚠ Fehler' : ''}</div>
+      <div><span class="swatch" style:background={s.isError ? 'var(--status-critical)' : toolColor(s.name)}></span> <strong class="mono">{splitMcpName(s.name).tool}</strong>{s.isError ? ' · ⚠ error' : ''}</div>
       <div>{s.summary}</div>
-      <div class="faint">{time(s.start)} · {s.end !== undefined ? duration(s.end - s.start) : 'läuft'} · {hover.lane.label}</div>
+      <div class="faint">{time(s.start)} · {s.end !== undefined ? duration(s.end - s.start) : 'running'} · {hover.lane.label}</div>
     {/if}
   </div>
 {/if}

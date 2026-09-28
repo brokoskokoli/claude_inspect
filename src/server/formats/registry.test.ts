@@ -6,7 +6,7 @@ import type { DecodedEntry } from './transcript/common.js';
 
 const decode = (raw: unknown) => registry.decode<DecodedEntry[]>('transcript', raw, 'test.jsonl');
 
-test('assistant-Record mit Text und Tool-Aufruf', () => {
+test('assistant record with text and tool call', () => {
   const { out, decoder } = decode({
     type: 'assistant',
     uuid: 'u1',
@@ -29,7 +29,7 @@ test('assistant-Record mit Text und Tool-Aufruf', () => {
   assert.equal(use.model, 'claude-opus-5-5');
 });
 
-test('user-Record: String-Inhalt (ältere Versionen) und tool_result mit strukturiertem Ergebnis', () => {
+test('user record: string content (older versions) and tool_result with structured result', () => {
   assert.equal(decode({ type: 'user', message: { role: 'user', content: 'hi' }, version: '2.1.72' }).out[0].kind, 'user-text');
   const { out } = decode({
     type: 'user',
@@ -40,10 +40,10 @@ test('user-Record: String-Inhalt (ältere Versionen) und tool_result mit struktu
   assert.equal(r.kind, 'tool-result');
   assert.equal(r.toolUseId, 'toolu_1');
   // ganze Dateiinhalte werden nicht mitgeschickt
-  assert.match(String((r.structured as Record<string, unknown>).originalFile), /ausgelassen/);
+  assert.match(String((r.structured as Record<string, unknown>).originalFile), /omitted/);
 });
 
-test('unbekannter Record-Typ landet beim Fallback und im Drift-Report', () => {
+test('unknown record type goes to the fallback and the drift report', () => {
   const { out, decoder } = decode({ type: 'future-thing', foo: 1, version: '9.9.9' });
   assert.equal(decoder, 'transcript.fallback');
   assert.equal(out[0].kind, 'unknown');
@@ -51,19 +51,19 @@ test('unbekannter Record-Typ landet beim Fallback und im Drift-Report', () => {
   assert.equal(drift?.firstVersion, '9.9.9');
 });
 
-test('unbekannte Felder werden als extra erhalten', () => {
+test('unknown fields are kept as extra', () => {
   const { out } = decode({ type: 'user', message: { role: 'user', content: 'x' }, brandNewField: 42 });
   assert.deepEqual(out[0].extra, { brandNewField: 42 });
 });
 
-test('Geheimnisse werden maskiert', () => {
+test('secrets are masked', () => {
   const { out } = decode({ type: 'attachment', attachment: { type: 'x', authToken: 'secret-value', totalTokens: 5 } });
   const a = out[0] as Extract<Entry, { kind: 'attachment' }>;
   assert.notEqual(a.data.authToken, 'secret-value');
   assert.equal(a.data.totalTokens, 5);
 });
 
-test('Prozessdatei: neue und alte Variante', () => {
+test('process file: new and old variant', () => {
   const v2 = registry.decode('process', { pid: 1, sessionId: 's', status: 'busy', version: '2.1.283' }, 'p.json');
   const v1 = registry.decode('process', { pid: 1, sessionId: 's', version: '2.1.114' }, 'p.json');
   assert.equal(v2.decoder, 'process.session-file@2');

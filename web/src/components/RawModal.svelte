@@ -18,14 +18,14 @@
     <div class="modal card" onclick={(e) => e.stopPropagation()}>
       <div class="head">
         <span class="mono">{rawView.title}</span>
-        <span class="muted small">Rohdaten, Geheimnisse maskiert</span>
-        <button class="btn" onclick={copy}>Kopieren</button>
-        <button class="btn" onclick={close}>Schließen</button>
+        <span class="muted small">raw data, secrets masked</span>
+        <button class="btn" onclick={copy}>Copy</button>
+        <button class="btn" onclick={close}>Close</button>
       </div>
       {#if rawView.error}
         <p class="badge error">{rawView.error}</p>
       {:else if rawView.data === null}
-        <p class="muted">Lade …</p>
+        <p class="muted">Loading …</p>
       {:else}
         <pre>{JSON.stringify(rawView.data, null, 2)}</pre>
       {/if}

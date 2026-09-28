@@ -24,17 +24,17 @@
 </script>
 
 <div class="page-head">
-  <h2>Dateien</h2>
-  <span class="muted">{total.toLocaleString('de-DE')} von Agenten gelesene oder geänderte Dateien</span>
+  <h2>Files</h2>
+  <span class="muted">{total.toLocaleString('en-US')} files read or changed by agents</span>
 </div>
 <div class="filters bar">
   <HistoryFilters bind:filter />
-  <input type="search" placeholder="Pfad filtern …" bind:value={q} />
+  <input type="search" placeholder="Filter by path …" bind:value={q} />
 </div>
 
 <div class="card">
   <table class="list">
-    <thead><tr><th>Datei</th><th>Projekt</th><th class="num">Edits</th><th class="num">Writes</th><th class="num">Reads</th><th class="num">Sessions</th><th>Zuletzt</th></tr></thead>
+    <thead><tr><th>File</th><th>Project</th><th class="num">Edits</th><th class="num">Writes</th><th class="num">Reads</th><th class="num">Sessions</th><th>Last</th></tr></thead>
     <tbody>
       {#each files as f (f.path)}
         <tr class="clickable" onclick={() => (location.hash = href.tools({ file: f.path, days: filter.days ? String(filter.days) : undefined }))}>
@@ -50,7 +50,7 @@
     </tbody>
   </table>
 </div>
-{#if total > files.length}<p class="faint center">Die ersten {files.length} angezeigt – Filter verwenden.</p>{/if}
+{#if total > files.length}<p class="faint center">Showing the first {files.length} – use the filter.</p>{/if}
 
 <style>
   .bar {

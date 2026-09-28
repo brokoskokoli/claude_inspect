@@ -27,7 +27,7 @@
   }
   // Ablauf nur laden, wenn Zeitleiste oder Graph offen ist; live gedrosselt nachführen
   $effect(() => {
-    if (tab !== 'zeitleiste' && tab !== 'graph') return;
+    if (tab !== 'timeline' && tab !== 'graph') return;
     untrack(() => void loadFlow());
     const off = onTranscript(() => {
       if (flowTimer) return;
@@ -44,9 +44,9 @@
   });
 
   const TABS: [SessionTab, string][] = [
-    ['verlauf', 'Verlauf'],
-    ['zeitleiste', 'Zeitleiste'],
-    ['graph', 'Aufrufgraph'],
+    ['transcript', 'Transcript'],
+    ['timeline', 'Timeline'],
+    ['graph', 'Call graph'],
     ['tasks', 'Tasks'],
   ];
 
@@ -86,7 +86,7 @@
 {#if error}
   <p class="badge error">{error}</p>
 {:else if !detail || !sum || !live.dashboard}
-  <p class="muted">Lade …</p>
+  <p class="muted">Loading …</p>
 {:else}
   <div class="crumbs muted"><a href={href.sessions()}>Sessions</a> / {sum.project}</div>
   <header class="head card">
@@ -102,9 +102,9 @@
     {#if detail.spawnedBy}
       {@const by = detail.spawnedBy}
       <div class="spawned-by">
-        <span class="muted">⇠ per <code>claude</code>-Aufruf gestartet von</span>
+        <span class="muted">⇠ started via <code>claude</code> call by</span>
         <a href={href.session(by.parentSessionId, by.parentAgentId)}>{by.parentTitle ?? by.parentSessionId.slice(0, 8)}</a>
-        {#if by.parentAgentId}<span class="faint">(Subagent {by.parentAgentId.slice(0, 8)})</span>{/if}
+        {#if by.parentAgentId}<span class="faint">(subagent {by.parentAgentId.slice(0, 8)})</span>{/if}
         <SpawnBadge link={by} />
         <span class="faint small">{by.evidence.join(' · ')}</span>
       </div>
@@ -113,17 +113,17 @@
       <div class="now"><Activity activity={liveProc.session.current} /></div>
     {/if}
     <dl>
-      <div><dt>Verzeichnis</dt><dd class="mono">{shortPath(sum.cwd)}</dd></div>
+      <div><dt>Directory</dt><dd class="mono">{shortPath(sum.cwd)}</dd></div>
       {#if sum.gitBranch}<div><dt>Branch</dt><dd class="mono">{sum.gitBranch}</dd></div>{/if}
-      <div><dt>Zeitraum</dt><dd>{dateTime(sum.firstTimestamp)} – {dateTime(sum.lastTimestamp)} <span class="faint">({ago(sum.lastTimestamp, clock.now)})</span></dd></div>
-      <div><dt>Modell</dt><dd>{modelName(liveProc?.session?.model ?? sum.model)}{liveProc?.session?.effort ? ` · ${liveProc.session.effort}` : ''}</dd></div>
+      <div><dt>Time range</dt><dd>{dateTime(sum.firstTimestamp)} – {dateTime(sum.lastTimestamp)} <span class="faint">({ago(sum.lastTimestamp, clock.now)})</span></dd></div>
+      <div><dt>Model</dt><dd>{modelName(liveProc?.session?.model ?? sum.model)}{liveProc?.session?.effort ? ` · ${liveProc.session.effort}` : ''}</dd></div>
       {#if liveProc?.session}
-        <div><dt>Kontext</dt><dd>{tokens(liveProc.session.contextTokens)} Tokens</dd></div>
+        <div><dt>Context</dt><dd>{tokens(liveProc.session.contextTokens)} tokens</dd></div>
         <div><dt>Permission</dt><dd class="mono">{liveProc.session.permissionMode ?? '–'}</dd></div>
       {/if}
-      {#if sum.costUSD !== undefined}<div><dt>Kosten</dt><dd>{usd(sum.costUSD)}</dd></div>{/if}
-      <div><dt>Versionen</dt><dd class="mono">{sum.versions.join(', ') || '–'}</dd></div>
-      {#if proc}<div><dt>Prozess</dt><dd class="mono">pid {proc.pid} · {proc.entrypoint ?? '?'} {proc.alive ? '' : '(beendet)'}</dd></div>{/if}
+      {#if sum.costUSD !== undefined}<div><dt>Cost</dt><dd>{usd(sum.costUSD)}</dd></div>{/if}
+      <div><dt>Versions</dt><dd class="mono">{sum.versions.join(', ') || '–'}</dd></div>
+      {#if proc}<div><dt>Process</dt><dd class="mono">pid {proc.pid} · {proc.entrypoint ?? '?'} {proc.alive ? '' : '(ended)'}</dd></div>{/if}
       {#if job}
         <div>
           <dt>Job</dt>
@@ -132,37 +132,37 @@
         {@const from = job.fork?.parentSessionId ?? job.launch?.fromSessionId}
         {@const isFork = !!(job.launch?.fork || job.fork)}
         {#if from && from !== id}
-          <div><dt>{isFork ? 'Fork von' : 'Fortsetzung von'}</dt><dd><a class="mono" href={href.session(from)}>{from.slice(0, 8)}</a></dd></div>
+          <div><dt>{isFork ? 'Fork of' : 'Resumed from'}</dt><dd><a class="mono" href={href.session(from)}>{from.slice(0, 8)}</a></dd></div>
         {:else if from === id && job.sessionId && job.sessionId !== id}
           <!-- Der Job ist ein Fork *dieser* Session (z. B. in den Hintergrund geparkt) -->
           {@const target = job.resumeSessionId ?? job.sessionId}
-          <div><dt>{isFork ? 'Geforkt in' : 'Fortgesetzt in'}</dt><dd><a class="mono" href={href.session(target)}>{job.name ?? target.slice(0, 8)}</a></dd></div>
+          <div><dt>{isFork ? 'Forked into' : 'Resumed in'}</dt><dd><a class="mono" href={href.session(target)}>{job.name ?? target.slice(0, 8)}</a></dd></div>
         {/if}
       {/if}
-      <div><dt>Datei</dt><dd class="mono faint">{sum.sessionId}.jsonl · {bytes(sum.size)}</dd></div>
+      <div><dt>File</dt><dd class="mono faint">{sum.sessionId}.jsonl · {bytes(sum.size)}</dd></div>
     </dl>
   </header>
 
   <nav class="tabs">
     {#each TABS as [key, label] (key)}
-      <a href={href.session(id, key === 'verlauf' ? agent : undefined, { tab: key })} class:on={tab === key}>
+      <a href={href.session(id, key === 'transcript' ? agent : undefined, { tab: key })} class:on={tab === key}>
         {label}{#if key === 'tasks' && detail.tasks.length}<span class="n">{detail.tasks.length}</span>{/if}
         {#if key === 'graph' && detail.subagents.length + detail.spawned.length}<span class="n">{detail.subagents.length + detail.spawned.length + 1}</span>{/if}
       </a>
     {/each}
   </nav>
 
-  {#if tab === 'zeitleiste'}
-    {#if flow}<Timeline {flow} />{:else}<p class="muted">Lade Ablauf …</p>{/if}
+  {#if tab === 'timeline'}
+    {#if flow}<Timeline {flow} />{:else}<p class="muted">Loading flow …</p>{/if}
   {:else if tab === 'graph'}
-    {#if flow}<FlowGraph {flow} />{:else}<p class="muted">Lade Ablauf …</p>{/if}
+    {#if flow}<FlowGraph {flow} />{:else}<p class="muted">Loading flow …</p>{/if}
   {:else if tab === 'tasks'}
     <TaskBoard tasks={detail.tasks} />
   {:else}
   <div class="layout">
     <aside>
       <div class="aside-head muted">
-        Agenten <span class="faint">{detail.subagents.length + 1}{detail.spawned.length ? ` + ${detail.spawned.length} Aufrufe` : ''}</span>
+        Agents <span class="faint">{detail.subagents.length + 1}{detail.spawned.length ? ` + ${detail.spawned.length} spawned` : ''}</span>
       </div>
       <AgentTree sessionId={id} subagents={detail.subagents} spawned={detail.spawned} selected={agent} {mainState} mainLabel={sum.title ?? sum.project} />
     </aside>
@@ -173,11 +173,11 @@
           <div>
             <div><strong>{sel.agentType ?? 'Subagent'}</strong> <span class="muted">{sel.description}</span></div>
             <div class="faint small">
-              {modelName(sel.model)} · {sel.toolCalls ?? 0} Tools · {tokens(sel.outputTokens)} Output-Tokens · Tiefe {sel.spawnDepth ?? 1}
-              {#if sel.background}· Hintergrund{/if}
+              {modelName(sel.model)} · {sel.toolCalls ?? 0} tools · {tokens(sel.outputTokens)} output tokens · depth {sel.spawnDepth ?? 1}
+              {#if sel.background}· background{/if}
             </div>
           </div>
-          <a class="back" href={href.session(id)}>← Hauptagent</a>
+          <a class="back" href={href.session(id)}>← Main agent</a>
         </div>
       {/if}
       {#key `${agent}|${tool}|${line}`}

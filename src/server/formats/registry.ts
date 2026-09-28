@@ -47,11 +47,11 @@ export class FormatRegistry {
         bestScore = s;
       }
     }
-    if (!best) throw new Error(`Kein Decoder (auch kein Fallback) für Quelle ${source}`);
+    if (!best) throw new Error(`No decoder (not even a fallback) for source ${source}`);
 
     if (opts.silent) return { out: best.decode(record, ctx) as Out, decoder: best.id };
     this.hits.set(best.id, (this.hits.get(best.id) ?? 0) + 1);
-    if (bestScore <= 1) this.noteDrift(source, str(record.type) ?? '-', '(unbekannter Record-Typ)', version);
+    if (bestScore <= 1) this.noteDrift(source, str(record.type) ?? '-', '(unknown record type)', version);
     const known = best.knownFields?.(record);
     if (known) {
       const recordType = str(record.type) ?? '-';

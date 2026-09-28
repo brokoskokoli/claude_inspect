@@ -11,8 +11,8 @@
 
 <div class="path mono">
   {s(use.input.file_path)}
-  {#if use.input.replace_all}<span class="badge">alle Vorkommen</span>{/if}
-  {#if st?.userModified}<span class="badge info">vom Nutzer angepasst</span>{/if}
+  {#if use.input.replace_all}<span class="badge">all occurrences</span>{/if}
+  {#if st?.userModified}<span class="badge info">modified by user</span>{/if}
 </div>
 {#if patch}
   <Diff hunks={patch} />

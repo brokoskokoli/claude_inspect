@@ -37,7 +37,7 @@
 
   const rootPos = $derived(layout.pos.get(flow.rootSessionId));
   const dur = (l: FlowLane) => (l.start !== undefined ? duration((l.status === 'running' ? clock.now : (l.end ?? l.start)) - l.start) : '');
-  const kindLabel: Record<FlowLane['kind'], string> = { main: 'Hauptagent', subagent: 'Subagent', spawn: 'Aufruf' };
+  const kindLabel: Record<FlowLane['kind'], string> = { main: 'Main agent', subagent: 'Subagent', spawn: 'Spawned' };
 
   function edge(from: { x: number; y: number }, to: { x: number; y: number }): string {
     const x1 = from.x + W;
@@ -50,14 +50,14 @@
 </script>
 
 <div class="legend">
-  <span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" class="e subagent" /></svg> Subagent (Agent-Tool)</span>
-  <span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" class="e spawn" /></svg> eigene Sitzung per <code>claude</code>-Aufruf</span>
-  {#if flow.origin}<span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" class="e origin" /></svg> {flow.origin.kind === 'fork' ? 'Fork' : 'Fortsetzung'}</span>{/if}
-  <span class="faint">grau = abgeschlossen</span>
+  <span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" class="e subagent" /></svg> Subagent (Agent tool)</span>
+  <span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" class="e spawn" /></svg> own session via <code>claude</code> call</span>
+  {#if flow.origin}<span><svg width="26" height="8"><line x1="0" y1="4" x2="26" y2="4" class="e origin" /></svg> {flow.origin.kind === 'fork' ? 'Fork' : 'Resume'}</span>{/if}
+  <span class="faint">grey = finished</span>
 </div>
 
 <div class="graph card">
-  <svg width={layout.width} height={layout.height} role="img" aria-label="Aufrufgraph">
+  <svg width={layout.width} height={layout.height} role="img" aria-label="Call graph">
     <g transform="translate(8,8)">
       {#each flow.lanes as l (l.id)}
         {#if l.parentId && layout.pos.has(l.parentId)}
@@ -72,7 +72,7 @@
   <div class="nodes" style:width="{layout.width}px" style:height="{layout.height}px">
     {#if flow.origin && rootPos}
       <a class="node origin" style:left="8px" style:top="{rootPos.y + 8}px" style:width="{W}px" style:height="{H}px" href={href.session(flow.origin.sessionId)}>
-        <div class="k">{flow.origin.kind === 'fork' ? 'Fork von' : 'Fortsetzung von'}</div>
+        <div class="k">{flow.origin.kind === 'fork' ? 'Fork of' : 'Resumed from'}</div>
         <div class="t ellipsis">{flow.origin.title ?? flow.origin.sessionId.slice(0, 8)}</div>
       </a>
     {/if}
@@ -87,14 +87,14 @@
           style:width="{W}px"
           style:height="{H}px"
           href={href.session(l.sessionId, l.agentId)}
-          title={[l.sublabel, l.confidence ? `Zuordnung ${l.confidence}` : ''].filter(Boolean).join(' · ')}
+          title={[l.sublabel, l.confidence ? `match ${l.confidence}` : ''].filter(Boolean).join(' · ')}
         >
           <div class="k">
             <span class="dot"></span>{kindLabel[l.kind]}{#if l.sublabel && l.kind !== 'main'}<span class="sl">· {l.sublabel}</span>{/if}
             <span class="d">{dur(l)}</span>
           </div>
           <div class="t ellipsis">{l.label}</div>
-          <div class="s ellipsis">{modelName(l.model)} · {l.toolCalls} Tools · {tokens(l.outputTokens)} out</div>
+          <div class="s ellipsis">{modelName(l.model)} · {l.toolCalls} tools · {tokens(l.outputTokens)} out</div>
         </a>
       {/if}
     {/each}

@@ -30,16 +30,16 @@
 </script>
 
 {#if !d}
-  <p class="muted">Lade …</p>
+  <p class="muted">Loading …</p>
 {:else}
   <section>
     <div class="section-head">
-      <h2>Laufende Agenten</h2>
-      <span class="muted">{alive.length} Prozesse · {busy} arbeiten</span>
-      <span class="faint src">liest {shortPath(d.claudeDir)}</span>
+      <h2>Running agents</h2>
+      <span class="muted">{alive.length} processes · {busy} working</span>
+      <span class="faint src">reading {shortPath(d.claudeDir)}</span>
     </div>
     {#if alive.length === 0}
-      <div class="card empty muted">Gerade läuft kein Claude-Code-Prozess.</div>
+      <div class="card empty muted">No Claude Code process is running right now.</div>
     {:else}
       <div class="grid">
         {#each alive as item (item.process.pid)}
@@ -53,7 +53,7 @@
     <section class="two">
       {#if d.orphanJobs.length}
         <div>
-          <div class="section-head"><h2>Hintergrund-Jobs</h2><span class="muted">ohne laufenden Prozess</span></div>
+          <div class="section-head"><h2>Background jobs</h2><span class="muted">without a running process</span></div>
           <div class="card">
             <table class="list">
               <tbody>
@@ -75,7 +75,7 @@
       {/if}
       {#if dead.length}
         <div>
-          <div class="section-head"><h2>Beendete Prozesse</h2><span class="muted">Registrierung noch vorhanden</span></div>
+          <div class="section-head"><h2>Ended processes</h2><span class="muted">registration still present</span></div>
           <div class="card">
             <table class="list">
               <tbody>
@@ -96,8 +96,8 @@
 
   <section>
     <div class="section-head">
-      <h2>Letzte Sessions</h2>
-      <a href={href.sessions()}>alle anzeigen →</a>
+      <h2>Recent sessions</h2>
+      <a href={href.sessions()}>show all →</a>
     </div>
     <div class="card"><SessionTable sessions={d.recentSessions} /></div>
   </section>

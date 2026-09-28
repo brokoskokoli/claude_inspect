@@ -193,20 +193,20 @@
 
 <div class="toolbar">
   <label><input type="checkbox" bind:checked={filters.tools} /> Tools <span class="faint">{counts['tool-use'] ?? 0}</span></label>
-  <label><input type="checkbox" bind:checked={filters.thinking} /> Thinking <span class="faint" title="{counts.emptyThinking ?? 0} Thinking-Blöcke ohne gespeicherten Inhalt">{counts.thinking ?? 0}{counts.emptyThinking ? ` (+${counts.emptyThinking} leer)` : ''}</span></label>
+  <label><input type="checkbox" bind:checked={filters.thinking} /> Thinking <span class="faint" title="{counts.emptyThinking ?? 0} thinking blocks without stored content">{counts.thinking ?? 0}{counts.emptyThinking ? ` (+${counts.emptyThinking} empty)` : ''}</span></label>
   <label><input type="checkbox" bind:checked={filters.system} /> System <span class="faint">{counts.system ?? 0}</span></label>
-  <label><input type="checkbox" bind:checked={filters.attachments} /> Anhänge <span class="faint">{counts.attachment ?? 0}</span></label>
-  <label><input type="checkbox" bind:checked={filters.meta} /> Zustand <span class="faint">{counts.meta ?? 0}</span></label>
-  {#if counts.unknown}<span class="badge error">{counts.unknown} unbekannt</span>{/if}
-  <input type="search" placeholder="Im Verlauf suchen …" bind:value={query} />
+  <label><input type="checkbox" bind:checked={filters.attachments} /> Attachments <span class="faint">{counts.attachment ?? 0}</span></label>
+  <label><input type="checkbox" bind:checked={filters.meta} /> State <span class="faint">{counts.meta ?? 0}</span></label>
+  {#if counts.unknown}<span class="badge error">{counts.unknown} unknown</span>{/if}
+  <input type="search" placeholder="Search this transcript …" bind:value={query} />
 </div>
 
 {#if error}<p class="badge error">{error}</p>{/if}
 {#if loading}
-  <p class="muted">Lade Transcript …</p>
+  <p class="muted">Loading transcript …</p>
 {:else}
   {#if items.length > shown}
-    <div class="older"><button class="btn" onclick={() => (shown += WINDOW)}>Ältere anzeigen ({items.length - shown} ausgeblendet)</button></div>
+    <div class="older"><button class="btn" onclick={() => (shown += WINDOW)}>Show older ({items.length - shown} hidden)</button></div>
   {/if}
   <div class="entries">
     {#each visible as it (it.key)}
@@ -228,9 +228,9 @@
       </div>
     {/each}
   </div>
-  {#if items.length === 0}<p class="muted">Keine Einträge{query ? ' für diese Suche' : ''}.</p>{/if}
+  {#if items.length === 0}<p class="muted">No entries{query ? ' for this search' : ''}.</p>{/if}
   {#if live}
-    <div class="follow faint">{follow ? '● folgt live' : 'Live-Updates – nach unten scrollen zum Folgen'}</div>
+    <div class="follow faint">{follow ? '● following live' : 'Live updates – scroll to the bottom to follow'}</div>
   {/if}
 {/if}
 

@@ -59,7 +59,7 @@ function decode(raw: Raw): DecodedProcess {
 export const processDecoderV2: Decoder<DecodedProcess> = {
   id: 'process.session-file@2',
   source: 'process',
-  description: 'Laufender Prozess mit Status (busy/idle), Namen, Job- und Bridge-Verknüpfung',
+  description: 'running process with status (busy/idle), name, job and bridge link',
   versions: '>=2.1.200',
   match: (raw) => (typeof raw.pid === 'number' && typeof raw.sessionId === 'string' && 'status' in raw ? 15 : 0),
   decode,
@@ -70,7 +70,7 @@ export const processDecoderV2: Decoder<DecodedProcess> = {
 export const processDecoderV1: Decoder<DecodedProcess> = {
   id: 'process.session-file@1',
   source: 'process',
-  description: 'Laufender Prozess, ältere Variante ohne Status',
+  description: 'running process, older variant without status',
   versions: '<2.1.200',
   match: (raw) => (typeof raw.pid === 'number' && typeof raw.sessionId === 'string' ? 10 : 0),
   decode,
@@ -80,7 +80,7 @@ export const processDecoderV1: Decoder<DecodedProcess> = {
 export const processFallback: Decoder<DecodedProcess> = {
   id: 'process.fallback',
   source: 'process',
-  description: 'Unbekannte Prozessdatei',
+  description: 'unknown process file',
   match: () => 1,
   decode: (raw) => ({ pid: num(raw.pid) ?? -1, sessionId: str(raw.sessionId) ?? '', extra: sanitize(raw) as Raw }),
 };

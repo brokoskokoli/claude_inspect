@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Node.js ≥ 20](https://img.shields.io/badge/node-%E2%89%A5%2020-green)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Svelte%205-3178c6)
+![Dark mode](https://img.shields.io/badge/dark%20mode-%E2%9C%93-2b2a27)
 ![No hooks](https://img.shields.io/badge/Claude%20Code-no%20hooks%20needed-d97757)
 
 **See what your [Claude Code](https://claude.com/claude-code) agents are doing – right now and in the past.**
@@ -42,7 +43,8 @@ becomes hard to tell *who is doing what*. claude-inspect answers:
 | **Tool explorer & files** | Every tool call across all sessions, filterable; which files agents read, edited or wrote. |
 | **Full-text search** | Across all transcripts, subagents and the prompt history (including prompts of sessions Claude Code already cleaned up). |
 | **Task boards** | The TaskCreate/TaskUpdate list of a session with dependencies. |
-| **Format detection & schema drift** | Claude Code's file formats change between versions. Each record is decoded individually by versioned decoders; unknown records and fields are never dropped and are listed on the *Formate* page. |
+| **Format detection & schema drift** | Claude Code's file formats change between versions. Each record is decoded individually by versioned decoders; unknown records and fields are never dropped and are listed on the *Formats* page. |
+| **Dark mode** | Light, dark or system theme, remembered per browser. |
 
 <table>
 <tr>
@@ -55,7 +57,12 @@ becomes hard to tell *who is doing what*. claude-inspect answers:
 </tr>
 </table>
 
-![Tool explorer listing tool calls across all sessions](docs/screenshots/tool-explorer.jpg)
+<table>
+<tr>
+<td><img src="docs/screenshots/tool-explorer.jpg" alt="Tool explorer listing tool calls across all sessions"></td>
+<td><img src="docs/screenshots/dashboard-dark.jpg" alt="Live dashboard in dark mode"></td>
+</tr>
+</table>
 
 *All screenshots show the built-in demo data set (`npm run demo`), not real sessions.*
 
@@ -81,7 +88,7 @@ Other data directory: `CLAUDE_CONFIG_DIR=/path/to/.claude npm start`.
 npm run demo    # fictional ~/.claude with running agents + 2 weeks of history, http://127.0.0.1:7718/?t=demo
 ```
 
-The UI language is currently German.
+Light, dark or follow the OS – switch with the button in the header (the choice is remembered).
 
 ## How it works
 
@@ -122,7 +129,7 @@ scripts/      fixture generator, demo data generator
 ```
 
 Contributions welcome – especially decoders for new Claude Code versions (run `npm run fixtures` and
-`npm test`, then check the *Formate* page for unknown fields).
+`npm test`, then check the *Formats* page for unknown fields).
 
 ## Disclaimer
 

@@ -126,7 +126,7 @@ export async function search(query: string, files: SearchFile[], knownSessions: 
           hits.push({
             sessionId: p.sessionId ?? '',
             project: p.project?.split('/').pop() ?? '?',
-            title: 'Transcript nicht mehr vorhanden',
+            title: 'transcript no longer exists',
             line: i,
             kind: 'history-prompt',
             ts: p.timestamp ? new Date(p.timestamp).toISOString() : undefined,

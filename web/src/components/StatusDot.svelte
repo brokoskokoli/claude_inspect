@@ -1,13 +1,13 @@
 <script lang="ts">
   let { state, size = 9 }: { state: 'busy' | 'idle' | 'dead' | 'error' | 'running' | 'done' | 'stale'; size?: number } = $props();
   const labels: Record<string, string> = {
-    busy: 'arbeitet',
-    running: 'läuft',
-    idle: 'wartet',
-    dead: 'beendet',
-    done: 'fertig',
-    stale: 'inaktiv',
-    error: 'Fehler',
+    busy: 'working',
+    running: 'running',
+    idle: 'waiting',
+    dead: 'ended',
+    done: 'finished',
+    stale: 'inactive',
+    error: 'error',
   };
 </script>
 

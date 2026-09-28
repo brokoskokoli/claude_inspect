@@ -18,13 +18,13 @@
     const d = e.data as Record<string, any>;
     switch (e.subtype) {
       case 'turn_duration':
-        return `Turn beendet nach ${Math.round((d.durationMs ?? 0) / 1000)}s · ${d.messageCount ?? '?'} Nachrichten`;
+        return `Turn finished after ${Math.round((d.durationMs ?? 0) / 1000)}s · ${d.messageCount ?? '?'} messages`;
       case 'stop_hook_summary':
-        return `Stop-Hooks: ${d.hookCount ?? 0}${d.hookErrors?.length ? ` · ${d.hookErrors.length} Fehler` : ''}${d.preventedContinuation ? ' · Fortsetzung verhindert' : ''}`;
+        return `Stop-Hooks: ${d.hookCount ?? 0}${d.hookErrors?.length ? ` · ${d.hookErrors.length} errors` : ''}${d.preventedContinuation ? ' · continuation prevented' : ''}`;
       case 'compact_boundary':
-        return `Kontext kompaktiert (${d.compactMetadata?.trigger ?? '?'}, vorher ${tokens(d.compactMetadata?.preTokens)} Tokens)`;
+        return `Context compacted (${d.compactMetadata?.trigger ?? '?'}, ${tokens(d.compactMetadata?.preTokens)} tokens before)`;
       case 'api_error':
-        return `API-Fehler: ${d.error?.message ?? e.text ?? '?'} · Versuch ${d.retryAttempt ?? '?'}/${d.maxRetries ?? '?'}`;
+        return `API error: ${d.error?.message ?? e.text ?? '?'} · attempt ${d.retryAttempt ?? '?'}/${d.maxRetries ?? '?'}`;
       case 'local_command':
         return (e.text ?? '').replace(/<\/?[a-z-]+>/g, ' ').replace(/\s+/g, ' ').trim();
       default:
@@ -37,25 +37,25 @@
     const d = e.data as Record<string, any>;
     switch (e.metaType) {
       case 'custom-title':
-        return `Titel: ${d.customTitle}`;
+        return `Title: ${d.customTitle}`;
       case 'ai-title':
-        return `KI-Titel: ${d.aiTitle}`;
+        return `AI title: ${d.aiTitle}`;
       case 'agent-name':
-        return `Agent-Name: ${d.agentName}`;
+        return `Agent name: ${d.agentName}`;
       case 'mode':
-        return `Modus: ${d.mode}`;
+        return `Mode: ${d.mode}`;
       case 'permission-mode':
-        return `Permission-Mode: ${d.permissionMode}`;
+        return `Permission mode: ${d.permissionMode}`;
       case 'queue-operation':
         return `Queue ${d.operation}${d.content ? `: ${String(d.content).slice(0, 160)}` : ''}`;
       case 'cost-state':
-        return `Kosten: $${Number(d.totalCostUSD ?? 0).toFixed(2)} · +${d.totalLinesAdded ?? 0}/−${d.totalLinesRemoved ?? 0} Zeilen`;
+        return `Cost: $${Number(d.totalCostUSD ?? 0).toFixed(2)} · +${d.totalLinesAdded ?? 0}/−${d.totalLinesRemoved ?? 0} lines`;
       case 'worktree-state':
         return `Worktree: ${JSON.stringify(d.worktreeSession)}`;
       case 'relocated':
-        return `Verzeichnis gewechselt: ${d.relocatedCwd}`;
+        return `Working directory changed: ${d.relocatedCwd}`;
       case 'continued-in':
-        return `Fortgesetzt in Session ${d.continuedInSessionId}`;
+        return `Continued in session ${d.continuedInSessionId}`;
       default:
         return e.metaType;
     }
@@ -65,17 +65,17 @@
 <div class="entry {e.kind}" class:sidechain={e.isSidechain && !agentId}>
   {#if e.kind === 'user-text'}
     {#if userView?.type === 'command'}
-      <div class="line cmd"><span class="tag">Befehl</span><span class="mono">{userView.name} {userView.args}</span></div>
+      <div class="line cmd"><span class="tag">Command</span><span class="mono">{userView.name} {userView.args}</span></div>
     {:else if userView?.type === 'stdout'}
-      <Output text={userView.text} label="Ausgabe" max={200} />
+      <Output text={userView.text} label="Output" max={200} />
     {:else if userView?.type === 'notification'}
-      <div class="notif"><span class="tag">Benachrichtigung</span><pre>{userView.text}</pre></div>
+      <div class="notif"><span class="tag">Notification</span><pre>{userView.text}</pre></div>
     {:else if userView?.type === 'meta' || e.isMeta}
-      <details class="line dim"><summary>Kontext für das Modell</summary><pre>{e.text}</pre></details>
+      <details class="line dim"><summary>Context for the model</summary><pre>{e.text}</pre></details>
     {:else}
       <div class="user">
         <div class="who">
-          {e.isCompactSummary ? 'Zusammenfassung (Kompaktierung)' : agentId ? 'Auftrag' : 'Nutzer'}
+          {e.isCompactSummary ? 'Summary (compaction)' : agentId ? 'Task' : 'User'}
           {#if e.promptSource && e.promptSource !== 'user'}<span class="badge">{e.promptSource}</span>{/if}
           {#if e.permissionMode}<span class="badge">{e.permissionMode}</span>{/if}
         </div>
@@ -94,18 +94,18 @@
   {:else if e.kind === 'thinking'}
     <button class="line think" onclick={() => (thinkingOpen = !thinkingOpen)}>
       <span class="tag">{thinkingOpen ? '▾' : '▸'} Thinking</span>
-      {#if !thinkingOpen}<span class="ellipsis">{e.redacted ? '(verschlüsselt)' : e.text}</span>{/if}
+      {#if !thinkingOpen}<span class="ellipsis">{e.redacted ? '(encrypted)' : e.text}</span>{/if}
     </button>
-    {#if thinkingOpen}<pre class="think-body">{e.redacted ? '(verschlüsselt)' : e.text}</pre>{/if}
+    {#if thinkingOpen}<pre class="think-body">{e.redacted ? '(encrypted)' : e.text}</pre>{/if}
   {:else if e.kind === 'image'}
-    <div class="line"><span class="tag">Bild</span><span class="muted">{e.mediaType}</span></div>
+    <div class="line"><span class="tag">Image</span><span class="muted">{e.mediaType}</span></div>
   {:else if e.kind === 'system'}
     <div class="line sys {e.subtype}" class:err={e.level === 'error' || e.subtype === 'api_error'}>
       <span class="tag">{e.subtype}</span><span class="ellipsis">{systemLine()}</span>
     </div>
   {:else if e.kind === 'attachment'}
     <details class="line dim">
-      <summary><span class="tag">Anhang</span> {e.attachmentType}</summary>
+      <summary><span class="tag">Attachment</span> {e.attachmentType}</summary>
       <JsonView value={e.data} />
     </details>
   {:else if e.kind === 'meta'}
@@ -114,22 +114,22 @@
       <JsonView value={e.data} />
     </details>
   {:else if e.kind === 'tool-result'}
-    <div class="line"><span class="tag">Tool-Ergebnis ohne Aufruf</span><span class="mono faint">{e.toolUseId}</span></div>
+    <div class="line"><span class="tag">Tool result without call</span><span class="mono faint">{e.toolUseId}</span></div>
   {:else if e.kind === 'unknown'}
     <div class="unknown">
-      <span class="tag">Unbekannter Record: {e.recordType}</span>
+      <span class="tag">Unknown record: {e.recordType}</span>
       <JsonView value={e.raw} />
     </div>
   {/if}
   {#if extraOpen && e.extra}<JsonView value={e.extra} />{/if}
   <div class="side">
     {#if e.extra && e.kind !== 'unknown'}
-      <button class="icon-btn" title="Felder, die kein Decoder kennt: {Object.keys(e.extra).join(', ')}" onclick={() => (extraOpen = !extraOpen)}
+      <button class="icon-btn" title="Fields no decoder knows: {Object.keys(e.extra).join(', ')}" onclick={() => (extraOpen = !extraOpen)}
         >+{Object.keys(e.extra).length}</button
       >
     {/if}
     <span class="ts">{time(e.timestamp)}</span>
-    <button class="icon-btn" title="Rohdaten (Zeile {e.line + 1}, Decoder {e.decoder})" onclick={() => showRaw(sessionId, agentId, e.line)}>{'{ }'}</button>
+    <button class="icon-btn" title="Raw data (line {e.line + 1}, decoder {e.decoder})" onclick={() => showRaw(sessionId, agentId, e.line)}>{'{ }'}</button>
   </div>
 </div>
 

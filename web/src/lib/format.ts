@@ -19,20 +19,20 @@ export function ago(t: string | number | undefined, now: number): string {
   const ms = toMs(t);
   if (ms === undefined) return '–';
   const d = now - ms;
-  if (d < 5000) return 'gerade eben';
-  return `vor ${duration(d)}`;
+  if (d < 5000) return 'just now';
+  return `${duration(d)} ago`;
 }
 
 export function dateTime(t: string | number | undefined): string {
   const ms = toMs(t);
   if (ms === undefined) return '–';
-  return new Date(ms).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  return new Date(ms).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
 export function time(t: string | number | undefined): string {
   const ms = toMs(t);
   if (ms === undefined) return '';
-  return new Date(ms).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return new Date(ms).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 export function tokens(n: number | undefined): string {

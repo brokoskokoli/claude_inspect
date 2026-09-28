@@ -72,7 +72,7 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
       await stat(file);
     } catch {
       res.writeHead(503, { 'content-type': 'text/plain; charset=utf-8' });
-      res.end('Frontend nicht gebaut. Bitte `npm run build` ausführen (oder `npm run dev:web` für die Entwicklung).');
+      res.end('UI not built. Run `npm run build` first (or `npm run dev:web` for development).');
       return;
     }
     res.writeHead(200, { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' });
@@ -85,7 +85,7 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
       if (!hostOk(req)) return json(res, 403, { error: 'host not allowed' });
       if (!authed(req, url)) {
         res.writeHead(401, { 'content-type': 'text/plain; charset=utf-8' });
-        return res.end('Nicht autorisiert – bitte die URL mit ?t=… aus der Konsole öffnen.');
+        return res.end('Not authorized – open the URL with ?t=… printed in the console.');
       }
       // Token aus der URL in ein Cookie übernehmen, damit Folgeaufrufe ohne ?t= funktionieren.
       if (!opts.noAuth && url.searchParams.has('t')) {

@@ -12,7 +12,7 @@ export interface HistoryPrompt {
 export const historyPromptDecoder: Decoder<HistoryPrompt> = {
   id: 'history.prompt@1',
   source: 'history',
-  description: 'Eingabe-Historie (Prompt, Projekt, Session, Zeit)',
+  description: 'prompt history (prompt, project, session, time)',
   match: (raw) => (typeof raw.display === 'string' ? 10 : 0),
   decode: (raw) => ({ display: str(raw.display) ?? '', timestamp: num(raw.timestamp), project: str(raw.project), sessionId: str(raw.sessionId) }),
   knownFields: () => ['display', 'timestamp', 'project', 'sessionId', 'pastedContents'],
@@ -21,7 +21,7 @@ export const historyPromptDecoder: Decoder<HistoryPrompt> = {
 export const historyFallback: Decoder<HistoryPrompt> = {
   id: 'history.fallback',
   source: 'history',
-  description: 'Unbekannter History-Eintrag',
+  description: 'unknown history entry',
   match: () => 1,
   decode: (raw) => ({ display: JSON.stringify(raw).slice(0, 200) }),
 };

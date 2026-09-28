@@ -1,9 +1,17 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Claude Inspect</title>
+    <meta name="description" content="Live dashboard and history viewer for Claude Code agents" />
+    <script>
+      // apply the saved theme before the first paint (no light flash in dark mode)
+      try {
+        const t = localStorage.getItem('claude-inspect.theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch {}
+    </script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='11' fill='none' stroke='%23d97757' stroke-width='4'/><circle cx='16' cy='16' r='4' fill='%23d97757'/></svg>" />
   </head>
   <body>

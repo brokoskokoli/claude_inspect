@@ -10,9 +10,9 @@
 
 <pre class="cmd">$ {s(use.input.command)}</pre>
 <div class="flags">
-  {#if use.input.run_in_background}<span class="badge info">Hintergrund</span>{/if}
+  {#if use.input.run_in_background}<span class="badge info">background</span>{/if}
   {#if use.input.timeout}<span class="badge">Timeout {Number(use.input.timeout) / 1000}s</span>{/if}
-  {#if st?.interrupted}<span class="badge error">unterbrochen</span>{/if}
+  {#if st?.interrupted}<span class="badge error">interrupted</span>{/if}
   {#if st?.backgroundTaskId}<span class="badge">Task {s(st.backgroundTaskId)}</span>{/if}
   {#if st?.returnCodeInterpretation}<span class="badge">{s(st.returnCodeInterpretation)}</span>{/if}
 </div>

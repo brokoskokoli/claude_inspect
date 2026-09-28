@@ -87,7 +87,7 @@ export function analyze(entries: Entry[]): TranscriptAnalysis {
   for (let i = entries.length - 1; i >= 0; i--) {
     const e = entries[i];
     if (e.kind === 'system' && e.subtype === 'api_error') {
-      a.current = { kind: 'error', label: short(e.text ?? String((e.data.error as { message?: string })?.message ?? 'API-Fehler')), since: e.timestamp };
+      a.current = { kind: 'error', label: short(e.text ?? String((e.data.error as { message?: string })?.message ?? 'API error')), since: e.timestamp };
       a.errored = true;
       return a;
     }
@@ -110,13 +110,13 @@ export function analyze(entries: Entry[]): TranscriptAnalysis {
         }
         break;
       case 'thinking':
-        a.current = { kind: 'thinking', label: short(last.text) || 'denkt nach', since: last.timestamp };
+        a.current = { kind: 'thinking', label: short(last.text) || 'thinking', since: last.timestamp };
         break;
       case 'tool-result':
-        a.current = { kind: 'waiting', label: 'Modell arbeitet (nach Tool-Ergebnis)', since: last.timestamp };
+        a.current = { kind: 'waiting', label: 'model working (after tool result)', since: last.timestamp };
         break;
       case 'user-text':
-        a.current = { kind: 'waiting', label: 'neue Eingabe: ' + short(last.text, 100), since: last.timestamp };
+        a.current = { kind: 'waiting', label: 'new input: ' + short(last.text, 100), since: last.timestamp };
         break;
     }
   }

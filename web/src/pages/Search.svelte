@@ -15,12 +15,12 @@
 
   const KIND: Record<string, string> = {
     'user-text': 'Prompt',
-    'assistant-text': 'Antwort',
+    'assistant-text': 'Response',
     thinking: 'Thinking',
-    'tool-use': 'Tool-Aufruf',
-    'tool-result': 'Tool-Ergebnis',
+    'tool-use': 'Tool call',
+    'tool-result': 'Tool result',
     system: 'System',
-    'history-prompt': 'Prompt (Historie)',
+    'history-prompt': 'Prompt (history)',
   };
 
   async function run() {
@@ -53,14 +53,14 @@
 </script>
 
 <div class="page-head">
-  <h2>Suche</h2>
-  <span class="muted">Volltext über alle Verläufe, Subagenten und die Eingabe-Historie · höchstens 5 Treffer je Datei, neueste zuerst</span>
+  <h2>Search</h2>
+  <span class="muted">Full text across all transcripts, subagents and the prompt history · at most 5 hits per file, newest first</span>
 </div>
 <form class="filters bar" onsubmit={(e) => (e.preventDefault(), run())}>
-  <input type="search" placeholder="Suchbegriff (mind. 2 Zeichen) …" bind:value={q} />
-  <button class="btn" type="submit" disabled={loading}>{loading ? 'Suche …' : 'Suchen'}</button>
+  <input type="search" placeholder="Search term (at least 2 characters) …" bind:value={q} />
+  <button class="btn" type="submit" disabled={loading}>{loading ? 'Searching …' : 'Search'}</button>
   {#if result}
-    <span class="faint">{result.hits.length} Treffer · {result.scannedFiles}/{result.totalFiles} Dateien · {(result.ms / 1000).toFixed(1)} s{result.truncated ? ' · abgebrochen (Limit)' : ''}</span>
+    <span class="faint">{result.hits.length} hits · {result.scannedFiles}/{result.totalFiles} files · {(result.ms / 1000).toFixed(1)} s{result.truncated ? ' · stopped (limit)' : ''}</span>
   {/if}
 </form>
 
@@ -73,14 +73,14 @@
         <div class="meta">
           <span class="badge">{KIND[h.kind] ?? h.kind}{h.toolName ? ` · ${h.toolName}` : ''}</span>
           <strong>{h.project}</strong>
-          <span class="muted ellipsis">{h.title ?? h.sessionId.slice(0, 8)}{h.agentId ? ' · Subagent' : ''}</span>
+          <span class="muted ellipsis">{h.title ?? h.sessionId.slice(0, 8)}{h.agentId ? ' · subagent' : ''}</span>
           <span class="faint when">{dateTime(h.ts)}</span>
         </div>
         <div class="snip">{@html mark(h.snippet, result.query)}</div>
       </svelte:element>
     {/each}
   </div>
-  {#if !result.hits.length}<p class="muted">Keine Treffer.</p>{/if}
+  {#if !result.hits.length}<p class="muted">No hits.</p>{/if}
 {/if}
 
 <style>

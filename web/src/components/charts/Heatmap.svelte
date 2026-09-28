@@ -7,7 +7,7 @@
   const step = (v: number) => (v <= 0 ? 0 : Math.min(7, 1 + Math.floor((Math.sqrt(v / max) * 7) - 1e-9)));
 </script>
 
-<div class="heat" role="img" aria-label="Aktivität nach Wochentag und Uhrzeit">
+<div class="heat" role="img" aria-label="Activity by weekday and hour">
   <div class="corner"></div>
   {#each colLabels as c, i (i)}<div class="col-label">{i % 3 === 0 ? c : ''}</div>{/each}
   {#each grid as row, r (r)}
@@ -24,12 +24,12 @@
   {/each}
 </div>
 <div class="scale faint">
-  weniger {#each [0, 1, 2, 3, 4, 5, 6, 7] as s (s)}<span class="swatch" style:background="var(--seq-{s})"></span>{/each} mehr
+  less {#each [0, 1, 2, 3, 4, 5, 6, 7] as s (s)}<span class="swatch" style:background="var(--seq-{s})"></span>{/each} more
 </div>
 {#if hover}
   <div class="tip" style:left="{hover.x + 14}px" style:top="{hover.y + 10}px">
-    <strong>{rowLabels[hover.r]}, {colLabels[hover.c]}–{hover.c + 1} Uhr</strong><br />
-    {grid[hover.r][hover.c].toLocaleString('de-DE')} {unit}
+    <strong>{rowLabels[hover.r]}, {colLabels[hover.c]}–{hover.c + 1}h</strong><br />
+    {grid[hover.r][hover.c].toLocaleString('en-US')} {unit}
   </div>
 {/if}
 

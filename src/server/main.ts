@@ -31,8 +31,8 @@ const { token } = startServer(inspector, {
 });
 
 const url = values.dev ? `http://127.0.0.1:${port}/` : `http://127.0.0.1:${port}/?t=${token}`;
-console.log(`claude-inspect liest ${CLAUDE_DIR} (Start in ${Date.now() - t0} ms)`);
-console.log(values.dev ? `API (dev, ohne Token): ${url}  –  Frontend: npm run dev:web` : `Dashboard: ${url}`);
+console.log(`claude-inspect is reading ${CLAUDE_DIR} (started in ${Date.now() - t0} ms)`);
+console.log(values.dev ? `API (dev, no token): ${url}  –  UI: npm run dev:web` : `Dashboard: ${url}`);
 if (values.open && process.platform === 'darwin') execFile('open', [url]);
 else if (values.open && process.platform === 'linux') execFile('xdg-open', [url]);
 

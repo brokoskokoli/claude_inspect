@@ -18,11 +18,11 @@
 
 <div class="path mono">
   {s(use.input.file_path)}
-  {#if use.input.offset || use.input.limit}<span class="muted">· ab {use.input.offset ?? 1}, {use.input.limit ?? '∞'} Zeilen</span>{/if}
-  {#if file?.totalLines}<span class="muted">· {n(file.numLines)} / {n(file.totalLines)} Zeilen</span>{/if}
+  {#if use.input.offset || use.input.limit}<span class="muted">· from {use.input.offset ?? 1}, {use.input.limit ?? '∞'} lines</span>{/if}
+  {#if file?.totalLines}<span class="muted">· {n(file.numLines)} / {n(file.totalLines)} lines</span>{/if}
 </div>
 {#if st?.type === 'image'}
-  <span class="badge">Bild gelesen</span>
+  <span class="badge">image read</span>
 {:else if numbered !== undefined}
   <Output text={numbered} />
 {:else}

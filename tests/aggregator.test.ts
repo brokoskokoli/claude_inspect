@@ -17,7 +17,7 @@ const records = [
   { type: 'assistant', uuid: 'a2', timestamp: T(2), message: { id: 'msg_1', model: 'claude-sonnet-5', content: [{ type: 'tool_use', id: 'toolu_a', name: 'Edit', input: { file_path: '/r/a.ts' } }], usage } },
 ];
 
-test('aggregiert Tokens, Kosten, Tool-Dauer und Dateien', async () => {
+test('aggregates tokens, cost, tool duration and files', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'ci-agg-'));
   const path = join(dir, 's1.jsonl');
   writeFileSync(path, records.map((r) => JSON.stringify(r)).join('\n') + '\n');
@@ -25,7 +25,7 @@ test('aggregiert Tokens, Kosten, Tool-Dauer und Dateien', async () => {
   await h.refresh([{ sessionId: 's1', projectDir: 'p', path, size: 1, mtime: Date.now() }], async () => 'demo', true);
 
   const s = h.stats({});
-  assert.equal(s.totals.tokens.output, 100, 'Usage je Message-Id nur einmal');
+  assert.equal(s.totals.tokens.output, 100, 'usage counted once per message id');
   assert.equal(s.totals.prompts, 1);
   assert.equal(s.totals.toolCalls, 1);
   assert.equal(s.byModel[0].model, 'claude-sonnet-5');

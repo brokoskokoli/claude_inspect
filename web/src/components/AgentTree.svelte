@@ -53,12 +53,12 @@
         <span class="body">
           <span class="line1">
             <span class="type">{a.agentType ?? 'agent'}</span>
-            {#if a.background}<span class="tag" title="Hintergrund">bg</span>{/if}
-            {#if a.status === 'done'}<span class="tag done">fertig</span>{/if}
+            {#if a.background}<span class="tag" title="background">bg</span>{/if}
+            {#if a.status === 'done'}<span class="tag done">finished</span>{/if}
             <span class="faint when">{ago(a.lastActivityAt, clock.now)}</span>
           </span>
           <span class="desc">{a.status === 'running' && a.current ? a.current.label : (a.description ?? a.agentId)}</span>
-          <span class="faint stats">{modelName(a.model)} · {a.toolCalls ?? 0} Tools · {tokens(a.outputTokens)} out</span>
+          <span class="faint stats">{modelName(a.model)} · {a.toolCalls ?? 0} tools · {tokens(a.outputTokens)} out</span>
         </span>
       </a>
       {#if children.get(a.agentId)?.length}
@@ -76,11 +76,11 @@
           <span class="line1">
             <span class="type">⇢ {c.agent ?? 'claude'}</span>
             <SpawnBadge link={c} />
-            {#if c.status === 'done'}<span class="tag done">fertig</span>{/if}
+            {#if c.status === 'done'}<span class="tag done">finished</span>{/if}
             <span class="faint when">{ago(c.lastActivityAt, clock.now)}</span>
           </span>
           <span class="desc">{c.status !== 'done' && c.current ? c.current.label : (c.title ?? c.childSessionId)}</span>
-          <span class="faint stats">eigene Session · {modelName(c.model)}{c.pid ? ` · pid ${c.pid}` : ''}</span>
+          <span class="faint stats">own session · {modelName(c.model)}{c.pid ? ` · pid ${c.pid}` : ''}</span>
         </span>
       </a>
     </li>
@@ -92,7 +92,7 @@
     <li>
       <a class="node main" class:sel={!selected} href={href.session(sessionId)}>
         <StatusDot state={mainState} size={8} />
-        <span class="body"><span class="type">Hauptagent</span><span class="desc">{mainLabel}</span></span>
+        <span class="body"><span class="type">Main agent</span><span class="desc">{mainLabel}</span></span>
       </a>
       {#if children.get(undefined)?.length}
         <ul>

@@ -14,12 +14,12 @@
 </script>
 
 <div class="intro">
-  <h2>Formate & Schema-Drift</h2>
+  <h2>Formats & schema drift</h2>
   <p class="muted">
-    Jeder Record wird einzeln erkannt: Alle Decoder einer Quelle bewerten ihn, der mit dem höchsten Score gewinnt. Unbekannte
-    Records landen beim Fallback und werden roh angezeigt. Unten stehen Felder, die kein Decoder kennt. Sie erscheinen in der
-    Oberfläche unter „weitere Felder“ und sind Kandidaten für einen neuen oder erweiterten Decoder (siehe
-    <code>docs/FORMATS.md</code>). Die Zahlen beziehen sich auf alles, was seit dem Serverstart gelesen wurde.
+    Every record is detected individually: all decoders of a source score it and the highest score wins. Unknown records
+    end up in the fallback and are shown raw. Below are fields no decoder knows yet – they appear in the UI as “more
+    fields” and are candidates for a new or extended decoder (see <code>docs/FORMATS.md</code>). Numbers cover everything
+    read since the server started.
   </p>
 </div>
 
@@ -27,10 +27,10 @@
 
 {#if report}
   <section>
-    <h3>Decoder</h3>
+    <h3>Decoders</h3>
     <div class="card">
       <table class="list">
-        <thead><tr><th>Quelle</th><th>Id</th><th>Versionen</th><th>Beschreibung</th><th class="num">Treffer</th></tr></thead>
+        <thead><tr><th>Source</th><th>Id</th><th>Versions</th><th>Description</th><th class="num">Hits</th></tr></thead>
         <tbody>
           {#each bySource as [source, decoders] (source)}
             {#each decoders as d, i (d.id)}
@@ -49,13 +49,13 @@
   </section>
 
   <section>
-    <h3>Unbekannte Felder <span class="muted">({report.drift.length})</span></h3>
+    <h3>Unknown fields <span class="muted">({report.drift.length})</span></h3>
     {#if report.drift.length === 0}
-      <p class="muted">Keine – alle gelesenen Records werden vollständig verstanden.</p>
+      <p class="muted">None – every record read so far is fully understood.</p>
     {:else}
       <div class="card">
         <table class="list">
-          <thead><tr><th>Quelle</th><th>Record-Typ</th><th>Feld</th><th>Versionen</th><th class="num">Anzahl</th></tr></thead>
+          <thead><tr><th>Source</th><th>Record type</th><th>Field</th><th>Versions</th><th class="num">Count</th></tr></thead>
           <tbody>
             {#each report.drift as x (x.source + x.recordType + x.field)}
               <tr>

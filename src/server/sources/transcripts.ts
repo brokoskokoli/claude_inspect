@@ -37,7 +37,7 @@ export class Transcript {
       let decoded: DecodedEntry[];
       let decoder: string;
       if (l.error !== undefined) {
-        decoded = [{ kind: 'unknown', recordType: '(defekte Zeile)', raw: l.error }];
+        decoded = [{ kind: 'unknown', recordType: '(corrupt line)', raw: l.error }];
         decoder = 'jsonl.parse-error';
       } else {
         ({ out: decoded, decoder } = registry.decode<DecodedEntry[]>('transcript', l.value, this.path, l.line));

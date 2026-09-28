@@ -10,7 +10,7 @@
 
 <div class="path mono">
   {s(use.input.file_path)}
-  {#if st?.type}<span class="badge">{st.type === 'create' ? 'neu' : st.type === 'update' ? 'überschrieben' : s(st.type)}</span>{/if}
+  {#if st?.type}<span class="badge">{st.type === 'create' ? 'new' : st.type === 'update' ? 'overwritten' : s(st.type)}</span>{/if}
 </div>
 {#if patch}
   <Diff hunks={patch} />

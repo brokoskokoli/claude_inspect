@@ -9,4 +9,4 @@
 
 {#if hasInput}<JsonView value={use.input} />{/if}
 <Output text={resultText(result)} error={result?.isError} />
-{#if result?.structured !== undefined}<JsonView value={result.structured} label="Strukturiertes Ergebnis" />{/if}
+{#if result?.structured !== undefined}<JsonView value={result.structured} label="Structured result" />{/if}

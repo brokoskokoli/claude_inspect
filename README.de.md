@@ -1,6 +1,8 @@
 # claude-inspect
 
 > English: [README.md](README.md) · Screenshots: [docs/screenshots](docs/screenshots)
+>
+> Die Oberfläche ist englisch; hell, dunkel oder nach Systemeinstellung (Umschalter oben rechts).
 
 Lokales Live-Dashboard für Claude-Code-Agenten. Liest **passiv** die Dateien unter
 `~/.claude`, ohne Hooks, ohne Konfigurationsänderung und ohne eigene Datenablage.
@@ -40,19 +42,19 @@ Ohne eigene Daten ausprobieren: `npm run demo` (fiktiver `~/.claude` mit laufend
   Subagenten, Modell, Kontextgröße, Tokens und Permission-Mode
 - **Sessions**: alle Transcripts mit Suche
 - **Session-Detail**, mit Tabs:
-  - *Verlauf*: Agentenbaum (Hauptagent → Subagenten, auch verschachtelt),
+  - *Transcript*: Agentenbaum (Hauptagent → Subagenten, auch verschachtelt),
   kompletter Verlauf mit Tool-Renderern (Bash, Read, Edit/Write als Diff, Agent mit Link
   zum Subagenten, Grep/Glob, generisch für alle anderen), Filter, Suche und Rohansicht
   jeder Zeile. Bei laufenden Sessions werden Änderungen live nachgeladen.
-  - *Zeitleiste*: eine Spur je Agent (inkl. gestarteter Sitzungen), Tool-Aufrufe als
+  - *Timeline*: eine Spur je Agent (inkl. gestarteter Sitzungen), Tool-Aufrufe als
     Balken, Aufruf-Verbindungen, Pausen über 10 min zusammengeschoben, Zoom
-  - *Aufrufgraph*: wer wen aufgerufen hat, inkl. Fork/Fortsetzung
+  - *Call graph*: wer wen aufgerufen hat, inkl. Fork/Fortsetzung
   - *Tasks*: Task-Liste der Session als Board
-- **Statistik**: API-Gegenwert (Schätzung nach Listenpreisen), Tokens je Modell/Tag/Projekt,
+- **Statistics**: API-Gegenwert (Schätzung nach Listenpreisen), Tokens je Modell/Tag/Projekt,
   Cache-Anteil, Aktivitäts-Heatmap, Tool-Statistik mit Fehlern und Dauer (p95)
 - **Tools**: alle Tool-Aufrufe aller Sessions, filterbar; Klick springt an die Stelle im Verlauf
-- **Dateien**: welche Dateien Agenten gelesen/geändert haben
-- **Suche**: Volltext über alle Verläufe, Subagenten und die Eingabe-Historie
+- **Files**: welche Dateien Agenten gelesen/geändert haben
+- **Search**: Volltext über alle Verläufe, Subagenten und die Eingabe-Historie
 - **Claude-Aufrufe**: Sitzungen, die ein Agent per Bash startet (`claude -p …`,
   `claude --agent …`), werden dem aufrufenden Tool-Aufruf zugeordnet und erscheinen im
   Agentenbaum, auf der Dashboard-Karte und am Bash-Aufruf. Konfidenz:
@@ -60,7 +62,7 @@ Ohne eigene Daten ausprobieren: `npm run demo` (fiktiver `~/.claude` mit laufend
   - *sicher*: erster Prompt des Kindes steht im Befehl, dazu Zeit, `--agent` und Verzeichnis
   - *wahrscheinlich*: schwächere Indizien, z. B. nur kurzer Prompt und Zeitfenster
   (siehe `src/server/sources/spawns.ts`)
-- **Formate**: registrierte Decoder mit Trefferzahlen und alle Felder, die noch kein
+- **Formats**: registrierte Decoder mit Trefferzahlen und alle Felder, die noch kein
   Decoder kennt (Schema-Drift)
 
 ## Architektur

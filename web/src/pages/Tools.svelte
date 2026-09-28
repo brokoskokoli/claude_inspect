@@ -47,24 +47,24 @@
 </script>
 
 <div class="page-head">
-  <h2>Tool-Aufrufe</h2>
-  <span class="muted">{total.toLocaleString('de-DE')} Treffer</span>
-  {#if file}<span class="badge info" title={file}>Datei: {shortPath(file)}</span>{/if}
+  <h2>Tool calls</h2>
+  <span class="muted">{total.toLocaleString('en-US')} matches</span>
+  {#if file}<span class="badge info" title={file}>File: {shortPath(file)}</span>{/if}
   {#if session}<span class="badge info">Session {session.slice(0, 8)}</span>{/if}
 </div>
 <div class="filters bar">
   <HistoryFilters bind:filter />
   <select bind:value={name} aria-label="Tool">
-    <option value="">Alle Tools</option>
+    <option value="">All tools</option>
     {#each names as n (n)}<option value={n}>{n}</option>{/each}
   </select>
-  <label class="chk"><input type="checkbox" bind:checked={errors} /> nur Fehler/Abgelehnt</label>
-  <input type="search" placeholder="Befehl, Datei, Beschreibung …" bind:value={q} />
+  <label class="chk"><input type="checkbox" bind:checked={errors} /> errors/denied only</label>
+  <input type="search" placeholder="Command, file, description …" bind:value={q} />
 </div>
 
 <div class="card">
   <table class="list">
-    <thead><tr><th>Zeit</th><th>Tool</th><th>Aufruf</th><th>Projekt</th><th class="num">Dauer</th><th></th></tr></thead>
+    <thead><tr><th>Time</th><th>Tool</th><th>Call</th><th>Project</th><th class="num">Duration</th><th></th></tr></thead>
     <tbody>
       {#each rows as r, i (i)}
         {@const mcp = splitMcpName(r.name)}
@@ -72,16 +72,16 @@
           <td class="nowrap muted">{dateTime(r.ts)}</td>
           <td class="nowrap"><span class="swatch" style:background={toolColor(r.name)}></span> <span class="mono">{mcp.tool}</span>{#if mcp.server}<span class="faint small"> {mcp.server}</span>{/if}</td>
           <td class="sum"><div class="ellipsis">{r.summary}</div>{#if r.file}<div class="ellipsis faint small mono">{shortPath(r.file)}</div>{/if}</td>
-          <td class="nowrap muted">{r.project}{r.agentId ? ' · Subagent' : ''}</td>
+          <td class="nowrap muted">{r.project}{r.agentId ? ' · subagent' : ''}</td>
           <td class="num nowrap">{r.durationMs !== undefined ? duration(r.durationMs) : '–'}</td>
-          <td class="nowrap">{#if r.denied}<span class="badge error">abgelehnt</span>{:else if r.isError}<span class="badge error">Fehler</span>{/if}</td>
+          <td class="nowrap">{#if r.denied}<span class="badge error">denied</span>{:else if r.isError}<span class="badge error">error</span>{/if}</td>
         </tr>
       {/each}
     </tbody>
   </table>
 </div>
 {#if rows.length < total}
-  <div class="more"><button class="btn" disabled={loading} onclick={() => load(false)}>{loading ? 'Lade …' : `Weitere laden (${(total - rows.length).toLocaleString('de-DE')})`}</button></div>
+  <div class="more"><button class="btn" disabled={loading} onclick={() => load(false)}>{loading ? 'Loading …' : `Load more (${(total - rows.length).toLocaleString('en-US')})`}</button></div>
 {/if}
 
 <style>

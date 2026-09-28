@@ -1,6 +1,7 @@
 <script lang="ts">
   import { connect, live } from './lib/live.svelte';
   import { href, router } from './lib/router.svelte';
+  import { cycleTheme, theme } from './lib/theme.svelte';
   import RawModal from './components/RawModal.svelte';
   import Dashboard from './pages/Dashboard.svelte';
   import Files from './pages/Files.svelte';
@@ -13,6 +14,7 @@
 
   connect();
 
+  const THEME_LABEL = { system: 'Theme: system', light: 'Theme: light', dark: 'Theme: dark' } as const;
   const running = $derived(live.dashboard?.processes.filter((p) => p.process.alive).length ?? 0);
   const r = $derived(router.route);
 </script>
@@ -27,13 +29,28 @@
   <nav>
     <a href={href.dashboard()} class:active={r.name === 'dashboard'}>Live <span class="count">{running}</span></a>
     <a href={href.sessions()} class:active={r.name === 'sessions' || r.name === 'session'}>Sessions</a>
-    <a href={href.stats()} class:active={r.name === 'stats'}>Statistik</a>
+    <a href={href.stats()} class:active={r.name === 'stats'}>Statistics</a>
     <a href={href.tools()} class:active={r.name === 'tools'}>Tools</a>
-    <a href={href.files()} class:active={r.name === 'files'}>Dateien</a>
-    <a href={href.search()} class:active={r.name === 'search'}>Suche</a>
-    <a href={href.formats()} class:active={r.name === 'formats'}>Formate</a>
+    <a href={href.files()} class:active={r.name === 'files'}>Files</a>
+    <a href={href.search()} class:active={r.name === 'search'}>Search</a>
+    <a href={href.formats()} class:active={r.name === 'formats'}>Formats</a>
   </nav>
-  <span class="conn" class:ok={live.connected} title={live.connected ? 'Live-Verbindung aktiv' : 'Keine Verbindung zum Server'}>
+  <button class="theme" onclick={cycleTheme} title="{THEME_LABEL[theme.mode]} (click to switch)" aria-label={THEME_LABEL[theme.mode]}>
+    {#if theme.mode === 'light'}
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"
+        ><circle cx="12" cy="12" r="4.5" fill="currentColor" /><g stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          ><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></g
+        ></svg
+      >
+    {:else if theme.mode === 'dark'}
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" fill="currentColor" /></svg>
+    {:else}
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"
+        ><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2" /><path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="currentColor" /></svg
+      >
+    {/if}
+  </button>
+  <span class="conn" class:ok={live.connected} title={live.connected ? 'Live connection active' : 'No connection to the server'}>
     <span class="dot"></span>{live.connected ? 'live' : 'offline'}
   </span>
 </header>
@@ -118,8 +135,22 @@
     font-size: 11.5px;
     text-align: center;
   }
-  .conn {
+  .theme {
     margin-left: auto;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--muted);
+  }
+  .theme:hover {
+    color: var(--text);
+    background: var(--surface-2);
+  }
+  .conn {
     display: flex;
     align-items: center;
     gap: 6px;
