@@ -8,7 +8,7 @@
   const d = $derived(live.dashboard);
   // Per claude-Aufruf gestartete Sitzungen direkt hinter ihren Aufrufer sortieren.
   const alive = $derived.by(() => {
-    const list = d?.processes.filter((p) => p.process.alive) ?? [];
+    const list = d?.processes.filter((p) => p.process.alive && !p.inactive) ?? [];
     const bySession = new Map(list.map((p) => [p.process.sessionId, p]));
     const childrenOf = new Map<string, typeof list>();
     const roots: typeof list = [];
@@ -25,6 +25,12 @@
     roots.forEach(visit);
     return out;
   });
+  const inactive = $derived(d?.processes.filter((p) => p.process.alive && p.inactive) ?? []);
+  const INACTIVE_REASON = {
+    exit: 'left with /exit – process still running in the background',
+    archived: 'ended or archived on another device',
+    'no-conversation': 'no conversation – process kept alive by the IDE/SDK host',
+  } as const;
   const dead = $derived(d?.processes.filter((p) => !p.process.alive) ?? []);
   const busy = $derived(alive.filter((p) => p.process.status !== 'idle').length);
 </script>
@@ -48,6 +54,27 @@
       </div>
     {/if}
   </section>
+
+  {#if inactive.length}
+    <section>
+      <div class="section-head"><h2>Inactive</h2><span class="muted">process still running, but nobody is using the session</span></div>
+      <div class="card">
+        <table class="list">
+          <tbody>
+            {#each inactive as item (item.process.pid)}
+              <tr class="clickable" onclick={() => (location.hash = href.session(item.process.sessionId))}>
+                <td>{item.process.name ?? item.session?.title ?? item.process.sessionId.slice(0, 8)}</td>
+                <td class="muted small">{shortPath(item.process.cwd)}</td>
+                <td class="muted small">{INACTIVE_REASON[item.inactive!.reason]}{#if item.inactive!.reason === 'no-conversation' && item.process.entrypoint} ({item.process.entrypoint}){/if}{#if item.job?.state} · job {item.job.state}{/if}</td>
+                <td class="muted small mono">pid {item.process.pid}</td>
+                <td class="muted nowrap">{ago(item.inactive!.at ?? item.session?.lastActivityAt, clock.now)}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {/if}
 
   {#if d.orphanJobs.length || dead.length}
     <section class="two">

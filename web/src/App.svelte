@@ -15,7 +15,7 @@
   connect();
 
   const THEME_LABEL = { system: 'Theme: system', light: 'Theme: light', dark: 'Theme: dark' } as const;
-  const running = $derived(live.dashboard?.processes.filter((p) => p.process.alive).length ?? 0);
+  const running = $derived(live.dashboard?.processes.filter((p) => p.process.alive && !p.inactive).length ?? 0);
   const r = $derived(router.route);
 </script>
 

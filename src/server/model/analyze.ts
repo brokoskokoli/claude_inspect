@@ -1,4 +1,4 @@
-import type { ActivityInfo, Entry, PendingTool, ToolUseEntry } from '../../shared/types.js';
+import type { ActivityInfo, Entry, PendingTool, SessionEnded, ToolUseEntry } from '../../shared/types.js';
 import { toolSummary } from '../../shared/tools.js';
 import { num, str } from '../formats/util.js';
 
@@ -20,6 +20,8 @@ export interface TranscriptAnalysis {
   finished: boolean;
   /** Mit Fehler abgebrochen (API-Fehler als letztes Ereignis). */
   errored: boolean;
+  /** Session nach der letzten Eingabe verlassen (/exit) oder von anderswo beendet/archiviert. */
+  ended?: SessionEnded;
 }
 
 const SIGNIFICANT = new Set(['user-text', 'assistant-text', 'thinking', 'tool-use', 'tool-result']);
@@ -31,6 +33,26 @@ function short(s: string, max = 140): string {
     .replace(/\s+/g, ' ')
     .trim();
   return one.length > max ? one.slice(0, max - 1) + '…' : one;
+}
+
+/**
+ * Wurde die Session nach der letzten echten Eingabe verlassen? Eine neue Eingabe danach hebt das auf.
+ * - `/exit`: bei Hintergrund-Sessions trennt das nur das Terminal, der Prozess läuft weiter
+ * - Remote Control meldet, dass die Session auf einem anderen Gerät beendet oder archiviert wurde
+ */
+function endedAfterLastPrompt(entries: Entry[]): SessionEnded | undefined {
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const e = entries[i];
+    if (e.kind === 'user-text') {
+      if (/^<command-name>\/(exit|quit)<\/command-name>/.test(e.text)) return { reason: 'exit', at: e.timestamp };
+      if (!e.isMeta && e.text && !e.text.startsWith('<')) return undefined;
+    } else if (e.kind === 'system' && /ended or archived/i.test(e.text ?? '')) {
+      return { reason: 'archived', at: e.timestamp };
+    } else if (e.kind === 'assistant-text' || e.kind === 'tool-use') {
+      return undefined; // danach wurde noch gearbeitet
+    }
+  }
+  return undefined;
 }
 
 export function analyze(entries: Entry[]): TranscriptAnalysis {
@@ -81,6 +103,8 @@ export function analyze(entries: Entry[]): TranscriptAnalysis {
     summary: toolSummary(t.name, t.input),
     since: t.timestamp,
   }));
+
+  a.ended = endedAfterLastPrompt(entries);
 
   // Aktuelle Aktivität aus dem letzten bedeutsamen Eintrag
   let last: Entry | undefined;

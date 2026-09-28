@@ -32,6 +32,17 @@ import { SpawnIndex } from './sources/spawns.js';
 import { agentCallIds, listSubagents, type SubagentFile } from './sources/subagents.js';
 import { TranscriptStore, type Transcript } from './sources/transcripts.js';
 
+/**
+ * IDE-Erweiterungen und SDK-Hosts (VS Code, JetBrains ACP …) halten claude-Prozesse am Leben,
+ * auch wenn das Chat-Panel längst zu ist. Ohne Transcript gab es darin nie ein Gespräch.
+ * Terminal-Sessions (entrypoint "cli") bleiben außen vor: Dort sitzt jemand vor dem Prompt.
+ */
+const IDE_GRACE_MS = 2 * 60_000;
+function idleIdeProcess(p: ProcessInfo): boolean {
+  if (p.status === 'busy' || !p.entrypoint || p.entrypoint === 'cli' || p.kind === 'bg') return false;
+  return Date.now() - (p.startedAt ?? 0) > IDE_GRACE_MS;
+}
+
 /** Subagenten, deren Datei so lange unverändert ist, gelten ohne Abschluss als "stale". */
 const SUBAGENT_STALE_MS = 10 * 60_000;
 /** Subagenten erscheinen auf dem Dashboard, wenn sie so kürzlich aktiv waren. */
@@ -183,9 +194,11 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       if (p.alive) {
         try {
           dp.session = await this.sessionLive(p.sessionId, p);
+          if (dp.session?.ended && p.status !== 'busy') dp.inactive = dp.session.ended;
         } catch {
           /* Transcript nicht lesbar */
         }
+        if (!dp.session && !this.index.get(p.sessionId) && idleIdeProcess(p)) dp.inactive = { reason: 'no-conversation', at: p.updatedAt ? new Date(p.updatedAt).toISOString() : undefined };
       }
       processes.push(dp);
     }
@@ -231,6 +244,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       costUSD: a.costUSD,
       lastPrompt: a.lastPrompt,
       spawned: await this.spawnedSessions(sessionId),
+      ended: a.ended,
     };
   }
 

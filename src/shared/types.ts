@@ -206,6 +206,15 @@ export interface JobInfo {
   extra?: Record<string, unknown>;
 }
 
+export interface SessionEnded {
+  /**
+   * exit = mit /exit verlassen, archived = auf einem anderen Gerät beendet/archiviert,
+   * no-conversation = Prozess einer IDE/eines SDK ohne Transcript (z. B. Chat-Panel geschlossen)
+   */
+  reason: 'exit' | 'archived' | 'no-conversation';
+  at?: string;
+}
+
 export interface ActivityInfo {
   kind: 'tool' | 'thinking' | 'text' | 'waiting' | 'idle' | 'error';
   label: string;
@@ -257,6 +266,7 @@ export interface SessionLive {
   lastPrompt?: string;
   /** Von dieser Session per `claude`-Aufruf gestartete Sitzungen. */
   spawned: SpawnedSession[];
+  ended?: SessionEnded;
 }
 
 export interface DashboardProcess {
@@ -265,6 +275,11 @@ export interface DashboardProcess {
   session?: SessionLive;
   /** Diese Session wurde per `claude …`-Aufruf von einer anderen Session gestartet. */
   spawnedBy?: SpawnParent;
+  /**
+   * Prozess läuft noch, die Session ist aber verlassen (z. B. /exit bei einer Hintergrund-Session,
+   * die als Prozess weiterläuft). Gehört nicht zu den laufenden Agenten.
+   */
+  inactive?: SessionEnded;
 }
 
 // ---------------------------------------------------------------------------
