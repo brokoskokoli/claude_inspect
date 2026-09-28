@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![npm](https://img.shields.io/npm/v/claude-inspect)](https://www.npmjs.com/package/claude-inspect)
-![Node.js ≥ 20](https://img.shields.io/badge/node-%E2%89%A5%2020-green)
+![Node.js ≥ 22](https://img.shields.io/badge/node-%E2%89%A5%2022-green)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Svelte%205-3178c6)
 ![Dark mode](https://img.shields.io/badge/dark%20mode-%E2%9C%93-2b2a27)
 ![No hooks](https://img.shields.io/badge/Claude%20Code-no%20hooks%20needed-d97757)
@@ -69,7 +69,7 @@ becomes hard to tell *who is doing what*. claude-inspect answers:
 
 ## Quick start
 
-Requirements: Node.js ≥ 20, macOS, Linux or Windows, Claude Code writing to `~/.claude`. On Windows, live process status is read via PowerShell; the autostart service and the live `demo` are macOS/Linux only (`demo --out <dir>` works everywhere).
+Requirements: Node.js ≥ 22, macOS, Linux or Windows, Claude Code writing to `~/.claude`. On Windows, live process status is read via PowerShell; the autostart service and the live `demo` are macOS/Linux only (`demo --out <dir>` works everywhere).
 
 ```bash
 npx claude-inspect --open        # try it once
