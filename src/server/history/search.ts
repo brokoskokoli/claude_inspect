@@ -5,6 +5,7 @@ import { paths } from '../config.js';
 import { registry } from '../formats/index.js';
 import type { HistoryPrompt } from '../formats/history/prompt.js';
 import type { DecodedEntry } from '../formats/transcript/common.js';
+import { pathTail } from '../sources/projects.js';
 
 export interface SearchFile {
   path: string;
@@ -125,7 +126,7 @@ export async function search(query: string, files: SearchFile[], knownSessions: 
           if (!p.display.toLowerCase().includes(needle) || (p.sessionId && knownSessions.has(p.sessionId))) continue;
           hits.push({
             sessionId: p.sessionId ?? '',
-            project: p.project?.split('/').pop() ?? '?',
+            project: p.project ? pathTail(p.project) : '?',
             title: 'transcript no longer exists',
             line: i,
             kind: 'history-prompt',

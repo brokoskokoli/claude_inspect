@@ -155,7 +155,7 @@ export function scoreSpawn(child: ChildInfo, call: SpawnCall): { score: number; 
       evidence.push('time (rough)');
     }
   }
-  if (child.cwd && call.cwd && child.cwd.replace(/\/$/, '') === call.cwd.replace(/\/$/, '')) {
+  if (child.cwd && call.cwd && child.cwd.replace(/[\\/]+$/, '') === call.cwd.replace(/[\\/]+$/, '')) {
     score += 5;
     evidence.push('directory');
   }

@@ -1,0 +1,4 @@
+# LF everywhere – fixtures and snapshots are compared byte-exact, also on Windows runners.
+* text=auto eol=lf
+*.jpg binary
+*.png binary

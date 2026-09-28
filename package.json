@@ -49,7 +49,8 @@
     "service:status": "tsx src/server/cli.ts service status",
     "check": "tsc --noEmit && svelte-check --tsconfig ./tsconfig.web.json",
     "test": "tsx --test \"src/**/*.test.ts\" \"tests/**/*.test.ts\"",
-    "test:update": "UPDATE_SNAPSHOTS=1 tsx --test \"tests/**/*.test.ts\"",
+    "test:update": "node -e \"process.env.UPDATE_SNAPSHOTS='1'; require('node:child_process').execSync('npm test', { stdio: 'inherit' })\"",
+    "smoke": "tsx scripts/smoke.ts",
     "snapshot": "tsx src/server/cli-snapshot.ts",
     "fixtures": "tsx scripts/make-fixtures.ts",
     "prepublishOnly": "npm run check && npm test && npm run build"

@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { watch, type FSWatcher } from 'node:fs';
 import { stat } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import type {
   Dashboard,
   DashboardProcess,
@@ -276,7 +276,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
    * Status und aktuelle Aktivität zu bestimmen (für Dashboard und Detailansicht).
    */
   private async resolveSubagents(sessionPath: string, files: SubagentFile[], load: boolean): Promise<SubagentInfo[]> {
-    const sessionId = sessionPath.replace(/^.*\//, '').replace(/\.jsonl$/, '');
+    const sessionId = basename(sessionPath, '.jsonl');
     const out: SubagentInfo[] = [];
     for (const sf of files) {
       const info: SubagentInfo = {

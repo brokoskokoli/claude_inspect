@@ -69,7 +69,7 @@ becomes hard to tell *who is doing what*. claude-inspect answers:
 
 ## Quick start
 
-Requirements: Node.js ≥ 20, macOS or Linux, Claude Code writing to `~/.claude`.
+Requirements: Node.js ≥ 20, macOS, Linux or Windows, Claude Code writing to `~/.claude`. On Windows, live process status is read via PowerShell; the autostart service and the live `demo` are macOS/Linux only (`demo --out <dir>` works everywhere).
 
 ```bash
 npx claude-inspect --open        # try it once

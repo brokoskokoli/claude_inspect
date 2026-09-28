@@ -338,6 +338,10 @@ export async function runDemo(opts: DemoOptions): Promise<void> {
     console.log(`Demo data written to ${ROOT} (no processes started)`);
     return;
   }
+  if (process.platform === 'win32') {
+    console.error('The live demo starts Unix processes (sh, sleep, pgrep) and needs macOS or Linux. Use `demo --out <dir>` to only generate the data.');
+    process.exit(1);
+  }
 
   // orchestrator = shell that forks the implementer (process tree: implementer → orchestrator)
   const children: ChildProcess[] = [

@@ -121,6 +121,9 @@ function macStatus(): void {
 
 const unitPath = join(homedir(), '.config', 'systemd', 'user', 'claude-inspect.service');
 
+/** systemd-Quoting für ExecStart (Pfade mit Leerzeichen, Anführungszeichen, Backslashes, %). */
+const q = (s: string) => `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/%/g, '%%')}"`;
+
 function linuxInstall(): void {
   mkdirSync(dirname(unitPath), { recursive: true });
   writeFileSync(
@@ -129,7 +132,7 @@ function linuxInstall(): void {
 Description=claude-inspect – live dashboard for Claude Code agents
 
 [Service]
-ExecStart=${nodePath()} ${ENTRY} --port ${port} --no-auth
+ExecStart=${q(nodePath())} ${q(ENTRY)} --port ${port} --no-auth
 WorkingDirectory=${ROOT}
 Restart=on-failure
 RestartSec=10

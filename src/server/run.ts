@@ -24,6 +24,16 @@ function findWebRoot(): string {
   return candidates.find((d) => existsSync(join(d, 'index.html'))) ?? candidates[0];
 }
 
+function openBrowser(url: string): void {
+  const [bin, args] =
+    process.platform === 'darwin'
+      ? ['open', [url]]
+      : process.platform === 'win32'
+        ? ['rundll32', ['url.dll,FileProtocolHandler', url]] // kein cmd/start: "&" in der URL wäre dort ein Befehlstrenner
+        : ['xdg-open', [url]];
+  execFile(bin, args, () => undefined).on('error', () => undefined);
+}
+
 export async function runServer(opts: RunOptions): Promise<void> {
   const inspector = new Inspector();
   const t0 = Date.now();
@@ -39,8 +49,7 @@ export async function runServer(opts: RunOptions): Promise<void> {
   const url = noAuth ? `http://localhost:${opts.port}/` : `http://localhost:${opts.port}/?t=${token}`;
   console.log(`claude-inspect is reading ${CLAUDE_DIR} (started in ${Date.now() - t0} ms)`);
   console.log(opts.dev ? `API (dev, no token): ${url}  –  UI: npm run dev:web` : `Dashboard: ${url}`);
-  if (opts.open && process.platform === 'darwin') execFile('open', [url]);
-  else if (opts.open && process.platform === 'linux') execFile('xdg-open', [url]);
+  if (opts.open) openBrowser(url);
 
   const shutdown = () => {
     inspector.stop();

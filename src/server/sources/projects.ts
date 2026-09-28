@@ -1,7 +1,7 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { SessionSummary } from '../../shared/types.js';
-import { paths } from '../config.js';
+import { paths, relToClaude } from '../config.js';
 import { registry } from '../formats/index.js';
 import type { DecodedEntry } from '../formats/transcript/common.js';
 import { isObj, num, str } from '../formats/util.js';
@@ -16,9 +16,15 @@ export interface TranscriptFile {
   mtime: number;
 }
 
+/** Letztes Segment eines Pfads – egal ob mit "/" (macOS/Linux) oder "\\" (Windows). */
+export function pathTail(p: string): string {
+  return p.replace(/[\\/]+$/, '').split(/[\\/]/).pop() || p;
+}
+
 export function projectName(cwd: string | undefined, projectDir: string): string {
-  if (cwd) return cwd.replace(/\/+$/, '').split('/').pop() || cwd;
-  return projectDir.replace(/^-Users-[^-]+-/, '');
+  if (cwd) return pathTail(cwd);
+  // kodiertes Home-Verzeichnis: -Users-<name>- (macOS), -home-<name>- (Linux), C--Users-<name>- (Windows)
+  return projectDir.replace(/^(?:[A-Za-z]-)?-(?:Users|home)-[^-]+-/, '');
 }
 
 /**
@@ -65,7 +71,7 @@ export class ProjectIndex {
 
   /** Aktualisiert einen einzelnen Eintrag nach einem Watch-Event. */
   async touch(path: string): Promise<void> {
-    const m = /\/projects\/([^/]+)\/([^/]+)\.jsonl$/.exec(path);
+    const m = /^projects\/([^/]+)\/([^/]+)\.jsonl$/.exec(relToClaude(path));
     if (!m) return;
     try {
       const st = await stat(path);
