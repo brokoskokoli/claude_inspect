@@ -1,6 +1,6 @@
 {
   "name": "claude-inspect",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Local live dashboard for Claude Code agents: see running sessions, subagents, spawned claude processes, tool calls, timelines, token usage and full history – read passively from ~/.claude, no hooks.",
   "keywords": [
     "claude-code",
