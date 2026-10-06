@@ -212,7 +212,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       const s = await this.index.summary(f);
       recentSessions.push({ ...s, live: liveIds.has(s.sessionId), spawnedBy: this.spawns.parentOf(s.sessionId)?.parentSessionId });
     }
-    return { generatedAt: Date.now(), claudeDir: CLAUDE_DIR, processes, orphanJobs, recentSessions };
+    return { generatedAt: Date.now(), claudeDir: CLAUDE_DIR, platform: process.platform, processes, orphanJobs, recentSessions };
   }
 
   private async sessionLive(sessionId: string, p: ProcessInfo): Promise<SessionLive | undefined> {

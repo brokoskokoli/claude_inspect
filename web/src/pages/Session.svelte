@@ -9,6 +9,8 @@
   import SpawnBadge from '../components/SpawnBadge.svelte';
   import StatusDot from '../components/StatusDot.svelte';
   import Transcript from '../components/Transcript.svelte';
+  import ResumeButtons from '../components/ResumeButtons.svelte';
+  import { resumeCommands } from '$shared/resume';
   import { api } from '../lib/api';
   import { ago, bytes, dateTime, modelName, shortPath, tokens, usd } from '../lib/format';
   import { clock, live, onTranscript } from '../lib/live.svelte';
@@ -81,6 +83,11 @@
   const mainState = $derived(!isLive ? 'dead' : liveProc?.session?.current?.kind === 'error' ? 'error' : liveProc?.process.status === 'idle' ? 'idle' : 'busy');
   const sel = $derived(agent ? detail?.subagents.find((s) => s.agentId === agent) : undefined);
   const job = $derived(detail?.job);
+  const resume = $derived(
+    sum && live.dashboard
+      ? resumeCommands({ sessionId: sum.sessionId, cwd: sum.cwd, platform: live.dashboard.platform, live: isLive, processKind: proc?.kind, jobShort: job?.short })
+      : [],
+  );
 </script>
 
 {#if error}
@@ -141,6 +148,7 @@
       {/if}
       <div><dt>File</dt><dd class="mono faint">{sum.sessionId}.jsonl · {bytes(sum.size)}</dd></div>
     </dl>
+    {#if resume.length}<div class="resume-row"><ResumeButtons commands={resume} /></div>{/if}
   </header>
 
   <nav class="tabs">
@@ -189,6 +197,11 @@
 {/if}
 
 <style>
+  .resume-row {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
   .spawned-by {
     display: flex;
     align-items: center;

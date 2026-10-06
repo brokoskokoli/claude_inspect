@@ -1,6 +1,9 @@
 <script lang="ts">
   import ProcessCard from '../components/ProcessCard.svelte';
+  import ResumeButtons from '../components/ResumeButtons.svelte';
   import SessionTable from '../components/SessionTable.svelte';
+  import { resumeCommands } from '$shared/resume';
+  import type { DashboardProcess } from '$shared/types';
   import { ago, shortPath } from '../lib/format';
   import { clock, live } from '../lib/live.svelte';
   import { href } from '../lib/router.svelte';
@@ -31,6 +34,11 @@
     archived: 'ended or archived on another device',
     'no-conversation': 'no conversation – process kept alive by the IDE/SDK host',
   } as const;
+  // Kein Transcript (IDE-Prozess ohne Gespräch) → nichts fortzusetzen
+  const resumeFor = (p: DashboardProcess) =>
+    d && (p.session || p.process.alive === false) && p.inactive?.reason !== 'no-conversation'
+      ? resumeCommands({ sessionId: p.process.sessionId, cwd: p.process.cwd, platform: d.platform, live: p.process.alive && !p.inactive, processKind: p.process.kind, jobShort: p.job?.short })
+      : [];
   const dead = $derived(d?.processes.filter((p) => !p.process.alive) ?? []);
   const busy = $derived(alive.filter((p) => p.process.status !== 'idle').length);
 </script>
@@ -68,6 +76,7 @@
                 <td class="muted small">{INACTIVE_REASON[item.inactive!.reason]}{#if item.inactive!.reason === 'no-conversation' && item.process.entrypoint} ({item.process.entrypoint}){/if}{#if item.job?.state} · job {item.job.state}{/if}</td>
                 <td class="muted small mono">pid {item.process.pid}</td>
                 <td class="muted nowrap">{ago(item.inactive!.at ?? item.session?.lastActivityAt, clock.now)}</td>
+                <td class="nowrap"><ResumeButtons commands={resumeFor(item)} compact /></td>
               </tr>
             {/each}
           </tbody>
@@ -93,6 +102,11 @@
                     </td>
                     <td><span class="badge">{j.state ?? '?'}</span></td>
                     <td class="muted nowrap">{ago(j.updatedAt, clock.now)}</td>
+                    <td class="nowrap">
+                      {#if j.sessionId}
+                        <ResumeButtons compact commands={resumeCommands({ sessionId: j.resumeSessionId ?? j.sessionId, cwd: j.cwd, platform: d.platform, live: false, jobShort: j.short })} />
+                      {/if}
+                    </td>
                   </tr>
                 {/each}
               </tbody>
@@ -111,6 +125,7 @@
                     <td>{item.process.name ?? item.process.sessionId.slice(0, 8)}</td>
                     <td class="muted small">{shortPath(item.process.cwd)}</td>
                     <td class="muted nowrap">{ago(item.process.updatedAt ?? item.process.startedAt, clock.now)}</td>
+                    <td class="nowrap"><ResumeButtons commands={resumeFor(item)} compact /></td>
                   </tr>
                 {/each}
               </tbody>

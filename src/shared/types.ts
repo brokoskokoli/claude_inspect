@@ -337,6 +337,8 @@ export interface SessionSummary {
 export interface Dashboard {
   generatedAt: number;
   claudeDir: string;
+  /** process.platform des Servers (für kopierbare Terminal-Befehle) */
+  platform: string;
   processes: DashboardProcess[];
   orphanJobs: JobInfo[];
   recentSessions: SessionSummary[];
