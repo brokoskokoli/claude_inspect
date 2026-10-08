@@ -261,6 +261,19 @@
     width: min(260px, 100%);
     padding: 3px 9px;
   }
+  @media (max-width: 640px) {
+    .toolbar {
+      position: static;
+      font-size: 14px;
+      gap: 0 14px;
+    }
+    label {
+      min-height: 44px;
+    }
+    .toolbar input[type='search'] {
+      padding: 6px 10px;
+    }
+  }
   .entries {
     display: flex;
     flex-direction: column;

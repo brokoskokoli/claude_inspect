@@ -39,12 +39,12 @@
       {#each files as f (f.path)}
         <tr class="clickable" onclick={() => (location.hash = href.tools({ file: f.path, days: filter.days ? String(filter.days) : undefined }))}>
           <td class="path"><div class="ellipsis mono" title={f.path}>{shortPath(f.path)}</div></td>
-          <td class="muted nowrap">{f.project}</td>
-          <td class="num">{f.edits || ''}</td>
-          <td class="num">{f.writes || ''}</td>
-          <td class="num muted">{f.reads || ''}</td>
-          <td class="num">{f.sessions}</td>
-          <td class="muted nowrap">{ago(f.lastTs, clock.now)}</td>
+          <td class="muted nowrap proj">{f.project}</td>
+          <td class="num cnt" data-label="Edits">{f.edits || ''}</td>
+          <td class="num cnt" data-label="Writes">{f.writes || ''}</td>
+          <td class="num muted cnt" data-label="Reads">{f.reads || ''}</td>
+          <td class="num cnt" data-label="Sessions">{f.sessions}</td>
+          <td class="muted nowrap last">{ago(f.lastTs, clock.now)}</td>
         </tr>
       {/each}
     </tbody>
@@ -66,6 +66,62 @@
   }
   .nowrap {
     white-space: nowrap;
+  }
+  /* phones: path on its own line (wrapping), counts with labels below */
+  @media (max-width: 640px) {
+    thead {
+      display: none;
+    }
+    table,
+    tbody {
+      display: block;
+    }
+    tr {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px 14px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    tr:last-child {
+      border-bottom: none;
+    }
+    table.list td {
+      display: block;
+      padding: 0;
+      border: none;
+    }
+    .path {
+      flex: 1 1 100%;
+      max-width: none;
+      width: auto;
+    }
+    .path .ellipsis {
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .proj {
+      order: 1;
+      flex: 1 1 60%;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .last {
+      order: 2;
+      text-align: right;
+    }
+    .cnt {
+      order: 3;
+      font-size: 13px;
+    }
+    .cnt:empty {
+      display: none;
+    }
+    .cnt::before {
+      content: attr(data-label) ' ';
+      color: var(--faint);
+    }
   }
   .center {
     text-align: center;

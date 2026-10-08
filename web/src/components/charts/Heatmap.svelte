@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tipAt } from '../../lib/tooltip';
   let { grid, rowLabels, colLabels, unit }: { grid: number[][]; rowLabels: string[]; colLabels: string[]; unit: string } = $props();
 
   let hover = $state<{ r: number; c: number; x: number; y: number } | null>(null);
@@ -27,7 +28,7 @@
   less {#each [0, 1, 2, 3, 4, 5, 6, 7] as s (s)}<span class="swatch" style:background="var(--seq-{s})"></span>{/each} more
 </div>
 {#if hover}
-  <div class="tip" style:left="{hover.x + 14}px" style:top="{hover.y + 10}px">
+  <div class="tip" use:tipAt={{ x: hover.x, y: hover.y }}>
     <strong>{rowLabels[hover.r]}, {colLabels[hover.c]}–{hover.c + 1}h</strong><br />
     {grid[hover.r][hover.c].toLocaleString('en-US')} {unit}
   </div>

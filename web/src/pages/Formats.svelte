@@ -28,7 +28,7 @@
 {#if report}
   <section>
     <h3>Decoders</h3>
-    <div class="card">
+    <div class="card table-scroll">
       <table class="list">
         <thead><tr><th>Source</th><th>Id</th><th>Versions</th><th>Description</th><th class="num">Hits</th></tr></thead>
         <tbody>
@@ -53,7 +53,7 @@
     {#if report.drift.length === 0}
       <p class="muted">None – every record read so far is fully understood.</p>
     {:else}
-      <div class="card">
+      <div class="card table-scroll">
         <table class="list">
           <thead><tr><th>Source</th><th>Record type</th><th>Field</th><th>Versions</th><th class="num">Count</th></tr></thead>
           <tbody>
@@ -94,5 +94,14 @@
   }
   .warn {
     color: var(--error);
+  }
+  /* phones: tables scroll inside their card; keep the description readable */
+  @media (max-width: 640px) {
+    td:nth-child(4) {
+      min-width: 200px;
+    }
+    td.mono {
+      white-space: nowrap;
+    }
   }
 </style>

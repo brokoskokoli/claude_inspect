@@ -122,6 +122,19 @@
     color: var(--muted);
     word-break: break-word;
   }
+  @media (max-width: 640px) {
+    .bar input {
+      flex: 1 1 0 !important;
+      min-width: 0;
+    }
+    .meta {
+      flex-wrap: wrap;
+      row-gap: 2px;
+    }
+    .snip {
+      font-size: 14px;
+    }
+  }
   .snip :global(mark) {
     background: var(--accent-soft);
     color: var(--text);

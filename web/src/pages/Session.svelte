@@ -76,6 +76,9 @@
     });
   });
 
+  // phones: the metadata block is collapsed by default (desktop always shows it)
+  let metaOpen = $state(false);
+
   const sum = $derived(detail?.summary);
   const proc = $derived(detail?.process);
   const liveProc = $derived(live.dashboard?.processes.find((p) => p.process.sessionId === id && p.process.alive));
@@ -119,7 +122,8 @@
     {#if isLive && liveProc?.session?.current}
       <div class="now"><Activity activity={liveProc.session.current} /></div>
     {/if}
-    <dl>
+    <button class="meta-toggle" aria-expanded={metaOpen} onclick={() => (metaOpen = !metaOpen)}>{metaOpen ? '▾' : '▸'} Details</button>
+    <dl class:collapsed={!metaOpen}>
       <div><dt>Directory</dt><dd class="mono">{shortPath(sum.cwd)}</dd></div>
       {#if sum.gitBranch}<div><dt>Branch</dt><dd class="mono">{sum.gitBranch}</dd></div>{/if}
       <div><dt>Time range</dt><dd>{dateTime(sum.firstTimestamp)} – {dateTime(sum.lastTimestamp)} <span class="faint">({ago(sum.lastTimestamp, clock.now)})</span></dd></div>
@@ -266,7 +270,7 @@
   }
   dl {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
     gap: 6px 20px;
     margin: 6px 0 0;
   }
@@ -286,6 +290,7 @@
   .layout {
     display: grid;
     grid-template-columns: 290px minmax(0, 1fr);
+    min-width: 0;
     gap: 20px;
     align-items: start;
   }
@@ -311,16 +316,74 @@
     margin-left: auto;
     white-space: nowrap;
   }
+  .meta-toggle {
+    display: none;
+  }
+  dd {
+    overflow-wrap: anywhere;
+  }
   .small {
     font-size: 12px;
   }
   @media (max-width: 900px) {
     .layout {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
     }
     aside {
       position: static;
       max-height: 300px;
+    }
+  }
+  @media (max-width: 640px) {
+    .head {
+      padding: 12px 14px;
+    }
+    h1 {
+      font-size: 17px;
+      overflow-wrap: anywhere;
+    }
+    .meta-toggle {
+      display: block;
+      align-self: flex-start;
+      min-height: 44px;
+      padding: 0 2px;
+      border: none;
+      background: none;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    dl {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 14px;
+      margin: 0;
+    }
+    dl.collapsed {
+      display: none;
+    }
+    dl > div:last-child {
+      grid-column: 1 / -1;
+    }
+    dd {
+      font-size: 14px;
+    }
+    .tabs {
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs a {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 0 12px;
+      white-space: nowrap;
+    }
+    .sub-head {
+      flex-wrap: wrap;
+    }
+    .back {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
     }
   }
 </style>

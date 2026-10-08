@@ -194,6 +194,19 @@
     gap: 4px;
     flex: none;
   }
+  /* phones: badges move below the title so the name stays readable */
+  @media (max-width: 480px) {
+    .head {
+      flex-wrap: wrap;
+    }
+    .titles {
+      flex: 1 1 calc(100% - 20px);
+    }
+    .badges {
+      flex-wrap: wrap;
+      padding-left: 19px;
+    }
+  }
   .where {
     display: flex;
     gap: 10px;

@@ -51,6 +51,15 @@
     margin-left: auto;
     width: min(360px, 50vw);
   }
+  @media (max-width: 640px) {
+    .head {
+      flex-wrap: wrap;
+    }
+    input {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
   .more {
     text-align: center;
     margin-top: 14px;

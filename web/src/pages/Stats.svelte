@@ -236,4 +236,23 @@
   .err {
     color: var(--error);
   }
+  /* tables scroll inside their card instead of squeezing names */
+  table.list td:first-child {
+    white-space: nowrap;
+  }
+  @media (max-width: 640px) {
+    .tiles {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .tile {
+      padding: 12px;
+    }
+    .value {
+      font-size: 22px;
+    }
+    .block-head {
+      flex-wrap: wrap;
+    }
+  }
 </style>
