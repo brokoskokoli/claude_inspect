@@ -150,6 +150,30 @@
   .entry:hover .side {
     opacity: 1;
   }
+  @media (max-width: 640px) {
+    .entry {
+      display: flex;
+      flex-direction: column;
+      padding-right: 0;
+    }
+    .side {
+      position: static;
+      order: -1;
+      align-self: flex-end;
+      align-items: center;
+      margin-bottom: -6px;
+    }
+    .side .icon-btn {
+      min-height: 32px;
+      min-width: 44px;
+    }
+    .think {
+      min-height: 44px;
+    }
+    details.line summary {
+      padding: 10px 0;
+    }
+  }
   .ts {
     font-size: 11.5px;
     color: var(--faint);

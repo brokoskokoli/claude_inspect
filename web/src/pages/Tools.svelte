@@ -69,12 +69,12 @@
       {#each rows as r, i (i)}
         {@const mcp = splitMcpName(r.name)}
         <tr class="clickable" onclick={() => (location.hash = href.session(r.sessionId, r.agentId, { tool: r.toolUseId }))}>
-          <td class="nowrap muted">{dateTime(r.ts)}</td>
-          <td class="nowrap"><span class="swatch" style:background={toolColor(r.name)}></span> <span class="mono">{mcp.tool}</span>{#if mcp.server}<span class="faint small"> {mcp.server}</span>{/if}</td>
+          <td class="nowrap muted time">{dateTime(r.ts)}</td>
+          <td class="nowrap tool"><span class="swatch" style:background={toolColor(r.name)}></span> <span class="mono">{mcp.tool}</span>{#if mcp.server}<span class="faint small"> {mcp.server}</span>{/if}</td>
           <td class="sum"><div class="ellipsis">{r.summary}</div>{#if r.file}<div class="ellipsis faint small mono">{shortPath(r.file)}</div>{/if}</td>
-          <td class="nowrap muted">{r.project}{r.agentId ? ' · subagent' : ''}</td>
-          <td class="num nowrap">{r.durationMs !== undefined ? duration(r.durationMs) : '–'}</td>
-          <td class="nowrap">{#if r.denied}<span class="badge error">denied</span>{:else if r.isError}<span class="badge error">error</span>{/if}</td>
+          <td class="nowrap muted proj">{r.project}{r.agentId ? ' · subagent' : ''}</td>
+          <td class="num nowrap dur">{r.durationMs !== undefined ? duration(r.durationMs) : '–'}</td>
+          <td class="nowrap flag">{#if r.denied}<span class="badge error">denied</span>{:else if r.isError}<span class="badge error">error</span>{/if}</td>
         </tr>
       {/each}
     </tbody>
@@ -98,6 +98,12 @@
     align-items: center;
     font-size: 13px;
   }
+  @media (max-width: 640px) {
+    .chk {
+      min-height: 44px;
+      font-size: 14px;
+    }
+  }
   .sum {
     max-width: 0;
     width: 60%;
@@ -107,6 +113,63 @@
   }
   .small {
     font-size: 11.5px;
+  }
+  /* phones: each call as a small card – tool and duration first, then the call, then where/when */
+  @media (max-width: 640px) {
+    thead {
+      display: none;
+    }
+    table,
+    tbody {
+      display: block;
+    }
+    tr {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      grid-template-areas:
+        'tool flag dur'
+        'sum sum sum'
+        'proj time time';
+      column-gap: 8px;
+      row-gap: 2px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    tr:last-child {
+      border-bottom: none;
+    }
+    table.list td {
+      display: block;
+      padding: 0;
+      border: none;
+    }
+    .tool {
+      grid-area: tool;
+    }
+    .flag {
+      grid-area: flag;
+    }
+    .dur {
+      grid-area: dur;
+      color: var(--muted);
+    }
+    .sum {
+      grid-area: sum;
+      max-width: none;
+      width: auto;
+      min-width: 0;
+    }
+    .proj {
+      grid-area: proj;
+      font-size: 12.5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .time {
+      grid-area: time;
+      font-size: 12.5px;
+      text-align: right;
+    }
   }
   .more {
     text-align: center;

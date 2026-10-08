@@ -329,4 +329,20 @@
     stroke: var(--text);
     stroke-width: 1.5;
   }
+  @media (max-width: 640px) {
+    .tl {
+      grid-template-columns: minmax(96px, 38%) minmax(0, 1fr);
+    }
+    .ll-main {
+      max-width: none;
+      flex: 1;
+      min-width: 0;
+    }
+    .ll-sub {
+      display: none;
+    }
+    .controls {
+      flex-wrap: wrap;
+    }
+  }
 </style>

@@ -57,6 +57,12 @@ Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
   (siehe `src/server/sources/spawns.ts`)
 - **Formats**: registrierte Decoder mit Trefferzahlen und alle Felder, die noch kein
   Decoder kennt (Schema-Drift)
+- **Handy**: Auf schmalen Bildschirmen (Handy, kleines iframe) klappt die Navigation in
+  ein Menü, Tabellen werden zu kompakten Listen, die Session-Ansicht ist einspaltig, und
+  lange Inhalte (Code, Pfade, JSON) scrollen innerhalb ihres Blocks. Der Server lauscht
+  weiterhin nur auf 127.0.0.1 – für den Zugriff vom Handy braucht es einen eigenen Tunnel
+  oder Reverse-Proxy, der mit lokalem `Host`-Header weiterleitet (andere Hosts werden
+  abgewiesen).
 
 ## Architektur
 

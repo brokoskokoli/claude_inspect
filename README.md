@@ -46,6 +46,7 @@ becomes hard to tell *who is doing what*. claude-inspect answers:
 | **Task boards** | The TaskCreate/TaskUpdate list of a session with dependencies. |
 | **Format detection & schema drift** | Claude Code's file formats change between versions. Each record is decoded individually by versioned decoders; unknown records and fields are never dropped and are listed on the *Formats* page. |
 | **Dark mode** | Light, dark or system theme, remembered per browser. |
+| **Phone-friendly** | On narrow screens (phones, small iframes) the navigation collapses into a menu, tables turn into compact lists, the session view is single-column and long code, paths and JSON scroll inside their block. The server still listens on 127.0.0.1 only – to open it from a phone you need your own tunnel or reverse proxy that forwards to it with a local `Host` header (other hosts are rejected). |
 
 <table>
 <tr>

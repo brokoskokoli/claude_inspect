@@ -66,7 +66,7 @@
   {#if inactive.length}
     <section>
       <div class="section-head"><h2>Inactive</h2><span class="muted">process still running, but nobody is using the session</span></div>
-      <div class="card">
+      <div class="card table-scroll">
         <table class="list">
           <tbody>
             {#each inactive as item (item.process.pid)}
@@ -90,7 +90,7 @@
       {#if d.orphanJobs.length}
         <div>
           <div class="section-head"><h2>Background jobs</h2><span class="muted">without a running process</span></div>
-          <div class="card">
+          <div class="card table-scroll">
             <table class="list">
               <tbody>
                 {#each d.orphanJobs as j (j.short)}
@@ -117,7 +117,7 @@
       {#if dead.length}
         <div>
           <div class="section-head"><h2>Ended processes</h2><span class="muted">registration still present</span></div>
-          <div class="card">
+          <div class="card table-scroll">
             <table class="list">
               <tbody>
                 {#each dead as item (item.process.pid)}
@@ -158,6 +158,17 @@
   .src {
     margin-left: auto;
     font-size: 12px;
+  }
+  @media (max-width: 640px) {
+    .section-head {
+      flex-wrap: wrap;
+      row-gap: 2px;
+    }
+    .src {
+      margin-left: 0;
+      flex-basis: 100%;
+      overflow-wrap: anywhere;
+    }
   }
   .grid {
     display: grid;

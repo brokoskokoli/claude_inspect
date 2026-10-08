@@ -221,5 +221,21 @@
     .server {
       display: none;
     }
+    .row {
+      align-items: center;
+      min-height: 44px;
+      padding: 6px 10px;
+    }
+    .body {
+      padding: 8px 10px 10px;
+    }
+    .spawn {
+      flex-wrap: wrap;
+      min-height: 44px;
+    }
+    .foot .icon-btn {
+      min-height: 44px;
+      padding: 0 8px;
+    }
   }
 </style>

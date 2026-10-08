@@ -66,6 +66,14 @@
   .small {
     font-size: 12px;
   }
+  @media (max-width: 640px) {
+    .backdrop {
+      padding: 8px;
+    }
+    .head {
+      flex-wrap: wrap;
+    }
+  }
   pre {
     overflow: auto;
     background: var(--code-bg);

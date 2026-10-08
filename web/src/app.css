@@ -365,3 +365,61 @@ input[type='search']:focus {
   border-radius: 2px;
   flex: none;
 }
+
+/* horizontally scrollable container for wide tables (keeps the page itself from scrolling sideways) */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ------------------------------------------------------------------ */
+/* Phones and other narrow screens                                     */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media (max-width: 760px) {
+  /* text inputs at 16px: no auto-zoom on focus in mobile browsers */
+  input[type='search'],
+  input[type='text'],
+  .filters select,
+  .filters input:not([type='checkbox']) {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .filters input[type='search'],
+  .filters input[type='text'] {
+    flex: 1 1 100%;
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+  .btn {
+    min-height: 44px;
+    padding: 6px 14px;
+    font-size: 14px;
+  }
+  .seg button {
+    min-height: 44px;
+    padding: 6px 14px;
+    font-size: 14px;
+  }
+  input[type='checkbox'] {
+    width: 20px;
+    height: 20px;
+  }
+  table.list td {
+    padding: 10px 10px;
+  }
+  .tip {
+    max-width: calc(100vw - 24px);
+  }
+}
+
+/* touch devices of any width: hover states are not reachable, so keep them out of the way */
+@media (hover: none) {
+  table.list tr.clickable:hover td {
+    background: none;
+  }
+}

@@ -75,6 +75,17 @@
     white-space: nowrap;
     min-width: 92px;
   }
+  @media (max-width: 640px) {
+    .cmd {
+      flex-wrap: wrap;
+    }
+    .cmd code {
+      flex: 1 1 100%;
+      overflow-x: auto;
+      text-overflow: clip;
+      padding: 4px 0;
+    }
+  }
   .btn.primary {
     border-color: var(--accent);
     color: var(--accent);

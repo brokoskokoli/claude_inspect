@@ -79,4 +79,59 @@
       display: none;
     }
   }
+  /* phones: each session as a compact two-line entry (project · last active / title) */
+  @media (max-width: 640px) {
+    thead {
+      display: none;
+    }
+    table,
+    tbody {
+      display: block;
+    }
+    tr {
+      display: grid;
+      grid-template-columns: 14px minmax(0, 1fr) auto;
+      grid-template-areas:
+        'dot proj when'
+        '. title title';
+      column-gap: 6px;
+      row-gap: 2px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    tr:last-child {
+      border-bottom: none;
+    }
+    table.list td {
+      display: block;
+      padding: 0;
+      border: none;
+    }
+    table.list td.hide-s {
+      display: none;
+    }
+    .dot {
+      grid-area: dot;
+      width: auto;
+      padding-top: 1px !important;
+    }
+    .proj {
+      grid-area: proj;
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .title {
+      grid-area: title;
+      max-width: none;
+      width: auto;
+      min-width: 0;
+    }
+    .when {
+      grid-area: when;
+      font-size: 13px;
+    }
+  }
 </style>

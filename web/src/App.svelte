@@ -17,16 +17,38 @@
   const THEME_LABEL = { system: 'Theme: system', light: 'Theme: light', dark: 'Theme: dark' } as const;
   const running = $derived(live.dashboard?.processes.filter((p) => p.process.alive && !p.inactive).length ?? 0);
   const r = $derived(router.route);
+
+  // Narrow screens: the navigation collapses into a menu (button in the header)
+  const SECTION: Record<string, string> = { dashboard: 'Live', sessions: 'Sessions', session: 'Sessions', stats: 'Statistics', tools: 'Tools', files: 'Files', search: 'Search', formats: 'Formats' };
+  let menuOpen = $state(false);
+  $effect(() => {
+    void router.route;
+    menuOpen = false;
+  });
 </script>
+
+<svelte:window onkeydown={(e) => e.key === 'Escape' && (menuOpen = false)} />
 
 <header class="top">
   <a class="brand" href={href.dashboard()}>
     <svg viewBox="0 0 32 32" width="20" height="20" aria-hidden="true"
       ><circle cx="16" cy="16" r="11" fill="none" stroke="var(--accent)" stroke-width="4" /><circle cx="16" cy="16" r="4" fill="var(--accent)" /></svg
     >
-    Claude Inspect
+    <span class="brand-name">Claude Inspect</span>
   </a>
-  <nav>
+  <button class="menu" aria-expanded={menuOpen} aria-controls="main-nav" aria-label="Menu" onclick={() => (menuOpen = !menuOpen)}>
+    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"
+      >{#if menuOpen}<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />{:else}<path
+          d="M4 7h16M4 12h16M4 17h16"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+        />{/if}</svg
+    >
+    <span>{SECTION[r.name]}</span>
+    {#if r.name !== 'dashboard' && running}<span class="count">{running}</span>{/if}
+  </button>
+  <nav id="main-nav" class:open={menuOpen}>
     <a href={href.dashboard()} class:active={r.name === 'dashboard'}>Live <span class="count">{running}</span></a>
     <a href={href.sessions()} class:active={r.name === 'sessions' || r.name === 'session'}>Sessions</a>
     <a href={href.stats()} class:active={r.name === 'stats'}>Statistics</a>
@@ -51,9 +73,11 @@
     {/if}
   </button>
   <span class="conn" class:ok={live.connected} title={live.connected ? 'Live connection active' : 'No connection to the server'}>
-    <span class="dot"></span>{live.connected ? 'live' : 'offline'}
+    <span class="dot"></span><span class="conn-label">{live.connected ? 'live' : 'offline'}</span>
   </span>
 </header>
+
+{#if menuOpen}<button class="scrim" aria-label="Close menu" onclick={() => (menuOpen = false)}></button>{/if}
 
 <main>
   {#if r.name === 'dashboard'}
@@ -171,13 +195,82 @@
     max-width: 1600px;
     margin: 0 auto;
   }
-  @media (max-width: 640px) {
+  .menu,
+  .scrim {
+    display: none;
+  }
+  /* narrow screens (phone, small iframe): navigation as a drop-down menu */
+  @media (max-width: 760px) {
     .top {
       padding: 0 12px;
-      gap: 12px;
+      gap: 8px;
+    }
+    .brand {
+      flex: none;
+      min-height: 44px;
+    }
+    .menu {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 40px;
+      min-width: 44px;
+      padding: 0 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 500;
+    }
+    .menu[aria-expanded='true'] {
+      background: var(--surface-2);
+    }
+    nav {
+      display: none;
+      position: absolute;
+      top: 52px;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      gap: 2px;
+      padding: 8px 12px 12px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+      overflow: visible;
+    }
+    nav.open {
+      display: flex;
+    }
+    nav a {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 44px;
+      padding: 0 12px;
+      font-size: 15px;
+    }
+    .scrim {
+      display: block;
+      position: fixed;
+      inset: 52px 0 0;
+      z-index: 9;
+      border: none;
+      padding: 0;
+      background: rgb(0 0 0 / 0.25);
+    }
+    .theme {
+      width: 40px;
+      height: 40px;
     }
     main {
       padding: 14px 12px 40px;
+    }
+  }
+  @media (max-width: 400px) {
+    .brand-name,
+    .conn-label {
+      display: none;
     }
   }
 </style>
