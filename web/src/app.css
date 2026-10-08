@@ -356,7 +356,13 @@ input[type='search']:focus {
   box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
   padding: 7px 10px;
   font-size: 12.5px;
-  max-width: 360px;
+  /* placed by tipAt (lib/tooltip.ts), always fully inside the viewport */
+  left: 0;
+  top: 0;
+  max-width: min(360px, calc(100vw - 16px));
+  max-height: calc(100vh - 16px);
+  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 .swatch {
   display: inline-block;
@@ -411,9 +417,6 @@ html {
   }
   table.list td {
     padding: 10px 10px;
-  }
-  .tip {
-    max-width: calc(100vw - 24px);
   }
 }
 

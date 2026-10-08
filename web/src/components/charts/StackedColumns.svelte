@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tipAt } from '../../lib/tooltip';
   export interface Column {
     label: string;
     segments: { key: string; value: number }[];
@@ -100,7 +101,7 @@
   </svg>
   {#if hover}
     {@const c = columns[hover.i]}
-    <div class="tip" style:left="{hover.x + 14}px" style:top="{hover.y + 10}px">
+    <div class="tip" use:tipAt={{ x: hover.x, y: hover.y }}>
       <div class="tip-title">{c.label} · {format(totals[hover.i])}</div>
       {#each keys.filter((k) => c.segments.some((s) => s.key === k && s.value > 0)) as k (k)}
         <div class="tip-row">

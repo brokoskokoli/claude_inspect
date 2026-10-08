@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tipAt } from '../lib/tooltip';
   import type { Flow, FlowLane, FlowSpan } from '$shared/types';
   import { splitMcpName } from '$shared/tools';
   import { TOOL_CATEGORIES, toolColor } from '../lib/colors';
@@ -182,7 +183,7 @@
 </div>
 
 {#if hover}
-  <div class="tip" style:left="{hover.x + 14}px" style:top="{hover.y + 12}px">
+  <div class="tip" use:tipAt={{ x: hover.x, y: hover.y }}>
     {#if hover.span}
       {@const s = hover.span}
       <div><span class="swatch" style:background={s.isError ? 'var(--status-critical)' : toolColor(s.name)}></span> <strong class="mono">{splitMcpName(s.name).tool}</strong>{s.isError ? ' · ⚠ error' : ''}</div>
