@@ -3,11 +3,39 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>claude-inspect</title>
-    <meta name="description" content="Live dashboard and history viewer for Claude Code agents: running sessions, subagents, spawned workers, tool calls, timelines, CPU usage, token usage and full history – read passively from ~/.claude, no hooks." />
-    <meta property="og:title" content="claude-inspect – see what your Claude Code agents are doing" />
-    <meta property="og:description" content="Local live dashboard and history viewer for Claude Code agents. No hooks, no proxy, nothing leaves your machine." />
+    <title>claude-inspect – Claude Code dashboard &amp; monitor for agents, subagents and usage</title>
+    <meta name="description" content="claude-inspect is a local Claude Code dashboard and monitor: live sessions, subagents, spawned claude -p workers, tool calls, timelines, CPU and token usage and a transcript viewer with full history – read passively from ~/.claude, no hooks." />
+    <link rel="canonical" href="https://brokoskokoli.github.io/claude_inspect/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="claude-inspect" />
+    <meta property="og:url" content="https://brokoskokoli.github.io/claude_inspect/" />
+    <meta property="og:title" content="claude-inspect – Claude Code dashboard &amp; monitor" />
+    <meta property="og:description" content="htop plus a flight recorder for Claude Code. Live agents, subagents, tool calls, CPU and token usage. No hooks, no proxy, one npx." />
     <meta property="og:image" content="https://brokoskokoli.github.io/claude_inspect/screenshots/dashboard.jpg" />
+    <meta property="og:image:width" content="1356" />
+    <meta property="og:image:height" content="896" />
+    <meta property="og:image:alt" content="claude-inspect live dashboard with running Claude Code agents and subagents" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="claude-inspect – Claude Code dashboard &amp; monitor" />
+    <meta name="twitter:description" content="htop plus a flight recorder for Claude Code. No hooks, no proxy, one npx." />
+    <meta name="twitter:image" content="https://brokoskokoli.github.io/claude_inspect/screenshots/dashboard.jpg" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "claude-inspect",
+        "description": "Local Claude Code dashboard and monitor for agents, subagents, tool calls, CPU and token usage and transcripts. Reads ~/.claude passively, no hooks.",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "macOS, Linux, Windows",
+        "url": "https://brokoskokoli.github.io/claude_inspect/",
+        "downloadUrl": "https://www.npmjs.com/package/claude-inspect",
+        "codeRepository": "https://github.com/brokoskokoli/claude_inspect",
+        "softwareVersion": "0.4.1",
+        "license": "https://opensource.org/licenses/MIT",
+        "image": "https://brokoskokoli.github.io/claude_inspect/screenshots/dashboard.jpg",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='11' fill='none' stroke='%23d97757' stroke-width='4'/><circle cx='16' cy='16' r='4' fill='%23d97757'/></svg>" />
     <style>
       :root {
@@ -110,6 +138,12 @@
       .hero h1 em {
         font-style: normal;
         color: var(--accent);
+      }
+      .hero p.tagline {
+        font-size: clamp(18px, 2.4vw, 22px);
+        font-weight: 600;
+        margin: 0 auto 12px;
+        text-wrap: balance;
       }
       .hero p.lead {
         font-size: clamp(17px, 2.2vw, 20px);
@@ -380,9 +414,10 @@
 
       <div class="hero">
         <h1>See what your Claude Code agents are doing – <em>right now</em> and in the past.</h1>
+        <p class="tagline">htop plus a flight recorder for Claude Code. No hooks, no proxy, one <code>npx</code>.</p>
         <p class="lead">
-          A local web dashboard that reads the files Claude Code already writes to <code>~/.claude</code>: running sessions, subagents, spawned
-          <code>claude -p</code> workers, every tool call, timelines, CPU and token usage and a searchable history.
+          claude-inspect is a local Claude Code dashboard and monitor that reads the files Claude Code already writes to <code>~/.claude</code>: running sessions, subagents, spawned
+          <code>claude -p</code> workers, every tool call, timelines, CPU and token usage and a searchable transcript viewer with the full history.
         </p>
         <div class="install">
           <span id="cmd">npx claude-inspect --open</span>
@@ -398,7 +433,7 @@
       </div>
 
       <section id="features">
-        <h2>Everything your agents do, in one place</h2>
+        <h2>Everything your Claude Code agents do, in one place</h2>
         <p class="sub">Claude Code keeps a lot of state on disk. claude-inspect turns it into a live view – without changing a single setting.</p>
 
         <div class="feature">

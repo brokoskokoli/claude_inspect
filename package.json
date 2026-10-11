@@ -1,7 +1,7 @@
 {
   "name": "claude-inspect",
   "version": "0.4.1",
-  "description": "Local live dashboard for Claude Code agents: see running sessions, subagents, spawned claude processes, tool calls, timelines, token usage and full history – read passively from ~/.claude, no hooks.",
+  "description": "Claude Code dashboard & monitor: live sessions, subagents, spawned claude workers, tool calls, timelines, CPU and token usage and transcript history – read passively from ~/.claude, no hooks.",
   "keywords": [
     "claude-code",
     "claude",
@@ -16,7 +16,13 @@
     "transcripts",
     "token-usage",
     "svelte",
-    "typescript"
+    "typescript",
+    "claude-code-tools",
+    "monitoring",
+    "cli",
+    "local-first",
+    "ai-tools",
+    "usage"
   ],
   "homepage": "https://brokoskokoli.github.io/claude_inspect/",
   "repository": {

@@ -1,23 +1,33 @@
-# claude-inspect – live dashboard & history viewer for Claude Code agents
+# claude-inspect – Claude Code dashboard & monitor for agents, subagents and usage
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![npm](https://img.shields.io/npm/v/claude-inspect)](https://www.npmjs.com/package/claude-inspect)
+[![npm downloads](https://img.shields.io/npm/dm/claude-inspect)](https://www.npmjs.com/package/claude-inspect)
+[![CI](https://github.com/brokoskokoli/claude_inspect/actions/workflows/ci.yml/badge.svg)](https://github.com/brokoskokoli/claude_inspect/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/brokoskokoli/claude_inspect/blob/main/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/brokoskokoli/claude_inspect?style=social)](https://github.com/brokoskokoli/claude_inspect)
 ![Node.js ≥ 22](https://img.shields.io/badge/node-%E2%89%A5%2022-green)
-![TypeScript](https://img.shields.io/badge/TypeScript-Svelte%205-3178c6)
-![Dark mode](https://img.shields.io/badge/dark%20mode-%E2%9C%93-2b2a27)
 ![No hooks](https://img.shields.io/badge/Claude%20Code-no%20hooks%20needed-d97757)
 
-**See what your [Claude Code](https://claude.com/claude-code) agents are doing – right now and in the past.**
-claude-inspect is a local web UI that reads the files Claude Code already writes to `~/.claude`
+**htop plus a flight recorder for [Claude Code](https://claude.com/claude-code). No hooks, no proxy, one `npx`.**
+
+claude-inspect is a local Claude Code dashboard and monitor that reads the files Claude Code already writes to `~/.claude`
 and shows running sessions, subagents, `claude -p` worker sessions started by other agents,
-every tool call with its result, timelines, a call graph, token usage and a searchable history.
+every tool call with its result, timelines, a call graph, CPU and token usage
+and a transcript viewer with a searchable history.
+
+```bash
+npx claude-inspect --open        # Node.js ≥ 22 · macOS, Linux, Windows
+```
+
+No Claude Code data at hand? `npx claude-inspect demo --open` starts it with a fictional data set.
+Permanent install with autostart: see [Installation](#installation).
 
 It is **read-only and passive** towards `~/.claude`: no hooks, no settings changes, no proxy, no data leaves
 your machine. The only thing it writes is a CPU log in its own data directory (see *CPU usage*).
 
-> Website: [brokoskokoli.github.io/claude_inspect](https://brokoskokoli.github.io/claude_inspect/) · Deutsch: [README.de.md](README.de.md) · Design notes (German): [KONZEPT.md](KONZEPT.md)
+> Website: [brokoskokoli.github.io/claude_inspect](https://brokoskokoli.github.io/claude_inspect/) · Deutsch: [README.de.md](https://github.com/brokoskokoli/claude_inspect/blob/main/README.de.md) · Design notes (German): [KONZEPT.md](https://github.com/brokoskokoli/claude_inspect/blob/main/KONZEPT.md) · [Contributing](https://github.com/brokoskokoli/claude_inspect/blob/main/CONTRIBUTING.md)
 
-![Live dashboard with running agents, subagents and a spawned worker session](docs/screenshots/dashboard.jpg)
+![Live dashboard with running agents, subagents and a spawned worker session](https://raw.githubusercontent.com/brokoskokoli/claude_inspect/main/docs/screenshots/dashboard.jpg)
 
 ## Why
 
@@ -49,29 +59,29 @@ becomes hard to tell *who is doing what*. claude-inspect answers:
 | **Dark mode** | Light, dark or system theme, remembered per browser. |
 | **Phone-friendly** | On narrow screens (phones, small iframes) the navigation collapses into a menu, tables turn into compact lists, the session view is single-column and long code, paths and JSON scroll inside their block. The server still listens on 127.0.0.1 only – to open it from a phone you need your own tunnel or reverse proxy that forwards to it with a local `Host` header (other hosts are rejected). |
 
-![CPU tab: CPU usage of a worker session and its subprocesses (vitest, tsc, esbuild …) over time](docs/screenshots/cpu.jpg)
+![CPU tab: CPU usage of a worker session and its subprocesses (vitest, tsc, esbuild …) over time](https://raw.githubusercontent.com/brokoskokoli/claude_inspect/main/docs/screenshots/cpu.jpg)
 
 <table>
 <tr>
-<td><img src="docs/screenshots/timeline.jpg" alt="Timeline of an orchestrator with subagents and a spawned worker session"></td>
-<td><img src="docs/screenshots/call-graph.jpg" alt="Call graph: main agent, subagents and a claude -p worker session"></td>
+<td><img src="https://raw.githubusercontent.com/brokoskokoli/claude_inspect/main/docs/screenshots/timeline.jpg" alt="Timeline of an orchestrator with subagents and a spawned worker session"></td>
+<td><img src="https://raw.githubusercontent.com/brokoskokoli/claude_inspect/main/docs/screenshots/call-graph.jpg" alt="Call graph: main agent, subagents and a claude -p worker session"></td>
 </tr>
 <tr>
-<td><img src="docs/screenshots/transcript.jpg" alt="Transcript viewer with an expanded Edit tool call shown as diff"></td>
-<td><img src="docs/screenshots/statistics.jpg" alt="Statistics: API cost estimate per day and model, activity heatmap"></td>
+<td><img src="https://raw.githubusercontent.com/brokoskokoli/claude_inspect/main/docs/screenshots/transcript.jpg" alt="Transcript viewer with an expanded Edit tool call shown as diff"></td>
+<td><img src="https://raw.githubusercontent.com/brokoskokoli/claude_inspect/main/docs/screenshots/statistics.jpg" alt="Statistics: API cost estimate per day and model, activity heatmap"></td>
 </tr>
 </table>
 
 <table>
 <tr>
-<td><img src="docs/screenshots/tool-explorer.jpg" alt="Tool explorer listing tool calls across all sessions"></td>
-<td><img src="docs/screenshots/dashboard-dark.jpg" alt="Live dashboard in dark mode"></td>
+<td><img src="https://raw.githubusercontent.com/brokoskokoli/claude_inspect/main/docs/screenshots/tool-explorer.jpg" alt="Tool explorer listing tool calls across all sessions"></td>
+<td><img src="https://raw.githubusercontent.com/brokoskokoli/claude_inspect/main/docs/screenshots/dashboard-dark.jpg" alt="Live dashboard in dark mode"></td>
 </tr>
 </table>
 
 *All screenshots show the built-in demo data set (`claude-inspect demo`), not real sessions.*
 
-## Quick start
+## Installation
 
 Requirements: Node.js ≥ 22, macOS, Linux or Windows, Claude Code writing to `~/.claude`. On Windows, live process status is read via PowerShell; the autostart service and the live `demo` are macOS/Linux only (`demo --out <dir>` works everywhere).
 
@@ -129,7 +139,7 @@ Light, dark or follow the OS – switch with the button in the header (the choic
 FormatRegistry → versioned decoders → normalized model → REST + SSE → Svelte UI
 ```
 
-- **Per-record format detection:** every decoder scores a record (`type`, version range, structure); the best one wins, a fallback keeps unknown records. Adding support for a new Claude Code version = adding a decoder file. See [docs/FORMATS.md](docs/FORMATS.md).
+- **Per-record format detection:** every decoder scores a record (`type`, version range, structure); the best one wins, a fallback keeps unknown records. Adding support for a new Claude Code version = adding a decoder file. See [docs/FORMATS.md](https://github.com/brokoskokoli/claude_inspect/blob/main/docs/FORMATS.md).
 - **In memory only:** startup reads process/job data and file heads (< 1 s); the full history (hundreds of MB) is aggregated in the background in a few seconds and then followed incrementally.
 - **Privacy & security:** listens on `127.0.0.1` only (never reachable from the network), rejects requests whose `Host` header isn't `localhost`/`127.0.0.1` (DNS rebinding), sends no CORS headers (other websites in your browser can't read the API), is read-only towards `~/.claude` (the CPU log goes to its own data directory and contains only timestamps, PIDs, program names and CPU percentages – no command lines), never reads credential files (`*.key`, `daemon/auth`, `ide/*.lock`, …) and masks token/secret fields in the raw view. The access token is an extra layer against *other local processes or users* on the same machine; on a single-user machine `--no-auth` (used by the autostart service) is a reasonable trade-off. Cost figures are estimates from public API list prices – with a subscription you do not pay these amounts directly.
 
@@ -159,7 +169,7 @@ tests/        anonymized fixtures per Claude Code version, snapshots, tests
 scripts/      fixture generator (demo data: src/server/cli/demo.ts)
 ```
 
-Contributions welcome – especially decoders for new Claude Code versions (run `npm run fixtures` and
+Contributions welcome – see [CONTRIBUTING.md](https://github.com/brokoskokoli/claude_inspect/blob/main/CONTRIBUTING.md), especially decoders for new Claude Code versions (run `npm run fixtures` and
 `npm test`, then check the *Formats* page for unknown fields).
 
 ## Disclaimer
@@ -169,4 +179,4 @@ may change at any time; claude-inspect is designed to degrade gracefully (unknow
 
 ## License
 
-[MIT](LICENSE)
+[MIT](https://github.com/brokoskokoli/claude_inspect/blob/main/LICENSE)

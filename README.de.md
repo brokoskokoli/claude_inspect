@@ -1,17 +1,33 @@
-# claude-inspect
+# claude-inspect – Claude-Code-Dashboard & Monitor für Agenten, Subagenten und Verbrauch
 
-> English: [README.md](README.md) · Website: [brokoskokoli.github.io/claude_inspect](https://brokoskokoli.github.io/claude_inspect/) · Screenshots: [docs/screenshots](docs/screenshots)
+[![npm](https://img.shields.io/npm/v/claude-inspect)](https://www.npmjs.com/package/claude-inspect)
+[![npm downloads](https://img.shields.io/npm/dm/claude-inspect)](https://www.npmjs.com/package/claude-inspect)
+[![CI](https://github.com/brokoskokoli/claude_inspect/actions/workflows/ci.yml/badge.svg)](https://github.com/brokoskokoli/claude_inspect/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/brokoskokoli/claude_inspect/blob/main/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/brokoskokoli/claude_inspect?style=social)](https://github.com/brokoskokoli/claude_inspect)
+
+**htop plus Flugschreiber für Claude Code. Keine Hooks, kein Proxy, ein `npx`.**
+
+Lokales Live-Dashboard und Monitor für Claude-Code-Agenten: laufende Sessions, Subagenten,
+per `claude -p` gestartete Worker, Tool-Aufrufe, Zeitleisten, CPU- und Token-Verbrauch
+und ein Transcript-Viewer mit durchsuchbarer History.
+
+```bash
+npx claude-inspect --open          # Node.js ≥ 22 · macOS, Linux, Windows
+```
+
+Liest **passiv** die Dateien unter `~/.claude`, ohne Hooks und ohne Konfigurationsänderung.
+Das Einzige, was es schreibt, ist ein CPU-Protokoll im eigenen Datenverzeichnis (siehe *CPU*).
+
+> English: [README.md](https://github.com/brokoskokoli/claude_inspect/blob/main/README.md) · Website: [brokoskokoli.github.io/claude_inspect](https://brokoskokoli.github.io/claude_inspect/) · Mitmachen: [CONTRIBUTING.md](https://github.com/brokoskokoli/claude_inspect/blob/main/CONTRIBUTING.md)
 >
 > Die Oberfläche ist englisch; hell, dunkel oder nach Systemeinstellung (Umschalter oben rechts).
 
-Lokales Live-Dashboard für Claude-Code-Agenten. Liest **passiv** die Dateien unter
-`~/.claude`, ohne Hooks und ohne Konfigurationsänderung. Das Einzige, was es schreibt, ist ein
-CPU-Protokoll im eigenen Datenverzeichnis (siehe *CPU*).
+![Live-Dashboard mit laufenden Agenten, Subagenten und einer gestarteten Worker-Session](https://raw.githubusercontent.com/brokoskokoli/claude_inspect/main/docs/screenshots/dashboard.jpg)
 
-## Start
+## Installation
 
 ```bash
-npx claude-inspect --open          # einmal ausprobieren
 npm install -g claude-inspect      # dauerhaft installieren
 claude-inspect service install     # Autostart → http://localhost:47717 (Lesezeichen)
 claude-inspect demo --open         # ohne eigene Daten ausprobieren
@@ -90,11 +106,11 @@ tests/             Fixtures je Claude-Code-Version, Snapshots, Tests
 scripts/           Fixture-Generator
 ```
 
-Neue Dateiformate: siehe [docs/FORMATS.md](docs/FORMATS.md). Gesamtkonzept: [KONZEPT.md](KONZEPT.md).
+Neue Dateiformate: siehe [docs/FORMATS.md](https://github.com/brokoskokoli/claude_inspect/blob/main/docs/FORMATS.md). Gesamtkonzept: [KONZEPT.md](https://github.com/brokoskokoli/claude_inspect/blob/main/KONZEPT.md).
 
 ## Speicher & Leistung
 
-Nichts wird auf Platte geschrieben. Beim Start liest der Server nur Prozess-, Job- und
+Außer dem CPU-Log im eigenen Datenverzeichnis wird nichts auf Platte geschrieben. Beim Start liest der Server nur Prozess-, Job- und
 Kopfdaten (unter 1 s); die komplette History (hier ~600 MB) wird im Hintergrund in
 2–3 s aggregiert und danach nur noch inkrementell nachgeführt. Vollständige Verläufe
 werden erst beim Öffnen geladen und mit einer Obergrenze im Speicher gehalten.
