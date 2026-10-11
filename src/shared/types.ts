@@ -386,7 +386,53 @@ export interface FormatReport {
 
 export type StreamEvent =
   | { type: 'dashboard'; data: Dashboard }
+  | { type: 'cpu'; data: CpuSnapshot }
   | { type: 'transcript'; data: { sessionId: string; agentId?: string; total: number } };
+
+// ---------------------------------------------------------------------------
+// CPU-Auslastung (Claude-Prozess + alle Unterprozesse, 100 % = ein Kern)
+
+export interface CpuLive {
+  /** Auslastung der letzten Messung */
+  pct: number;
+  /** Verlauf der letzten Minuten, ein Wert je Messung (älteste zuerst) */
+  spark: number[];
+}
+
+export interface CpuSnapshot {
+  t: number;
+  intervalMs: number;
+  cores: number;
+  /** je sessionId */
+  sessions: Record<string, CpuLive>;
+}
+
+export interface CpuProcessStat {
+  comm: string;
+  /** verbrauchte CPU-Zeit in Sekunden */
+  cpuSeconds: number;
+  /** höchste Auslastung in einer Messung (%) */
+  peak: number;
+  /** Anzahl verschiedener PIDs mit diesem Namen */
+  pids: number;
+}
+
+export interface CpuHistory {
+  sessionId: string;
+  /** Aufzeichnung auf Platte aktiv (sonst nur die letzte Stunde aus dem Speicher) */
+  logging: boolean;
+  file?: string;
+  cores: number;
+  /** Breite eines Punkts in ms */
+  bucketMs: number;
+  /** Reihen (Prozessnamen) nach CPU-Zeit absteigend, Rest als "other" */
+  keys: string[];
+  /** Mittelwert je Reihe und Zeitabschnitt (%), null = keine Messung (claude-inspect lief nicht) */
+  points: { t: number; values: number[] | null }[];
+  processes: CpuProcessStat[];
+  cpuSeconds: number;
+  peak: number;
+}
 
 // ---------------------------------------------------------------------------
 // Phase 3: Ablauf (Zeitleiste + Graph)

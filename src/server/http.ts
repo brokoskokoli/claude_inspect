@@ -101,6 +101,7 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
       if (p === '/api/stream') {
         res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-store', connection: 'keep-alive' });
         res.write(`event: dashboard\ndata: ${JSON.stringify(await inspector.getDashboard())}\n\n`);
+        res.write(`event: cpu\ndata: ${JSON.stringify(inspector.cpuSnapshot())}\n\n`);
         sseClients.add(res);
         req.on('close', () => sseClients.delete(res));
         return;
@@ -167,6 +168,9 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
       }
       if (p === '/api/files') return json(res, 200, await inspector.fileStats({ ...filter, q: sp.get('q') || undefined }));
       if (p === '/api/search') return json(res, 200, await inspector.search(sp.get('q') ?? ''));
+
+      m = /^\/api\/cpu\/([\w-]+)$/.exec(p);
+      if (m) return json(res, 200, await inspector.cpuHistory(m[1]));
 
       m = /^\/api\/flow\/([\w-]+)$/.exec(p);
       if (m) {

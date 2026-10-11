@@ -11,6 +11,7 @@ import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import { existsSync, mkdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { CSV_HEADER, toCsv, type CpuUsage } from '../model/cpu.js';
 
 let ROOT = '';
 const NOW = Date.now();
@@ -323,6 +324,52 @@ function sessionFile(pid: number, data: Record<string, unknown>) {
   write(join(ROOT, 'sessions', `${pid}.json`), JSON.stringify({ pid, procStart: procStart(pid), version: VERSION, peerProtocol: 1, pidDomain: process.platform, updatedAt: NOW, statusUpdatedAt: NOW - 20_000, ...data }));
 }
 
+/**
+ * Fictional CPU history (what claude-inspect would have recorded) for the live demo sessions:
+ * the claude process itself plus bursts of test runs, type checks and builds.
+ */
+type Burst = { at: number; secs: number; comm: string; pid: number; pct: [number, number] };
+
+function cpuHistory(dataDir: string, sessionId: string, pid: number, from: number, bursts: Burst[]): void {
+  const lines: string[] = [];
+  let lastWrite = 0;
+  for (let t = from; t <= NOW; t += 3000) {
+    const procs: CpuUsage[] = [{ pid, ppid: 1, comm: 'claude', pct: Math.round((3 + rnd() * 9) * 10) / 10 }];
+    for (const b of bursts) {
+      const start = from + b.at * 60_000;
+      if (t < start || t > start + b.secs * 1000) continue;
+      procs.push({ pid: b.pid, ppid: pid + 1, comm: b.comm, pct: Math.round((b.pct[0] + rnd() * (b.pct[1] - b.pct[0])) * 10) / 10 });
+    }
+    // like the real recorder: quiet phases at most every 30 s
+    if (procs.length === 1 && t - lastWrite < 30_000) continue;
+    lastWrite = t;
+    lines.push(toCsv({ t, procs }));
+  }
+  write(join(dataDir, 'cpu', `${sessionId}.csv`), CSV_HEADER + lines.join(''));
+}
+
+function demoCpu(dataDir: string, s: ReturnType<typeof buildScenario>): void {
+  rmSync(dataDir, { recursive: true, force: true });
+  cpuHistory(dataDir, s.orchId, 41_200, NOW - 38 * 60_000, [
+    { at: 2, secs: 20, comm: 'rg', pid: 41_310, pct: [60, 95] },
+    { at: 30, secs: 150, comm: 'node', pid: 41_377, pct: [110, 160] },
+    { at: 31, secs: 90, comm: 'eslint', pid: 41_380, pct: [90, 130] },
+  ]);
+  const minutes = Math.max(4, (NOW - s.implStart) / 60_000);
+  const at = (f: number) => f * minutes;
+  cpuHistory(dataDir, s.implId, 52_100, s.implStart, [
+    { at: at(0.1), secs: 120, comm: 'vitest', pid: 52_210, pct: [240, 380] },
+    { at: at(0.1), secs: 120, comm: 'esbuild', pid: 52_214, pct: [20, 60] },
+    { at: at(0.3), secs: 75, comm: 'tsc', pid: 52_260, pct: [95, 105] },
+    { at: at(0.45), secs: 180, comm: 'vitest', pid: 52_301, pct: [280, 420] },
+    { at: at(0.45), secs: 180, comm: 'esbuild', pid: 52_305, pct: [30, 70] },
+    { at: at(0.68), secs: 240, comm: 'node', pid: 52_340, pct: [90, 140] },
+    { at: at(0.84), secs: 150, comm: 'vitest', pid: 52_390, pct: [250, 360] },
+    { at: at(0.84), secs: 150, comm: 'esbuild', pid: 52_394, pct: [20, 50] },
+    { at: at(0.93), secs: 60, comm: 'tsc', pid: 52_401, pct: [95, 105] },
+  ]);
+}
+
 export interface DemoOptions {
   /** only generate into this directory – no processes, no server */
   out?: string;
@@ -367,6 +414,8 @@ export async function runDemo(opts: DemoOptions): Promise<void> {
   console.log(`Demo data in ${ROOT}`);
   // config.ts reads CLAUDE_CONFIG_DIR on import – set it before loading the server
   process.env.CLAUDE_CONFIG_DIR = ROOT;
+  process.env.CLAUDE_INSPECT_DATA_DIR = `${ROOT}-data`;
+  demoCpu(`${ROOT}-data`, s);
   const { runServer } = await import('../run.js');
   await runServer({ port: opts.port, open: opts.open, token: process.env.CLAUDE_INSPECT_TOKEN ?? 'demo' });
 }

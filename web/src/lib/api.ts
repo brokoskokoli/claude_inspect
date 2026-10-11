@@ -1,4 +1,5 @@
 import type {
+  CpuHistory,
   Dashboard,
   FileStat,
   Flow,
@@ -42,6 +43,7 @@ export const api = {
     get<unknown>(`/api/raw/${enc(id)}?line=${line}${agent ? `&agent=${enc(agent)}` : ''}`),
   formats: () => get<FormatReport>('/api/formats'),
   flow: (id: string) => get<Flow>(`/api/flow/${enc(id)}`),
+  cpu: (id: string) => get<CpuHistory>(`/api/cpu/${enc(id)}`),
   stats: (f: HistoryFilter) => get<HistoryStats>(`/api/stats${qs({ ...f })}`),
   projects: () => get<string[]>('/api/projects'),
   tools: (p: HistoryFilter & { name?: string; q?: string; session?: string; file?: string; errors?: boolean; offset?: number; limit?: number }) =>

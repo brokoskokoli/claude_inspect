@@ -3,6 +3,8 @@ import { watch, type FSWatcher } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 import type {
+  CpuHistory,
+  CpuSnapshot,
   Dashboard,
   DashboardProcess,
   Flow,
@@ -19,6 +21,7 @@ import type {
   TranscriptPage,
 } from '../shared/types.js';
 import { CLAUDE_DIR, relToClaude } from './config.js';
+import { CpuMonitor } from './cpu-monitor.js';
 import { registry } from './formats/index.js';
 import { HistoryIndex, type HistoryFilter, type ToolQuery } from './history/aggregator.js';
 import { search, type SearchFile } from './history/search.js';
@@ -69,6 +72,17 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
   private timer?: NodeJS.Timeout;
   private poller?: NodeJS.Timeout;
   private building?: Promise<void>;
+  /** CPU-Auslastung je Claude-Prozess samt Unterprozessen */
+  private readonly cpu: CpuMonitor;
+
+  constructor(opts: { cpuLog?: boolean } = {}) {
+    super();
+    this.cpu = new CpuMonitor({
+      log: opts.cpuLog ?? false,
+      roots: () => new Map(this.processes.filter((p) => p.alive && p.pid > 0).map((p) => [p.pid, p.sessionId])),
+      onSample: (data) => this.emit('event', { type: 'cpu', data }),
+    });
+  }
 
   async start(): Promise<void> {
     await this.index.scan();
@@ -96,9 +110,11 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
     }
     // Polling als Netz: Prozess-Liveness (kein Datei-Event beim Absturz) und verpasste Events.
     this.poller = setInterval(() => void this.poll(), 3000);
+    this.cpu.start();
   }
 
   stop(): void {
+    this.cpu.stop();
     this.watcher?.close();
     clearInterval(this.poller);
     clearTimeout(this.timer);
@@ -173,6 +189,18 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       }
     })().finally(() => (this.building = undefined));
     await this.building;
+  }
+
+  cpuSnapshot(): CpuSnapshot {
+    return this.cpu.snapshot();
+  }
+
+  cpuHistory(sessionId: string): Promise<CpuHistory> {
+    return this.cpu.history(sessionId);
+  }
+
+  get cpuLogDir(): string | undefined {
+    return this.cpu.logging ? this.cpu.dir : undefined;
   }
 
   async getDashboard(): Promise<Dashboard> {

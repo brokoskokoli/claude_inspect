@@ -1,5 +1,6 @@
 <script lang="ts">
-  import type { Flow, SessionDetail } from '$shared/types';
+  import type { CpuHistory, Flow, SessionDetail } from '$shared/types';
+  import CpuChart from '../components/CpuChart.svelte';
   import FlowGraph from '../components/FlowGraph.svelte';
   import TaskBoard from '../components/TaskBoard.svelte';
   import Timeline from '../components/Timeline.svelte';
@@ -45,11 +46,34 @@
     };
   });
 
+  let cpu = $state<CpuHistory | null>(null);
+  let cpuLoadedAt = 0;
+  async function loadCpu() {
+    cpuLoadedAt = Date.now();
+    try {
+      cpu = await api.cpu(id);
+    } catch (e) {
+      error = String(e);
+    }
+  }
+  $effect(() => {
+    if (tab !== 'cpu') return;
+    untrack(() => void loadCpu());
+  });
+  // laufende Session: mit neuen Messungen nachladen (höchstens alle 5 s)
+  $effect(() => {
+    if (tab !== 'cpu' || !live.cpu?.sessions[id]) return;
+    untrack(() => {
+      if (Date.now() - cpuLoadedAt > 5000) void loadCpu();
+    });
+  });
+
   const TABS: [SessionTab, string][] = [
     ['transcript', 'Transcript'],
     ['timeline', 'Timeline'],
     ['graph', 'Call graph'],
     ['tasks', 'Tasks'],
+    ['cpu', 'CPU'],
   ];
 
   let detail = $state<SessionDetail | null>(null);
@@ -170,6 +194,16 @@
     {#if flow}<FlowGraph {flow} />{:else}<p class="muted">Loading flow …</p>{/if}
   {:else if tab === 'tasks'}
     <TaskBoard tasks={detail.tasks} />
+  {:else if tab === 'cpu'}
+    {#if !cpu}
+      <p class="muted">Loading CPU usage …</p>
+    {:else if cpu.points.length === 0}
+      <p class="muted">
+        No CPU usage recorded for this session. claude-inspect measures while it is running{cpu.logging ? '' : ' (recording to disk is off: --no-cpu-log, only the last hour is kept in memory)'}.
+      </p>
+    {:else}
+      <section class="card cpu-card"><CpuChart history={cpu} /></section>
+    {/if}
   {:else}
   <div class="layout">
     <aside>
@@ -201,6 +235,10 @@
 {/if}
 
 <style>
+  .cpu-card {
+    padding: 16px;
+    min-width: 0;
+  }
   .resume-row {
     margin-top: 12px;
     padding-top: 12px;

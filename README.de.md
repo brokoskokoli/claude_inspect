@@ -1,11 +1,12 @@
 # claude-inspect
 
-> English: [README.md](README.md) · Screenshots: [docs/screenshots](docs/screenshots)
+> English: [README.md](README.md) · Website: [brokoskokoli.github.io/claude_inspect](https://brokoskokoli.github.io/claude_inspect/) · Screenshots: [docs/screenshots](docs/screenshots)
 >
 > Die Oberfläche ist englisch; hell, dunkel oder nach Systemeinstellung (Umschalter oben rechts).
 
 Lokales Live-Dashboard für Claude-Code-Agenten. Liest **passiv** die Dateien unter
-`~/.claude`, ohne Hooks, ohne Konfigurationsänderung und ohne eigene Datenablage.
+`~/.claude`, ohne Hooks und ohne Konfigurationsänderung. Das Einzige, was es schreibt, ist ein
+CPU-Protokoll im eigenen Datenverzeichnis (siehe *CPU*).
 
 ## Start
 
@@ -23,7 +24,8 @@ beim Login und nach Abstürzen neu und läuft ohne Token (nur von localhost erre
 
 Manuell gestartet gibt `claude-inspect` eine URL mit Zufallstoken (`?t=…`) aus; der Browser merkt
 es sich als Cookie. `--token` für einen festen Token, `--no-auth` für keinen, `--port` für einen
-anderen Port, `CLAUDE_CONFIG_DIR=/pfad` für ein anderes Datenverzeichnis.
+anderen Port, `CLAUDE_CONFIG_DIR=/pfad` für ein anderes Datenverzeichnis, `--no-cpu-log` ohne
+CPU-Protokoll, `CLAUDE_INSPECT_DATA_DIR=/pfad` für einen anderen Ablageort des CPU-Protokolls.
 
 Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
 (`npm run dev` + `npm run dev:web` für die Entwicklung mit Hot-Reload).
@@ -43,6 +45,14 @@ Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
     Balken, Aufruf-Verbindungen, Pausen über 10 min zusammengeschoben, Zoom
   - *Call graph*: wer wen aufgerufen hat, inkl. Fork/Fortsetzung
   - *Tasks*: Task-Liste der Session als Board
+  - *CPU*: Auslastung des Claude-Prozesses samt aller Unterprozesse (Shells, Builds, Tests,
+  MCP-Server …) als gestapelter Verlauf je Programmname, dazu die Prozesse mit der meisten CPU-Zeit
+- **CPU**: alle 3 s aus der Prozesstabelle gemessen (100 % = ein Kern), Verlaufslinie auf der
+  Dashboard-Karte. Pro Session eine CSV-Datei im App-Datenverzeichnis (macOS
+  `~/Library/Application Support/claude-inspect/cpu`, Linux `~/.local/share/claude-inspect/cpu`,
+  Windows `%LOCALAPPDATA%\claude-inspect\cpu`), damit der Verlauf nach Sessionende abrufbar bleibt.
+  Dateien älter als 30 Tage werden gelöscht. Gemessen wird nur, solange claude-inspect läuft;
+  Prozesse, die kürzer als 3 s leben, fehlen. Abschalten mit `--no-cpu-log`.
 - **Statistics**: API-Gegenwert (Schätzung nach Listenpreisen), Tokens je Modell/Tag/Projekt,
   Cache-Anteil, Aktivitäts-Heatmap, Tool-Statistik mit Fehlern und Dauer (p95)
 - **Tools**: alle Tool-Aufrufe aller Sessions, filterbar; Klick springt an die Stelle im Verlauf

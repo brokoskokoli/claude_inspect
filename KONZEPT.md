@@ -103,7 +103,8 @@ Daraus ergibt sich ein **Agenten-Graph**: Prozess → Session → (Subagenten, r
 ### 2.1 Stack-Vorschlag
 
 - **Backend:** Node.js + TypeScript (Fastify o. ä.) oder Bun. Gleiche Sprache wie das Frontend, Decoder-Typen teilen sich Frontend und Backend.
-- **Keine eigene Persistenz:** Das Tool speichert nichts. Die Quelle der Wahrheit sind ausschließlich die Dateien unter `~/.claude`, der Index lebt nur im Arbeitsspeicher. Was Claude Code aufräumt, verschwindet auch aus dem Tool.
+- **Keine eigene Persistenz für Claude-Daten:** Die Quelle der Wahrheit sind ausschließlich die Dateien unter `~/.claude`, der Index lebt nur im Arbeitsspeicher. Was Claude Code aufräumt, verschwindet auch aus dem Tool.
+- **Einzige Ausnahme, CPU-Messwerte:** Claude Code selbst speichert keine CPU-Auslastung, rückwirkend gibt es sie also nicht. Deshalb schreibt das Tool je Session eine CSV-Datei (`ts,pid,ppid,comm,cpu_pct`) in sein eigenes App-Datenverzeichnis, nie nach `~/.claude`: Claude Code räumt dort selbst auf, und das Tool bleibt gegenüber `~/.claude` rein lesend. Keine Kommandozeilen (können Geheimnisse enthalten), Löschung nach 30 Tagen, abschaltbar mit `--no-cpu-log`.
 - **Zweistufiges Laden**, weil 600 MB beim Start komplett zu parsen zu langsam wäre:
   1. *Beim Start:* Nur die leichten Quellen vollständig lesen (`sessions/`, `jobs/`, `daemon/`, `tasks/`, `history.jsonl`, `*.meta.json`, `custom-title.json`). Von jedem Transcript nur Größe, mtime sowie Anfang und Ende. Das reicht für Titel, Zeitraum, letzten Prompt und `cost-state`. So entsteht eine Session-Liste mit Kennzahlen.
   2. *Bei Bedarf:* Ein Transcript wird erst beim Öffnen komplett geparst und im Speicher gehalten (LRU-Cache, Obergrenze z. B. 500 MB). Aktive Sessions werden per Tail inkrementell nachgeführt, pro Datei merkt sich das Tool den Byte-Offset.
@@ -207,4 +208,4 @@ Task      { id, sessionId, subject, description, status, blocks[], blockedBy[] }
 - **Umfang:** Erst einmal nur Claude Code. Die Adapter-Architektur bleibt trotzdem offen für andere Agenten.
 - **Stack:** TypeScript durchgehend (Backend Node.js und Frontend).
 - **Zugriff:** Nur lokal im Browser (`127.0.0.1`), keine Auth über das URL-Token hinaus.
-- **Persistenz:** Keine. Das Tool speichert selbst keine Sessions und keinen Index, alles wird aus `~/.claude` gelesen und nur im Speicher gehalten.
+- **Persistenz:** Keine für Sessions und Index, alles wird aus `~/.claude` gelesen und nur im Speicher gehalten. Ausnahme: CPU-Messwerte als CSV im eigenen Datenverzeichnis (siehe oben).

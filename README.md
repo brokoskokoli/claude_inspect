@@ -12,10 +12,10 @@ claude-inspect is a local web UI that reads the files Claude Code already writes
 and shows running sessions, subagents, `claude -p` worker sessions started by other agents,
 every tool call with its result, timelines, a call graph, token usage and a searchable history.
 
-It is **read-only and passive**: no hooks, no settings changes, no proxy, no data leaves your machine,
-and the tool itself stores nothing.
+It is **read-only and passive** towards `~/.claude`: no hooks, no settings changes, no proxy, no data leaves
+your machine. The only thing it writes is a CPU log in its own data directory (see *CPU usage*).
 
-> Deutsch: [README.de.md](README.de.md) · Design notes (German): [KONZEPT.md](KONZEPT.md)
+> Website: [brokoskokoli.github.io/claude_inspect](https://brokoskokoli.github.io/claude_inspect/) · Deutsch: [README.de.md](README.de.md) · Design notes (German): [KONZEPT.md](KONZEPT.md)
 
 ![Live dashboard with running agents, subagents and a spawned worker session](docs/screenshots/dashboard.jpg)
 
@@ -41,12 +41,15 @@ becomes hard to tell *who is doing what*. claude-inspect answers:
 | **Timeline** | One lane per agent, tool calls as bars, spawn links between lanes, idle gaps > 10 min collapsed, zoom. Click a bar to jump to the call. |
 | **Spawn linking** | Links sessions started by `claude -p …` to the calling tool use via the process tree (exact), `--session-id`, prompt text, `--agent`, time window and working directory – with a confidence label. |
 | **Statistics** | API list-price estimate, tokens per model/day/project, cache share, activity heatmap, tool statistics with error rate and p95 duration. |
+| **CPU usage** | CPU of each Claude Code process plus all its subprocesses (shells, builds, test runners, MCP servers …), measured every 3 s from the process table. Sparkline on the dashboard card, a *CPU* tab per session with a stacked chart by process name and the processes that used the most CPU time. Recorded as one CSV per session in the app data directory (`~/Library/Application Support/claude-inspect/cpu` on macOS, `~/.local/share/claude-inspect/cpu` on Linux, `%LOCALAPPDATA%\claude-inspect\cpu` on Windows), so it stays available after the session ended; files older than 30 days are deleted. Only measured while claude-inspect runs; processes that live less than 3 s are missed. `--no-cpu-log` turns recording off. |
 | **Tool explorer & files** | Every tool call across all sessions, filterable; which files agents read, edited or wrote. |
 | **Full-text search** | Across all transcripts, subagents and the prompt history (including prompts of sessions Claude Code already cleaned up). |
 | **Task boards** | The TaskCreate/TaskUpdate list of a session with dependencies. |
 | **Format detection & schema drift** | Claude Code's file formats change between versions. Each record is decoded individually by versioned decoders; unknown records and fields are never dropped and are listed on the *Formats* page. |
 | **Dark mode** | Light, dark or system theme, remembered per browser. |
 | **Phone-friendly** | On narrow screens (phones, small iframes) the navigation collapses into a menu, tables turn into compact lists, the session view is single-column and long code, paths and JSON scroll inside their block. The server still listens on 127.0.0.1 only – to open it from a phone you need your own tunnel or reverse proxy that forwards to it with a local `Host` header (other hosts are rejected). |
+
+![CPU tab: CPU usage of a worker session and its subprocesses (vitest, tsc, esbuild …) over time](docs/screenshots/cpu.jpg)
 
 <table>
 <tr>
@@ -90,7 +93,8 @@ After `npm install -g claude-inspect@latest`, run `claude-inspect service instal
 
 Started manually, `claude-inspect` prints a URL with a random access token (`?t=…`) that the browser
 keeps as a cookie. Use `--token <t>` for a fixed token or `--no-auth` for none, `--port` for another port,
-`CLAUDE_CONFIG_DIR=/path/to/.claude` for another data directory. `claude-inspect --help` lists everything.
+`CLAUDE_CONFIG_DIR=/path/to/.claude` for another data directory, `--no-cpu-log` to not record CPU usage,
+`CLAUDE_INSPECT_DATA_DIR=/path` for another place for the CPU log. `claude-inspect --help` lists everything.
 
 ### Try it without your own data
 
@@ -127,7 +131,7 @@ FormatRegistry → versioned decoders → normalized model → REST + SSE → Sv
 
 - **Per-record format detection:** every decoder scores a record (`type`, version range, structure); the best one wins, a fallback keeps unknown records. Adding support for a new Claude Code version = adding a decoder file. See [docs/FORMATS.md](docs/FORMATS.md).
 - **In memory only:** startup reads process/job data and file heads (< 1 s); the full history (hundreds of MB) is aggregated in the background in a few seconds and then followed incrementally.
-- **Privacy & security:** listens on `127.0.0.1` only (never reachable from the network), rejects requests whose `Host` header isn't `localhost`/`127.0.0.1` (DNS rebinding), sends no CORS headers (other websites in your browser can't read the API), is read-only, never reads credential files (`*.key`, `daemon/auth`, `ide/*.lock`, …) and masks token/secret fields in the raw view. The access token is an extra layer against *other local processes or users* on the same machine; on a single-user machine `--no-auth` (used by the autostart service) is a reasonable trade-off. Cost figures are estimates from public API list prices – with a subscription you do not pay these amounts directly.
+- **Privacy & security:** listens on `127.0.0.1` only (never reachable from the network), rejects requests whose `Host` header isn't `localhost`/`127.0.0.1` (DNS rebinding), sends no CORS headers (other websites in your browser can't read the API), is read-only towards `~/.claude` (the CPU log goes to its own data directory and contains only timestamps, PIDs, program names and CPU percentages – no command lines), never reads credential files (`*.key`, `daemon/auth`, `ide/*.lock`, …) and masks token/secret fields in the raw view. The access token is an extra layer against *other local processes or users* on the same machine; on a single-user machine `--no-auth` (used by the autostart service) is a reasonable trade-off. Cost figures are estimates from public API list prices – with a subscription you do not pay these amounts directly.
 
 ## Development
 

@@ -2,9 +2,10 @@
   import type { DashboardProcess, SubagentInfo } from '$shared/types';
   import { splitMcpName } from '$shared/tools';
   import { ago, duration, modelName, shortPath, toMs, tokens, usd } from '../lib/format';
-  import { clock } from '../lib/live.svelte';
+  import { clock, live } from '../lib/live.svelte';
   import { href } from '../lib/router.svelte';
   import Activity from './Activity.svelte';
+  import Sparkline from './charts/Sparkline.svelte';
   import SpawnBadge from './SpawnBadge.svelte';
   import StatusDot from './StatusDot.svelte';
 
@@ -28,6 +29,7 @@
   const spawnedRunning = $derived(s?.spawned.filter((c) => c.status !== 'done') ?? []);
   const spawnedDone = $derived(s?.spawned.filter((c) => c.status === 'done').slice(-3).reverse() ?? []);
   const spawnedBy = $derived(item.spawnedBy);
+  const cpu = $derived(p.alive ? live.cpu?.sessions[p.sessionId] : undefined);
 </script>
 
 <a class="card proc {state}" href={href.session(p.sessionId)}>
@@ -137,7 +139,14 @@
       <span title="Tool calls">{s.toolCalls} tools</span>
       {#if s.costUSD !== undefined}<span>{usd(s.costUSD)}</span>{/if}
       {#if s.permissionMode}<span class="perm" title="Permission-Mode">{s.permissionMode}</span>{/if}
-    {:else}
+    {/if}
+    {#if cpu}
+      <span class="cpu" title="CPU of the claude process and all its subprocesses (100% = one core), last minutes">
+        <Sparkline values={cpu.spark} ariaLabel="CPU usage, last minutes" />
+        <span class:hot={cpu.pct >= 80}>cpu {Math.round(cpu.pct)}%</span>
+      </span>
+    {/if}
+    {#if !s}
       <span class="faint">{p.alive ? 'no transcript found' : `ended · last seen ${ago(p.updatedAt ?? p.startedAt, clock.now)}`}</span>
     {/if}
     <span class="ver faint">v{p.version} · pid {p.pid}</span>
@@ -325,6 +334,15 @@
     font-size: 12px;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
+  }
+  .cpu {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .cpu .hot {
+    color: var(--text);
+    font-weight: 600;
   }
   .perm {
     font-family: var(--mono);

@@ -15,6 +15,8 @@ export interface RunOptions {
   noAuth?: boolean;
   /** fixed access token; random per start if omitted */
   token?: string;
+  /** don't write CPU measurements to the data directory */
+  noCpuLog?: boolean;
 }
 
 /** Locates the built web UI – works from src/server (tsx), dist/app/server and an installed npm package. */
@@ -35,7 +37,7 @@ function openBrowser(url: string): void {
 }
 
 export async function runServer(opts: RunOptions): Promise<void> {
-  const inspector = new Inspector();
+  const inspector = new Inspector({ cpuLog: !opts.noCpuLog });
   const t0 = Date.now();
   await inspector.start();
 
@@ -48,6 +50,7 @@ export async function runServer(opts: RunOptions): Promise<void> {
 
   const url = noAuth ? `http://localhost:${opts.port}/` : `http://localhost:${opts.port}/?t=${token}`;
   console.log(`claude-inspect is reading ${CLAUDE_DIR} (started in ${Date.now() - t0} ms)`);
+  console.log(inspector.cpuLogDir ? `CPU usage is recorded in ${inspector.cpuLogDir} (--no-cpu-log to turn off)` : 'CPU usage is not recorded (--no-cpu-log)');
   console.log(opts.dev ? `API (dev, no token): ${url}  –  UI: npm run dev:web` : `Dashboard: ${url}`);
   if (opts.open) openBrowser(url);
 

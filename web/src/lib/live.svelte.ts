@@ -1,8 +1,8 @@
-import type { Dashboard } from '$shared/types';
+import type { CpuSnapshot, Dashboard } from '$shared/types';
 
 type TranscriptEvent = { sessionId: string; agentId?: string; total: number };
 
-export const live = $state<{ dashboard: Dashboard | null; connected: boolean }>({ dashboard: null, connected: false });
+export const live = $state<{ dashboard: Dashboard | null; cpu: CpuSnapshot | null; connected: boolean }>({ dashboard: null, cpu: null, connected: false });
 
 /** Sekundentakt für relative Zeitangaben. */
 export const clock = $state({ now: Date.now() });
@@ -22,6 +22,9 @@ export function connect(): void {
   es.addEventListener('dashboard', (ev) => {
     live.dashboard = JSON.parse((ev as MessageEvent).data);
     live.connected = true;
+  });
+  es.addEventListener('cpu', (ev) => {
+    live.cpu = JSON.parse((ev as MessageEvent).data);
   });
   es.addEventListener('transcript', (ev) => {
     const data = JSON.parse((ev as MessageEvent).data) as TranscriptEvent;

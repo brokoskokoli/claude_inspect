@@ -3,6 +3,19 @@ import { join, relative, sep } from 'node:path';
 
 export const CLAUDE_DIR = process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.claude');
 
+/** Üblicher Ort für App-Daten je Plattform. */
+function defaultDataDir(): string {
+  if (process.platform === 'darwin') return join(homedir(), 'Library', 'Application Support', 'claude-inspect');
+  if (process.platform === 'win32') return join(process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'), 'claude-inspect');
+  return join(process.env.XDG_DATA_HOME ?? join(homedir(), '.local', 'share'), 'claude-inspect');
+}
+
+/**
+ * Eigenes Datenverzeichnis von claude-inspect – das einzige, in das das Tool schreibt
+ * (CPU-Messwerte). ~/.claude wird nie verändert.
+ */
+export const DATA_DIR = process.env.CLAUDE_INSPECT_DATA_DIR || defaultDataDir();
+
 export const paths = {
   projects: join(CLAUDE_DIR, 'projects'),
   sessions: join(CLAUDE_DIR, 'sessions'),
