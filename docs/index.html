@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>claude-inspect</title>
+    <meta name="description" content="Live dashboard and history viewer for Claude Code agents: running sessions, subagents, spawned workers, tool calls, timelines, CPU usage, token usage and full history – read passively from ~/.claude, no hooks." />
+    <meta property="og:title" content="claude-inspect – see what your Claude Code agents are doing" />
+    <meta property="og:description" content="Local live dashboard and history viewer for Claude Code agents. No hooks, no proxy, nothing leaves your machine." />
+    <meta property="og:image" content="https://brokoskokoli.github.io/claude_inspect/screenshots/dashboard.jpg" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='11' fill='none' stroke='%23d97757' stroke-width='4'/><circle cx='16' cy='16' r='4' fill='%23d97757'/></svg>" />
+    <style>
+      :root {
+        --bg: #f6f5f1;
+        --surface: #ffffff;
+        --surface-2: #f0eee8;
+        --border: #e3e0d8;
+        --text: #1f1e1c;
+        --muted: #6b6860;
+        --faint: #9b978d;
+        --accent: #c2643f;
+        --accent-soft: #f6e6de;
+        --code-bg: #f3f1ec;
+        --shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 6px 24px rgb(0 0 0 / 0.06);
+        --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #161614;
+          --surface: #1f1e1b;
+          --surface-2: #282724;
+          --border: #353430;
+          --text: #ebe8e1;
+          --muted: #a39f95;
+          --faint: #75726a;
+          --accent: #e0835f;
+          --accent-soft: #3a2a22;
+          --code-bg: #262521;
+          --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 24px rgb(0 0 0 / 0.25);
+          color-scheme: dark;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      code {
+        font-family: var(--mono);
+        font-size: 0.88em;
+        background: var(--code-bg);
+        padding: 1px 5px;
+        border-radius: 5px;
+      }
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 16px;
+      }
+      header.top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 0;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 650;
+        color: var(--text);
+      }
+      .brand svg {
+        flex: none;
+      }
+      nav.links {
+        display: flex;
+        gap: 18px;
+        font-size: 15px;
+      }
+      nav.links a {
+        color: var(--muted);
+      }
+      .hero {
+        padding: 56px 0 28px;
+        text-align: center;
+      }
+      .hero h1 {
+        font-size: clamp(32px, 5.5vw, 52px);
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        margin: 0 auto 18px;
+        max-width: 16em;
+        text-wrap: balance;
+      }
+      .hero h1 em {
+        font-style: normal;
+        color: var(--accent);
+      }
+      .hero p.lead {
+        font-size: clamp(17px, 2.2vw, 20px);
+        color: var(--muted);
+        max-width: 40em;
+        margin: 0 auto 28px;
+        text-wrap: pretty;
+      }
+      .install {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 10px 10px 18px;
+        font-family: var(--mono);
+        font-size: 15px;
+        box-shadow: var(--shadow);
+        max-width: 100%;
+      }
+      .install span {
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+      .install span::before {
+        content: '$ ';
+        color: var(--faint);
+      }
+      .install button {
+        flex: none;
+        font: 600 13px system-ui, sans-serif;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 12px;
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+        min-height: 36px;
+      }
+      .badges {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 22px;
+        font-size: 13.5px;
+        color: var(--muted);
+      }
+      .badges span {
+        border: 1px solid var(--border);
+        border-radius: 99px;
+        padding: 3px 11px;
+        background: var(--surface);
+      }
+      figure.shot {
+        margin: 36px 0 0;
+      }
+      .shot img,
+      .feature img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        background: var(--surface);
+      }
+      figcaption {
+        text-align: center;
+        font-size: 13.5px;
+        color: var(--faint);
+        margin-top: 10px;
+      }
+      section {
+        padding: 56px 0 8px;
+      }
+      section > h2 {
+        font-size: clamp(24px, 3.4vw, 32px);
+        letter-spacing: -0.01em;
+        margin: 0 0 8px;
+      }
+      section > p.sub {
+        color: var(--muted);
+        margin: 0 0 28px;
+        max-width: 46em;
+      }
+      .feature {
+        display: grid;
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+        gap: 36px;
+        align-items: center;
+        margin: 0 0 56px;
+      }
+      .feature:nth-of-type(even) {
+        grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      }
+      .feature:nth-of-type(even) .text {
+        order: 2;
+      }
+      .feature h3 {
+        font-size: 22px;
+        margin: 0 0 10px;
+      }
+      .feature p {
+        color: var(--muted);
+        margin: 0 0 10px;
+      }
+      .feature ul {
+        margin: 0;
+        padding-left: 20px;
+        color: var(--muted);
+      }
+      .feature li {
+        margin: 4px 0;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 650;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--accent);
+        background: var(--accent-soft);
+        border-radius: 99px;
+        padding: 2px 10px;
+        margin-bottom: 10px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+        gap: 16px;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px 20px;
+      }
+      .card h4 {
+        margin: 0 0 6px;
+        font-size: 16px;
+      }
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+      .releases {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .release {
+        display: grid;
+        grid-template-columns: 110px minmax(0, 1fr);
+        gap: 18px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px 20px;
+      }
+      .release .ver {
+        font-family: var(--mono);
+        font-weight: 650;
+      }
+      .release .date {
+        display: block;
+        font-family: system-ui, sans-serif;
+        font-weight: 400;
+        font-size: 13px;
+        color: var(--faint);
+      }
+      .release h4 {
+        margin: 0 0 4px;
+        font-size: 16px;
+      }
+      .release p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+      .release.new {
+        border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+      }
+      pre {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 18px;
+        overflow-x: auto;
+        font: 14px/1.7 var(--mono);
+        margin: 0 0 14px;
+      }
+      pre .c {
+        color: var(--faint);
+      }
+      .two {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
+        gap: 24px;
+      }
+      .two h3 {
+        margin: 0 0 10px;
+        font-size: 18px;
+      }
+      .two p,
+      .two li {
+        color: var(--muted);
+        font-size: 15px;
+      }
+      .two ul {
+        padding-left: 20px;
+        margin: 0;
+      }
+      .two li {
+        margin: 5px 0;
+      }
+      footer {
+        margin-top: 64px;
+        padding: 28px 0 40px;
+        border-top: 1px solid var(--border);
+        color: var(--faint);
+        font-size: 14px;
+      }
+      footer .wrap {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      @media (max-width: 760px) {
+        .feature,
+        .feature:nth-of-type(even) {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 18px;
+        }
+        .feature:nth-of-type(even) .text {
+          order: 0;
+        }
+        .release {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 6px;
+        }
+        nav.links a.hide-sm {
+          display: none;
+        }
+        .hero {
+          padding-top: 28px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <a class="brand" href="./">
+          <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="11" fill="none" stroke="#d97757" stroke-width="4" /><circle cx="16" cy="16" r="4" fill="#d97757" /></svg>
+          claude-inspect
+        </a>
+        <nav class="links">
+          <a href="#features">Features</a>
+          <a href="#new" class="hide-sm">What's new</a>
+          <a href="#start" class="hide-sm">Get started</a>
+          <a href="https://github.com/brokoskokoli/claude_inspect">GitHub</a>
+        </nav>
+      </header>
+
+      <div class="hero">
+        <h1>See what your Claude Code agents are doing – <em>right now</em> and in the past.</h1>
+        <p class="lead">
+          A local web dashboard that reads the files Claude Code already writes to <code>~/.claude</code>: running sessions, subagents, spawned
+          <code>claude -p</code> workers, every tool call, timelines, CPU and token usage and a searchable history.
+        </p>
+        <div class="install">
+          <span id="cmd">npx claude-inspect --open</span>
+          <button type="button" id="copy">Copy</button>
+        </div>
+        <div class="badges">
+          <span>No hooks</span><span>No proxy</span><span>Nothing leaves your machine</span><span>macOS · Linux · Windows</span><span>MIT</span>
+        </div>
+        <figure class="shot">
+          <img src="screenshots/dashboard.jpg" width="1356" height="896" alt="Live dashboard with running agents, subagents and a spawned worker session" />
+          <figcaption>Live dashboard. All screenshots show the built-in demo data (<code>claude-inspect demo</code>).</figcaption>
+        </figure>
+      </div>
+
+      <section id="features">
+        <h2>Everything your agents do, in one place</h2>
+        <p class="sub">Claude Code keeps a lot of state on disk. claude-inspect turns it into a live view – without changing a single setting.</p>
+
+        <div class="feature">
+          <div class="text">
+            <span class="tag">New in 0.4</span>
+            <h3>CPU usage per session</h3>
+            <p>Some agents quietly burn your CPU: a test runner in watch mode, a build that never ends, an MCP server stuck in a loop. claude-inspect measures every Claude Code process together with all of its subprocesses.</p>
+            <ul>
+              <li>Sparkline and current value on every dashboard card</li>
+              <li>A <em>CPU</em> tab per session: stacked by program (<code>vitest</code>, <code>tsc</code>, <code>cargo</code> …) with the biggest consumers</li>
+              <li>Kept as a small CSV per session, so you can look back after the session ended</li>
+            </ul>
+          </div>
+          <img src="screenshots/cpu.jpg" width="1512" height="805" loading="lazy" alt="CPU tab: CPU usage of a worker session and its subprocesses over time" />
+        </div>
+
+        <div class="feature">
+          <div class="text">
+            <span class="tag">Transcript</span>
+            <h3>The full conversation, readable</h3>
+            <p>Every message and tool call with dedicated renderers: Bash output, Edit/Write as a diff, Read with line numbers, Agent calls linking to their subagent. Filters, search, and the raw JSON of any line with secrets masked. Live sessions follow along.</p>
+          </div>
+          <img src="screenshots/transcript.jpg" width="1356" height="896" loading="lazy" alt="Transcript viewer with an Edit tool call shown as diff" />
+        </div>
+
+        <div class="feature">
+          <div class="text">
+            <span class="tag">Timeline</span>
+            <h3>Who did what, when</h3>
+            <p>One lane per agent, tool calls as bars, links where an agent started another one. Idle gaps over 10 minutes are collapsed, so long sessions stay readable. Click a bar to jump to the call in the transcript.</p>
+          </div>
+          <img src="screenshots/timeline.jpg" width="1356" height="896" loading="lazy" alt="Timeline of an orchestrator with subagents and a spawned worker session" />
+        </div>
+
+        <div class="feature">
+          <div class="text">
+            <span class="tag">Call graph</span>
+            <h3>Orchestrators, subagents and workers</h3>
+            <p>Sessions started with <code>claude -p …</code> or <code>claude --agent …</code> from a Bash call are linked to the call that started them – exactly via the process tree or <code>--session-id</code>, otherwise by prompt text, agent, directory and time, always with a confidence label.</p>
+          </div>
+          <img src="screenshots/call-graph.jpg" width="1356" height="896" loading="lazy" alt="Call graph: main agent, subagents and a claude -p worker session" />
+        </div>
+
+        <div class="feature">
+          <div class="text">
+            <span class="tag">Statistics</span>
+            <h3>Tokens, cost and habits</h3>
+            <p>API list-price estimate, tokens per model, day and project, cache share, an activity heatmap and tool statistics with error rate and p95 duration.</p>
+          </div>
+          <img src="screenshots/statistics.jpg" width="1356" height="896" loading="lazy" alt="Statistics: API cost estimate per day and model, activity heatmap" />
+        </div>
+
+        <div class="grid">
+          <div class="card"><h4>Tool explorer</h4><p>Every tool call across all sessions, filterable by tool, project, file and errors.</p></div>
+          <div class="card"><h4>Files</h4><p>Which files your agents read, edited or wrote – and in which sessions.</p></div>
+          <div class="card"><h4>Full-text search</h4><p>Across all transcripts, subagents and the prompt history, including sessions Claude Code already cleaned up.</p></div>
+          <div class="card"><h4>Resume from the dashboard</h4><p>Copyable <em>Resume</em>, <em>Attach</em> or <em>Fork</em> commands for every session, quoted safely for your shell.</p></div>
+          <div class="card"><h4>Task boards</h4><p>A session's TaskCreate/TaskUpdate list as a board with dependencies.</p></div>
+          <div class="card"><h4>Schema drift detection</h4><p>Versioned decoders per record. Unknown records and fields are never dropped and are listed on the <em>Formats</em> page.</p></div>
+          <div class="card"><h4>Dark mode</h4><p>Light, dark or system theme, remembered per browser.</p></div>
+          <div class="card"><h4>Phone-friendly</h4><p>Collapsible navigation, card lists instead of wide tables, a single-column session view.</p></div>
+        </div>
+      </section>
+
+      <section id="new">
+        <h2>What's new</h2>
+        <p class="sub">Recent releases. Full notes on <a href="https://github.com/brokoskokoli/claude_inspect/releases">GitHub Releases</a>.</p>
+        <div class="releases">
+          <div class="release new">
+            <div class="ver">0.4.0<span class="date">October 2026</span></div>
+            <div>
+              <h4>CPU usage of agents and their subprocesses</h4>
+              <p>Measured every 3 s from the process table, shown on the dashboard and in a new <em>CPU</em> tab, recorded per session in the app data directory (deleted after 30 days, <code>--no-cpu-log</code> to turn off). <code>~/.claude</code> stays read-only.</p>
+            </div>
+          </div>
+          <div class="release">
+            <div class="ver">0.3.0<span class="date">October 2026</span></div>
+            <div>
+              <h4>Mobile layout</h4>
+              <p>Navigation menu on small screens, tables as compact lists, single-column session view, no horizontal scrolling, larger touch targets, tooltips that stay inside the viewport.</p>
+            </div>
+          </div>
+          <div class="release">
+            <div class="ver">0.2.2<span class="date">October 2026</span></div>
+            <div>
+              <h4>Resume sessions from the dashboard</h4>
+              <p>One-click copy of <code>claude --resume</code>, <code>claude attach</code> or a fork command, depending on the session's state – PowerShell syntax on Windows.</p>
+            </div>
+          </div>
+          <div class="release">
+            <div class="ver">0.2.0<span class="date">September 2026</span></div>
+            <div>
+              <h4>Windows, Linux and CI</h4>
+              <p>Runs on all three platforms, tested in CI on each of them with Node 22 and 24. Since 0.2.1, inactive sessions are shown separately from running agents.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="start">
+        <h2>Get started</h2>
+        <p class="sub">Requires Node.js 22 or newer.</p>
+        <div class="two">
+          <div>
+            <pre><span class="c"># try it once</span>
+npx claude-inspect --open
+
+<span class="c"># install and start at login (http://localhost:47717)</span>
+npm install -g claude-inspect
+claude-inspect service install
+
+<span class="c"># no Claude Code data at hand? fictional demo</span>
+claude-inspect demo --open</pre>
+          </div>
+          <div>
+            <h3>Private by design</h3>
+            <ul>
+              <li>Reads <code>~/.claude</code> only – no hooks, no settings changes, no proxy.</li>
+              <li>Listens on <code>127.0.0.1</code> only and rejects foreign <code>Host</code> headers.</li>
+              <li>Never reads credential files, masks tokens in the raw view.</li>
+              <li>The only thing it writes is the CPU log in its own data directory – timestamps, PIDs, program names and percentages, no command lines.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      <div class="wrap">
+        <span>claude-inspect · MIT license · not affiliated with Anthropic</span>
+        <span><a href="https://github.com/brokoskokoli/claude_inspect">GitHub</a> · <a href="https://www.npmjs.com/package/claude-inspect">npm</a></span>
+      </div>
+    </footer>
+
+    <script>
+      document.getElementById('copy').addEventListener('click', async (e) => {
+        try {
+          await navigator.clipboard.writeText(document.getElementById('cmd').textContent);
+          e.target.textContent = 'Copied';
+          setTimeout(() => (e.target.textContent = 'Copy'), 1500);
+        } catch {}
+      });
+    </script>
+  </body>
+</html>
