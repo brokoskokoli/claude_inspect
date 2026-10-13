@@ -135,14 +135,20 @@
   const reviewRunning = $derived(review?.runs.some((r) => r.status === 'running') ?? false);
 
   const TABS: [SessionTab, string][] = [
+    ['cost', 'Cost'],
+    ['cpu', 'CPU'],
     ['transcript', 'Transcript'],
     ['timeline', 'Timeline'],
     ['graph', 'Call graph'],
     ['tasks', 'Tasks'],
-    ['cpu', 'CPU'],
-    ['cost', 'Cost'],
     ['analysis', 'Analysis'],
   ];
+
+  // Andere Session geöffnet: oben anfangen (Kopf, Tabs und Kosten im Blick)
+  $effect(() => {
+    void id;
+    untrack(() => window.scrollTo({ top: 0 }));
+  });
 
   let detail = $state<SessionDetail | null>(null);
   let error = $state('');
@@ -335,7 +341,7 @@
               {#if sel.background}· background{/if}
             </div>
           </div>
-          <a class="back" href={href.session(id)}>← Main agent</a>
+          <a class="back" href={href.session(id, undefined, { tab: 'transcript' })}>← Main agent</a>
         </div>
       {/if}
       {#key `${agent}|${tool}|${line}`}

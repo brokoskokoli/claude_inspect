@@ -90,7 +90,7 @@
 <nav class="tree">
   <ul>
     <li>
-      <a class="node main" class:sel={!selected} href={href.session(sessionId)}>
+      <a class="node main" class:sel={!selected} href={href.session(sessionId, undefined, { tab: 'transcript' })}>
         <StatusDot state={mainState} size={8} />
         <span class="body"><span class="type">Main agent</span><span class="desc">{mainLabel}</span></span>
       </a>

@@ -10,6 +10,11 @@ export type Route =
   | { name: 'search'; q: string }
   | { name: 'formats' };
 
+/** Session öffnet mit den Kosten; Links auf einen Subagenten, Tool-Aufruf oder eine Zeile zeigen das Transcript. */
+function defaultTab(agent?: string, tool?: string, line?: string | number | null): SessionTab {
+  return agent || tool || (line !== undefined && line !== null) ? 'transcript' : 'cost';
+}
+
 function parse(hash: string): Route {
   const [path, query = ''] = hash.replace(/^#/, '').split('?');
   const params = new URLSearchParams(query);
@@ -22,11 +27,13 @@ function parse(hash: string): Route {
   if (parts[0] === 'search') return { name: 'search', q: params.get('q') ?? '' };
   if (parts[0] === 'session' && parts[1]) {
     const line = params.get('line');
+    const agent = params.get('agent') ?? undefined;
+    const tool = params.get('tool') ?? undefined;
     return {
       name: 'session',
       id: parts[1],
-      agent: params.get('agent') ?? undefined,
-      tab: (params.get('tab') as SessionTab) ?? 'transcript',
+      agent,
+      tab: (params.get('tab') as SessionTab) ?? defaultTab(agent, tool, line),
       tool: params.get('tool') ?? undefined,
       line: line ? Number(line) : undefined,
     };
@@ -44,7 +51,7 @@ export const href = {
   session: (id: string, agent?: string, extra: { tab?: SessionTab; tool?: string; line?: number } = {}) => {
     const q = new URLSearchParams();
     if (agent) q.set('agent', agent);
-    if (extra.tab && extra.tab !== 'transcript') q.set('tab', extra.tab);
+    if (extra.tab && extra.tab !== defaultTab(agent, extra.tool, extra.line)) q.set('tab', extra.tab);
     if (extra.tool) q.set('tool', extra.tool);
     if (extra.line !== undefined) q.set('line', String(extra.line));
     const qs = q.toString();
