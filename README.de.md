@@ -74,7 +74,9 @@ Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
   Windows `%LOCALAPPDATA%\claude-inspect\cpu`), damit der Verlauf nach Sessionende abrufbar bleibt.
   Dateien älter als 30 Tage werden gelöscht. Gemessen wird nur, solange claude-inspect läuft;
   Prozesse, die kürzer als 3 s leben, fehlen. Abschalten mit `--no-cpu-log`.
-- **Analyze with Claude**: Knopf auf jeder Session. Im Pop-up wählt man, worauf geachtet wird
+- **Analyze with Claude**: Knopf auf jeder Session und jedem Subagenten. *Describe*: inhaltliche
+  Zusammenfassung der Arbeit oder ein Bash-Skript, das Befehle und Dateiänderungen des Agenten
+  nachvollzieht (Download/Kopieren). *Review*: Im Pop-up wählt man, worauf geachtet wird
   (Auftrag erfüllt, Effizienz & Kosten, Fehler & Umwege, Datenschutz, Sicherheit & riskante
   Aktionen, Agenten & Delegation, Setup-Verbesserungen), dazu optional eine eigene Frage, Modell
   und Antwortsprache. claude-inspect baut einen kompakten Bericht über die Session samt Subagenten
