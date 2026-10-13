@@ -84,16 +84,20 @@ export class HistoryIndex {
    */
   async refresh(transcripts: TranscriptFile[], projectOf: (f: TranscriptFile) => Promise<string>, full: boolean): Promise<void> {
     const seen = new Set<string>();
+    // Sessions ohne Änderung in der letzten Stunde: Subagenten nicht neu einlesen, nur behalten
+    const untouched = new Set<string>();
     for (const f of transcripts) {
       const project = await projectOf(f);
       seen.add(f.path);
       await this.scan(f.path, f.size, f.sessionId, undefined, project);
       if (!full && Date.now() - f.mtime > 3600_000) {
-        for (const p of this.files.keys()) if (p.startsWith(subagentDir(f.path))) seen.add(p);
+        untouched.add(f.sessionId);
         continue;
       }
       await this.scanSubagents(f, project, seen);
     }
+    // ein Durchgang statt Sessions × Dateien (war bei ~1.500 Sessions der größte CPU-Verbraucher)
+    for (const [p, a] of this.files) if (a.agentId && untouched.has(a.sessionId)) seen.add(p);
     // Von Claude Code aufgeräumte Dateien vergessen
     for (const p of [...this.files.keys()]) if (!seen.has(p)) this.files.delete(p);
     this.totalFiles = this.files.size;
