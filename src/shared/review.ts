@@ -1,6 +1,6 @@
 // Analyse einer Session durch Claude ("Analyze with Claude"): Prüfaspekte und Datentypen.
 
-export type ReviewAspect = 'outcome' | 'efficiency' | 'errors' | 'privacy' | 'security' | 'orchestration' | 'improvements';
+export type ReviewAspect = 'summary' | 'script' | 'outcome' | 'efficiency' | 'errors' | 'privacy' | 'security' | 'orchestration' | 'improvements';
 
 export interface AspectInfo {
   key: ReviewAspect;
@@ -13,6 +13,22 @@ export interface AspectInfo {
 }
 
 export const ASPECTS: AspectInfo[] = [
+  {
+    key: 'summary',
+    label: 'Summary of the work',
+    hint: 'What the agent actually did, in plain words: steps, decisions, results, files touched.',
+    brief:
+      'Write a plain-language account of what the agent did, in order: what it was asked, how it approached it, the main steps and decisions, what it changed (files, commands, external systems) and what the end result was. No judgement here – just a clear narrative a colleague could read instead of the transcript. Use short paragraphs or a numbered list of phases.',
+    default: false,
+  },
+  {
+    key: 'script',
+    label: 'Shell script',
+    hint: 'A bash script that repeats what the agent did – commands and file changes – to run again or adapt.',
+    brief:
+      'Produce one bash script that reproduces the effective work of the session: the commands that mattered (skip pure exploration such as ls/cat/grep and failed attempts that were replaced) and the file changes (write files with heredocs, apply edits with a here-doc patch or a small sed/perl/python snippet). Start with #!/usr/bin/env bash and set -euo pipefail, add a comment per step with the time stamp it corresponds to, use variables for paths that depend on the machine, and mark steps that cannot be reproduced automatically (decisions, interactive steps, secrets – never put [REDACTED] values in, use variables) with a TODO comment. Put the whole script in a single ```bash code block in its own section "## Shell script", followed by short notes on what it does not cover.',
+    default: false,
+  },
   {
     key: 'outcome',
     label: 'Task outcome',
@@ -79,6 +95,8 @@ export const REVIEW_MODELS = [
 export type ReviewModel = (typeof REVIEW_MODELS)[number]['key'];
 
 export interface ReviewRequest {
+  /** nur diesen Subagenten (samt seiner Unter-Agenten) analysieren */
+  agentId?: string;
   aspects: ReviewAspect[];
   model: ReviewModel;
   /** eigene Frage, optional */
@@ -121,5 +139,7 @@ export interface ReviewState {
   /** Analyse abgeschaltet (--no-analyze) */
   disabled: boolean;
   digest?: DigestStats;
+  /** Umfang mit vollständigen Befehlen und Dateiinhalten (für "Shell script") */
+  fullDigest?: DigestStats;
   runs: ReviewRun[];
 }

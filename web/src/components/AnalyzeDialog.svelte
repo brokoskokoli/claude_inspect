@@ -4,7 +4,14 @@
   import { api } from '../lib/api';
   import { tokens } from '../lib/format';
 
-  let { sessionId, review, open = $bindable(), onstarted }: { sessionId: string; review: ReviewState | null; open: boolean; onstarted: (run: ReviewRun) => void } = $props();
+  let {
+    sessionId,
+    agentId,
+    agentLabel,
+    review,
+    open = $bindable(),
+    onstarted,
+  }: { sessionId: string; agentId?: string; agentLabel?: string; review: ReviewState | null; open: boolean; onstarted: (run: ReviewRun) => void } = $props();
 
   const LANGUAGES: [string, string][] = [
     ['en', 'English'],
@@ -19,6 +26,8 @@
     ['zh', '中文'],
   ];
   const KEY = 'claude-inspect.analyze';
+  const DESCRIBE = ASPECTS.filter((a) => a.key === 'summary' || a.key === 'script');
+  const REVIEW = ASPECTS.filter((a) => !DESCRIBE.includes(a));
 
   // Letzte Auswahl merken (nur Bequemlichkeit, darf fehlen)
   function loadPrefs(): { aspects?: ReviewAspect[]; model?: ReviewModel; language?: string } {
@@ -37,7 +46,9 @@
   let busy = $state(false);
   let error = $state('');
 
-  const d = $derived(review?.digest);
+  // Für das Skript gehen vollständige Befehle und Dateiinhalte mit
+  const full = $derived(aspects.includes('script'));
+  const d = $derived(full ? (review?.fullDigest ?? review?.digest) : review?.digest);
   const canStart = $derived(!!review?.available && !busy && (aspects.length > 0 || question.trim().length > 0));
 
   function toggle(k: ReviewAspect) {
@@ -53,7 +64,7 @@
       } catch {
         /* egal */
       }
-      const run = await api.startReview(sessionId, { aspects, model, question: question.trim() || undefined, language });
+      const run = await api.startReview(sessionId, { agentId, aspects, model, question: question.trim() || undefined, language });
       question = '';
       open = false;
       onstarted(run);
@@ -73,19 +84,24 @@
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
     <div class="modal card" role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="analyze-title" onclick={(e) => e.stopPropagation()}>
       <h2 id="analyze-title">Analyze with Claude</h2>
-      <p class="muted intro">Claude reviews this session{d && d.agents > 1 ? ` and its ${d.agents - 1} subagents and spawned sessions` : ''} and reports what it finds. Pick what to look at:</p>
+      <p class="muted intro">
+        {#if agentId}Claude looks at the subagent <strong>{agentLabel ?? agentId}</strong>{:else}Claude looks at this session{/if}{d && d.agents > 1 ? ` and the ${d.agents - 1} agents it started` : ''}. Pick what you want:
+      </p>
 
-      <div class="aspects">
-        {#each ASPECTS as a (a.key)}
-          <label class="aspect" class:on={aspects.includes(a.key)}>
-            <input type="checkbox" checked={aspects.includes(a.key)} onchange={() => toggle(a.key)} />
-            <span>
-              <strong>{a.label}</strong>
-              <span class="hint">{a.hint}</span>
-            </span>
-          </label>
-        {/each}
-      </div>
+      {#each [['Describe', DESCRIBE], ['Review', REVIEW]] as const as [title, list] (title)}
+        <div class="group-title">{title}</div>
+        <div class="aspects">
+          {#each list as a (a.key)}
+            <label class="aspect" class:on={aspects.includes(a.key)}>
+              <input type="checkbox" checked={aspects.includes(a.key)} onchange={() => toggle(a.key)} />
+              <span>
+                <strong>{a.label}</strong>
+                <span class="hint">{a.hint}</span>
+              </span>
+            </label>
+          {/each}
+        </div>
+      {/each}
 
       <label class="field">
         <span class="label">Your own question <span class="faint">(optional)</span></span>
@@ -114,9 +130,9 @@
           <span class="err">The <code>claude</code> command was not found on this machine, so the analysis can't run.</span>
         {:else if d}
           <span>
-            Sends a condensed digest of the session (<strong>~{tokens(d.tokens)} tokens</strong>, {d.toolCalls} tool calls{d.truncated ? ', shortened' : ''}{d.redactions ? `, ${d.redactions} secrets masked` : ''}) to Claude through your local <code>claude</code> CLI – no tools, not saved as a session. It counts towards your plan usage.
+            Sends a {full ? 'detailed' : 'condensed'} digest of the {agentId ? 'subagent' : 'session'} (<strong>~{tokens(d.tokens)} tokens</strong>, {d.toolCalls} tool calls{full ? ' with full commands and file contents' : ''}{d.truncated ? ', shortened' : ''}{d.redactions ? `, ${d.redactions} secrets masked` : ''}) to Claude through your local <code>claude</code> CLI – no tools, not saved as a session. It counts towards your plan usage.
           </span>
-          <a href={api.reviewDigestUrl(sessionId)} target="_blank" rel="noreferrer">View what is sent</a>
+          <a href={api.reviewDigestUrl(sessionId, agentId, full)} target="_blank" rel="noreferrer">View what is sent</a>
         {/if}
       </div>
 
@@ -157,6 +173,14 @@
   .intro {
     margin: -4px 0 0;
     font-size: 13px;
+  }
+  .group-title {
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--faint);
+    margin-bottom: -4px;
   }
   .aspects {
     display: grid;

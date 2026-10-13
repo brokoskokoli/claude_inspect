@@ -212,18 +212,18 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
 
       m = /^\/api\/cost\/([\w-]+)$/.exec(p);
       if (m) {
-        const cost = await inspector.sessionCost(m[1]);
+        const cost = await inspector.sessionCost(m[1], url.searchParams.get('agent') || undefined);
         return cost ? json(res, 200, cost) : json(res, 404, { error: 'unknown session' });
       }
 
       m = /^\/api\/review\/([\w-]+)$/.exec(p);
       if (m) {
-        const st = await inspector.reviewState(m[1]);
+        const st = await inspector.reviewState(m[1], url.searchParams.get('agent') || undefined);
         return st ? json(res, 200, st) : json(res, 404, { error: 'unknown session' });
       }
       m = /^\/api\/review\/([\w-]+)\/digest$/.exec(p);
       if (m) {
-        const d = await inspector.reviewDigest(m[1]);
+        const d = await inspector.reviewDigest(m[1], url.searchParams.get('agent') || undefined, url.searchParams.get('full') === '1');
         if (!d) return json(res, 404, { error: 'unknown session' });
         res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' });
         return res.end(d.text);
@@ -231,7 +231,7 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
 
       m = /^\/api\/flow\/([\w-]+)$/.exec(p);
       if (m) {
-        const flow = await inspector.flow(m[1]);
+        const flow = await inspector.flow(m[1], url.searchParams.get('agent') || undefined);
         return flow ? json(res, 200, flow) : json(res, 404, { error: 'unknown session' });
       }
 

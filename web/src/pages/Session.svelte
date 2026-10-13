@@ -28,7 +28,7 @@
   let flowTimer: ReturnType<typeof setTimeout> | undefined;
   async function loadFlow() {
     try {
-      flow = await api.flow(id);
+      flow = await api.flow(id, agent);
     } catch (e) {
       error = String(e);
     }
@@ -36,6 +36,7 @@
   // Ablauf nur laden, wenn Zeitleiste oder Graph offen ist; live gedrosselt nachführen
   $effect(() => {
     if (tab !== 'timeline' && tab !== 'graph') return;
+    void agent; // anderer Subagent → neu laden
     untrack(() => void loadFlow());
     const off = onTranscript(() => {
       if (flowTimer) return;
@@ -77,7 +78,7 @@
   let costTimer: ReturnType<typeof setTimeout> | undefined;
   async function loadCost() {
     try {
-      cost = await api.cost(id);
+      cost = await api.cost(id, agent);
     } catch (e) {
       error = String(e);
     }
@@ -85,6 +86,7 @@
   // Kosten nur im Kosten-Tab laden; live gedrosselt nachführen (auch Subagenten und gestartete Sessions)
   $effect(() => {
     if (tab !== 'cost') return;
+    void agent;
     untrack(() => void loadCost());
     const off = onTranscript(() => {
       if (costTimer) return;
@@ -105,17 +107,21 @@
   let analyzeOpen = $state(false);
   async function loadReview() {
     try {
-      review = await api.review(id);
+      review = await api.review(id, agent);
     } catch {
       /* Knopf bleibt ohne Umfangsangabe */
     }
   }
   $effect(() => {
-    untrack(() => void loadReview());
+    void agent;
+    untrack(() => {
+      review = null;
+      void loadReview();
+    });
     // Tab war im Hintergrund: verpasste Fortschrittsmeldungen nachholen
     const offReconnect = onReconnect(() => void loadReview());
     const offReview = onReview((run) => {
-      if (run.sessionId !== id || !review) return;
+      if (run.sessionId !== id || run.request.agentId !== agent || !review) return;
       const i = review.runs.findIndex((r) => r.id === run.id);
       if (i >= 0) review.runs[i] = run;
       else review.runs = [run, ...review.runs];
@@ -131,7 +137,7 @@
   }
   function started(run: ReviewRun) {
     if (review && !review.runs.some((r) => r.id === run.id)) review.runs = [run, ...review.runs];
-    location.hash = href.session(id, undefined, { tab: 'analysis' });
+    location.hash = href.session(id, agent, { tab: 'analysis' });
   }
   const reviewRunning = $derived(review?.runs.some((r) => r.status === 'running') ?? false);
 
@@ -241,7 +247,7 @@
       {#if proc?.agent}<span class="badge info">{proc.agent}</span>{/if}
       {#if proc?.bridgeSessionId}<span class="badge info">remote</span>{/if}
       {#if review && !review.disabled}
-        <button class="btn analyze" onclick={openAnalyze} disabled={!review.available} title={review.available ? 'Let Claude review this session' : 'claude was not found on this machine'}>✦ Analyze with Claude</button>
+        <button class="btn analyze" onclick={openAnalyze} disabled={!review.available} title={review.available ? `Let Claude review this ${sel ? 'subagent' : 'session'}` : 'claude was not found on this machine'}>✦ Analyze {sel ? 'subagent' : 'with Claude'}</button>
       {/if}
     </div>
     {#if proc?.name && sum.title && sum.title !== proc.name}<div class="muted">{sum.title}</div>{/if}
@@ -291,14 +297,29 @@
     {#if resume.length}<div class="resume-row"><ResumeButtons commands={resume} /></div>{/if}
   </header>
 
-  <AnalyzeDialog sessionId={id} {review} bind:open={analyzeOpen} onstarted={started} />
+  <AnalyzeDialog sessionId={id} agentId={agent} agentLabel={sel ? `${sel.agentType ?? 'subagent'}${sel.description ? ` – ${sel.description}` : ''}` : undefined} {review} bind:open={analyzeOpen} onstarted={started} />
+
+  {#if sel}
+    <div class="sub-head card">
+      <span class="badge info">Subagent</span>
+      <StatusDot state={sel.status} size={9} />
+      <div>
+        <div><strong>{sel.agentType ?? 'Subagent'}</strong> <span class="muted">{sel.description}</span></div>
+        <div class="faint small">
+          {modelName(sel.model)} · {sel.toolCalls ?? 0} tools · {tokens(sel.outputTokens)} output tokens · depth {sel.spawnDepth ?? 1}
+          {#if sel.background}· background{/if}
+        </div>
+      </div>
+      <a class="back" href={href.session(id, undefined, { tab })}>← Whole session</a>
+    </div>
+  {/if}
 
   <nav class="tabs">
     {#each TABS as [key, label] (key)}
-      <a href={href.session(id, key === 'transcript' ? agent : undefined, { tab: key })} class:on={tab === key}>
+      <a href={href.session(id, agent, { tab: key })} class:on={tab === key}>
         {label}{#if key === 'tasks' && detail.tasks.length}<span class="n">{detail.tasks.length}</span>{/if}
         {#if key === 'analysis' && review?.runs.length}<span class="n" class:live-n={reviewRunning}>{review.runs.length}</span>{/if}
-        {#if key === 'graph' && detail.subagents.length + detail.spawned.length}<span class="n">{detail.subagents.length + detail.spawned.length + 1}</span>{/if}
+        {#if key === 'graph' && !sel && detail.subagents.length + detail.spawned.length}<span class="n">{detail.subagents.length + detail.spawned.length + 1}</span>{/if}
       </a>
     {/each}
   </nav>
@@ -314,6 +335,7 @@
   {:else if tab === 'cost'}
     {#if cost}<CostView {cost} />{:else}<p class="muted"><Spinner /> Loading cost …</p>{/if}
   {:else if tab === 'cpu'}
+    {#if sel}<p class="faint small">CPU is measured per process – subagents run inside the session's process, so this is the whole session.</p>{/if}
     {#if !cpu}
       <p class="muted"><Spinner /> Loading CPU usage …</p>
     {:else if cpu.points.length === 0}
@@ -332,19 +354,6 @@
       <AgentTree sessionId={id} subagents={detail.subagents} spawned={detail.spawned} selected={agent} {mainState} mainLabel={sum.title ?? sum.project} />
     </aside>
     <section class="main">
-      {#if sel}
-        <div class="sub-head card">
-          <StatusDot state={sel.status} size={9} />
-          <div>
-            <div><strong>{sel.agentType ?? 'Subagent'}</strong> <span class="muted">{sel.description}</span></div>
-            <div class="faint small">
-              {modelName(sel.model)} · {sel.toolCalls ?? 0} tools · {tokens(sel.outputTokens)} output tokens · depth {sel.spawnDepth ?? 1}
-              {#if sel.background}· background{/if}
-            </div>
-          </div>
-          <a class="back" href={href.session(id, undefined, { tab: 'transcript' })}>← Main agent</a>
-        </div>
-      {/if}
       {#key `${agent}|${tool}|${line}`}
         <Transcript sessionId={id} agentId={agent} subagents={detail.subagents} spawned={detail.spawned} live={isLive} focusTool={tool} focusLine={line} />
       {/key}

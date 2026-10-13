@@ -576,7 +576,25 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
    * Ablauf einer Session für Zeitleiste und Graph: Hauptagent, Subagenten
    * (verschachtelt) und per claude-Aufruf gestartete Sitzungen (rekursiv).
    */
-  async flow(rootSessionId: string): Promise<Flow | undefined> {
+  async flow(rootSessionId: string, agentId?: string): Promise<Flow | undefined> {
+    const flow = await this.fullFlow(rootSessionId);
+    if (!flow || !agentId) return flow;
+    // nur ein Subagent samt allem, was er selbst gestartet hat – wie eine eigene Session
+    const rootId = `${rootSessionId}/${agentId}`;
+    const root = flow.lanes.find((l) => l.id === rootId);
+    if (!root) return undefined;
+    const keep = new Set([rootId]);
+    for (let grew = true; grew; ) {
+      grew = false;
+      for (const l of flow.lanes) if (l.parentId && keep.has(l.parentId) && !keep.has(l.id)) keep.add(l.id), (grew = true);
+    }
+    const lanes = flow.lanes
+      .filter((l) => keep.has(l.id))
+      .map((l) => (l.id === rootId ? { ...l, parentId: undefined, viaToolUseId: undefined, depth: 0 } : { ...l, depth: l.depth - root.depth }));
+    return { rootSessionId, lanes };
+  }
+
+  private async fullFlow(rootSessionId: string): Promise<Flow | undefined> {
     const rootFile = this.index.get(rootSessionId);
     if (!rootFile) return undefined;
     const lanes: FlowLane[] = [];
@@ -655,8 +673,8 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
    * Geschätzte Kosten einer Session samt aller Subagenten und per `claude` gestarteten
    * Sitzungen (rekursiv, gleicher Baum wie Zeitleiste und Graph).
    */
-  async sessionCost(rootSessionId: string): Promise<SessionCost | undefined> {
-    const flow = await this.flow(rootSessionId);
+  async sessionCost(rootSessionId: string, agentId?: string): Promise<SessionCost | undefined> {
+    const flow = await this.flow(rootSessionId, agentId);
     if (!flow) return undefined;
     // nur die Dateien dieses Baums einlesen, statt auf den ersten vollständigen History-Scan zu warten
     for (const sid of new Set(flow.lanes.map((l) => l.sessionId))) {
@@ -705,6 +723,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
     const rootFile = this.index.get(rootSessionId);
     return {
       rootSessionId,
+      agentId,
       rows,
       total,
       costUSD,
@@ -712,7 +731,8 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
         .map(([model, tokens]) => ({ model, tokens, costUSD: estimateCost(model, tokens) }))
         .sort((a, b) => (b.costUSD ?? 0) - (a.costUSD ?? 0)),
       unpricedModels: [...unpriced],
-      reportedCostUSD: rootFile ? (await this.index.summary(rootFile)).costUSD : undefined,
+      // von Claude Code gemeldete Kosten gibt es nur für die ganze Session
+      reportedCostUSD: rootFile && !agentId ? (await this.index.summary(rootFile)).costUSD : undefined,
       timeline: costTimeline(points),
     };
   }
@@ -722,32 +742,43 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
   }
 
   /** Kompakter Bericht über die Session samt Subagenten und gestarteten Sitzungen (Grundlage der Analyse). */
-  async reviewDigest(sessionId: string) {
-    const [flow, cost] = [await this.flow(sessionId), await this.sessionCost(sessionId)];
+  async reviewDigest(sessionId: string, agentId?: string, full = false) {
+    const [flow, cost] = [await this.flow(sessionId, agentId), await this.sessionCost(sessionId, agentId)];
     const f = this.index.get(sessionId);
     if (!flow || !f) return undefined;
     const sum = await this.index.summary(f);
+    const root = flow.lanes[0];
     const costOf = new Map(cost?.rows.map((r) => [r.id, r.costUSD]));
     const lanes = [];
     for (const lane of flow.lanes) {
       const t = await this.transcriptFor(lane.sessionId, lane.agentId);
       if (t) lanes.push({ lane, entries: t.entries, costUSD: costOf.get(lane.id) ?? 0 });
     }
-    return buildDigest({ title: sum.title, project: sum.project, cwd: sum.cwd, gitBranch: sum.gitBranch, costUSD: cost?.costUSD ?? 0, lanes });
+    const title = agentId ? `subagent ${root?.label ?? agentId}${root?.sublabel ? ` – ${root.sublabel}` : ''} (in session "${sum.title ?? sessionId}")` : sum.title;
+    return buildDigest({ title, project: sum.project, cwd: sum.cwd, gitBranch: sum.gitBranch, costUSD: cost?.costUSD ?? 0, lanes }, { full });
   }
 
-  async reviewState(sessionId: string): Promise<ReviewState | undefined> {
+  async reviewState(sessionId: string, agentId?: string): Promise<ReviewState | undefined> {
     if (!this.index.get(sessionId)) return undefined;
     if (!this.reviewer) return { available: false, disabled: true, runs: [] };
     const claudePath = await findClaude();
-    return { available: !!claudePath, claudePath, disabled: false, digest: (await this.reviewDigest(sessionId))?.stats, runs: await this.reviewer.list(sessionId) };
+    return {
+      available: !!claudePath,
+      claudePath,
+      disabled: false,
+      digest: (await this.reviewDigest(sessionId, agentId))?.stats,
+      fullDigest: (await this.reviewDigest(sessionId, agentId, true))?.stats,
+      runs: await this.reviewer.list(sessionId, agentId),
+    };
   }
 
   async startReview(sessionId: string, req: ReviewRequest) {
     if (!this.reviewer) throw new Error('Analysis is turned off (--no-analyze).');
-    const digest = await this.reviewDigest(sessionId);
+    const agentId = typeof req.agentId === 'string' && /^[\w-]+$/.test(req.agentId) ? req.agentId : undefined;
+    // Für ein Skript braucht Claude die vollständigen Befehle und Dateiinhalte
+    const digest = await this.reviewDigest(sessionId, agentId, req.aspects?.includes('script'));
     if (!digest) throw new Error('unknown session');
-    return this.reviewer.start(sessionId, digest, req);
+    return this.reviewer.start(sessionId, digest, { ...req, agentId });
   }
 }
 

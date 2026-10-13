@@ -22,6 +22,20 @@
   function copy(run: ReviewRun) {
     void navigator.clipboard?.writeText(run.text);
   }
+
+  /** Das erzeugte Shell-Skript (letzter ```bash-Block der Antwort) */
+  function script(run: ReviewRun): string | undefined {
+    if (!run.request.aspects.includes('script')) return undefined;
+    const blocks = [...run.text.matchAll(/```(?:bash|sh|shell)\n([\s\S]*?)```/g)];
+    return blocks.length ? blocks[blocks.length - 1][1] : undefined;
+  }
+  function download(run: ReviewRun, text: string) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], { type: 'text/x-shellscript' }));
+    a.download = `replay-${run.sessionId.slice(0, 8)}${run.request.agentId ? `-${run.request.agentId.slice(0, 8)}` : ''}.sh`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
 </script>
 
 {#if !review}
@@ -71,6 +85,11 @@
             <span class="pulse" aria-hidden="true"></span>
             <button class="btn" onclick={() => cancel(run)}>Stop</button>
           {:else if run.text}
+            {@const sh = script(run)}
+            {#if sh}
+              <button class="btn" onclick={() => download(run, sh)}>Download script</button>
+              <button class="btn" onclick={() => navigator.clipboard?.writeText(sh)}>Copy script</button>
+            {/if}
             <button class="btn" onclick={() => copy(run)}>Copy as Markdown</button>
           {/if}
           <span class="faint small">

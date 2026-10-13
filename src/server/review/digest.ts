@@ -28,10 +28,17 @@ export interface DigestInput {
 const MAX_CHARS = 240_000;
 
 const LEVELS = [
-  { prompt: 4000, text: 1200, err: 600, ok: 160, cmd: 400 },
-  { prompt: 2000, text: 500, err: 300, ok: 0, cmd: 240 },
-  { prompt: 1000, text: 200, err: 160, ok: 0, cmd: 160 },
+  { prompt: 4000, text: 1200, err: 600, ok: 160, cmd: 400, body: 0 },
+  { prompt: 2000, text: 500, err: 300, ok: 0, cmd: 240, body: 0 },
+  { prompt: 1000, text: 200, err: 160, ok: 0, cmd: 160, body: 0 },
 ];
+/** Für "Shell script": vollständige Befehle und Dateiinhalte (Write/Edit) */
+const FULL_LEVELS = [
+  { prompt: 4000, text: 800, err: 400, ok: 160, cmd: 6000, body: 8000 },
+  { prompt: 2000, text: 400, err: 300, ok: 0, cmd: 3000, body: 3000 },
+  { prompt: 1000, text: 200, err: 160, ok: 0, cmd: 1200, body: 1200 },
+];
+const FULL_MAX_CHARS = 400_000;
 type Level = (typeof LEVELS)[number];
 
 // --- Geheimnisse ---------------------------------------------------------------
@@ -101,6 +108,8 @@ function toolDetail(e: ToolUseEntry, lv: Level): string {
   const i = e.input ?? {};
   switch (e.name) {
     case 'Bash':
+      // für das Skript mehrzeilig lassen (Heredocs, Skripte)
+      if (lv.body) return `${i.run_in_background ? '(background) ' : ''}\n\`\`\`sh\n${block(s(i.command), lv.cmd)}\n\`\`\``;
       return `${oneLine(s(i.command), lv.cmd)}${i.run_in_background ? ' (background)' : ''}`;
     case 'Read':
     case 'Write':
@@ -108,8 +117,11 @@ function toolDetail(e: ToolUseEntry, lv: Level): string {
     case 'MultiEdit':
     case 'NotebookEdit': {
       const p = tildify(s(i.file_path) || s(i.notebook_path));
-      if (e.name === 'Write') return `${p} (${s(i.content).split('\n').length} lines)`;
-      if (e.name === 'Edit') return `${p} (−${s(i.old_string).split('\n').length}/+${s(i.new_string).split('\n').length} lines)`;
+      if (e.name === 'Write') return `${p} (${s(i.content).split('\n').length} lines)${lv.body ? `\n<<<CONTENT\n${block(s(i.content), lv.body)}\nCONTENT` : ''}`;
+      if (e.name === 'Edit')
+        return `${p} (−${s(i.old_string).split('\n').length}/+${s(i.new_string).split('\n').length} lines${i.replace_all ? ', all occurrences' : ''})${
+          lv.body ? `\n<<<OLD\n${block(s(i.old_string), lv.body / 2)}\nOLD\n<<<NEW\n${block(s(i.new_string), lv.body / 2)}\nNEW` : ''
+        }`;
       if (e.name === 'Read' && (i.offset || i.limit)) return `${p} (from ${i.offset ?? 0}, ${i.limit ?? 'all'} lines)`;
       return p;
     }
@@ -310,7 +322,9 @@ function renderLane(dl: DigestLane, lv: Level, childOf: Map<string, string>, f: 
   return { head, lines };
 }
 
-export function buildDigest(input: DigestInput): { text: string; stats: DigestStats } {
+export function buildDigest(input: DigestInput, opts: { full?: boolean } = {}): { text: string; stats: DigestStats } {
+  const levels = opts.full ? FULL_LEVELS : LEVELS;
+  const maxChars = opts.full ? FULL_MAX_CHARS : MAX_CHARS;
   const childOf = new Map<string, string>();
   const labelOf = new Map(input.lanes.map((l) => [l.lane.id, l.lane.kind === 'main' ? 'main agent' : `${l.lane.kind === 'spawn' ? 'claude session' : 'subagent'} "${l.lane.label}"`]));
   for (const { lane } of input.lanes) if (lane.viaToolUseId) childOf.set(lane.viaToolUseId, labelOf.get(lane.id)!);
@@ -325,21 +339,21 @@ export function buildDigest(input: DigestInput): { text: string; stats: DigestSt
 
   let truncated = false;
   let result: { text: string; stats: DigestStats } | undefined;
-  for (let li = 0; li < LEVELS.length; li++) {
+  for (let li = 0; li < levels.length; li++) {
     const count = { n: 0 };
     const f = new Findings();
-    const lanes = input.lanes.map((l) => renderLane(l, LEVELS[li], childOf, f, count));
+    const lanes = input.lanes.map((l) => renderLane(l, levels[li], childOf, f, count));
     let body = lanes.map((l) => `${l.head}\n\n${l.lines.join('\n')}`).join('\n\n');
-    const last = li === LEVELS.length - 1;
-    if (body.length > MAX_CHARS && !last) {
+    const last = li === levels.length - 1;
+    if (body.length > maxChars && !last) {
       truncated = true;
       continue;
     }
-    if (body.length > MAX_CHARS) {
+    if (body.length > maxChars) {
       // Notfalls die Mitte langer Lanes auslassen: Anfang und Ende sind meist am aufschlussreichsten
       const total = lanes.reduce((a, l) => a + l.lines.length, 0);
       const avg = body.length / Math.max(1, total);
-      const keep = Math.floor(MAX_CHARS / avg);
+      const keep = Math.floor(maxChars / avg);
       body = lanes
         .map((l) => {
           const k = Math.max(20, Math.floor((keep * l.lines.length) / total));
@@ -357,7 +371,7 @@ export function buildDigest(input: DigestInput): { text: string; stats: DigestSt
       `- Project: ${input.project}${input.cwd ? ` (${tildify(input.cwd)})` : ''}${input.gitBranch ? `, branch ${input.gitBranch}` : ''}`,
       from ? `- Time: ${new Date(from).toLocaleString('en-GB')} – ${to ? new Date(to).toLocaleString('en-GB') : 'now'}${to ? ` (${dur(to - from)})` : ''}` : undefined,
       `- Estimated cost of the whole tree (API list prices): ${usd(input.costUSD)}`,
-      `- Format: one line per event. [hh:mm:ss] USER / ASSISTANT / TOOL <name>: <input> → <result status, duration>. {$cost, ctx N} = cost and context size of that model response (shown from $0.02). Texts and outputs are shortened${truncated ? ' strongly, because the session is long' : ''}.`,
+      `- Format: one line per event. [hh:mm:ss] USER / ASSISTANT / TOOL <name>: <input> → <result status, duration>. {$cost, ctx N} = cost and context size of that model response (shown from $0.02). Texts and outputs are shortened${truncated ? ' strongly, because the session is long' : ''}.${opts.full ? ' Bash commands are given in full in ```sh blocks; Write contents between <<<CONTENT/CONTENT, Edit replacements between <<<OLD/OLD and <<<NEW/NEW (long ones shortened).' : ''}`,
       '',
       '## Agent tree',
       tree,

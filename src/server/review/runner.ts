@@ -53,6 +53,7 @@ Rules:
 - Base every statement on the digest and cite evidence: time stamp [hh:mm:ss] and agent. Do not invent details; say so when the digest is too short or truncated to judge.
 - Be specific and practical. Prefer a few significant findings over many trivial ones.
 - Rate each finding: **High**, **Medium**, **Low** or **Info**.
+- The aspects "Summary of the work" and "Shell script" are not reviews: follow their own instructions instead of listing rated findings.
 
 Answer in Markdown:
 ## Summary
@@ -67,7 +68,12 @@ function userPrompt(digest: string, req: ReviewRequest): string {
   const aspects = ASPECTS.filter((a) => req.aspects.includes(a.key));
   const lang = req.language && !/^en\b/i.test(req.language) ? `\nWrite the whole answer in the language with the code "${req.language}" (keep code, commands and file names unchanged).` : '';
   const question = req.question?.trim() ? `\n\nAdditional question from the developer (answer it in its own section "## Your question"):\n${req.question.trim()}` : '';
-  return `Review this Claude Code session for the following aspects:\n\n${aspects.map((a) => `- ${a.label}: ${a.brief}`).join('\n')}${question}${lang}\n\n<session_digest>\n${digest}\n</session_digest>`;
+  // Nur beschreibende Punkte gewählt: keine Bewertung, kein allgemeiner Summary-/Empfehlungsteil
+  const describeOnly = aspects.every((a) => a.key === 'summary' || a.key === 'script');
+  const shape = describeOnly
+    ? '\n\nOnly descriptive output is requested: skip the general "## Summary" and "## Top recommendations" sections and start directly with the requested sections.'
+    : '';
+  return `${describeOnly ? 'Describe' : 'Review'} this Claude Code ${req.agentId ? 'subagent' : 'session'} for the following aspects:\n\n${aspects.map((a) => `- ${a.label}: ${a.brief}`).join('\n')}${question}${shape}${lang}\n\n<session_digest>\n${digest}\n</session_digest>`;
 }
 
 type Running = ReviewRun & { child?: ChildProcess };
@@ -84,7 +90,8 @@ export class Reviewer {
     return join(this.dir, sessionId.replace(/[^\w-]/g, ''));
   }
 
-  async list(sessionId: string): Promise<ReviewRun[]> {
+  /** Analysen einer Session; mit `agentId` nur die dieses Subagenten, ohne nur die der ganzen Session */
+  async list(sessionId: string, agentId?: string): Promise<ReviewRun[]> {
     const out: ReviewRun[] = [];
     const dir = this.sessionDir(sessionId);
     let names: string[] = [];
@@ -102,7 +109,7 @@ export class Reviewer {
       }
     }
     for (const r of this.running.values()) if (r.sessionId === sessionId && !out.some((o) => o.id === r.id)) out.push(strip(r));
-    return out.sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+    return out.filter((r) => r.request.agentId === agentId).sort((a, b) => b.startedAt.localeCompare(a.startedAt));
   }
 
   get(id: string): ReviewRun | undefined {
@@ -125,7 +132,7 @@ export class Reviewer {
     const aspects = req.aspects.filter((a): a is ReviewAspect => ASPECTS.some((x) => x.key === a));
     if (!aspects.length && !req.question?.trim()) throw new Error('Choose at least one aspect.');
     const model = REVIEW_MODELS.some((m) => m.key === req.model) ? req.model : 'sonnet';
-    const request: ReviewRequest = { aspects, model, question: req.question?.slice(0, 2000), language: req.language?.replace(/[^\w-]/g, '').slice(0, 20) };
+    const request: ReviewRequest = { agentId: req.agentId, aspects, model, question: req.question?.slice(0, 2000), language: req.language?.replace(/[^\w-]/g, '').slice(0, 20) };
 
     const run: Running = {
       id: `${new Date().toISOString().replace(/[:.]/g, '-')}-${randomBytes(3).toString('hex')}`,

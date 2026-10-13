@@ -544,6 +544,8 @@ export interface CostBucket {
 }
 
 export interface SessionCost {
+  /** gesetzt, wenn nur ein Subagent (samt seiner Unter-Agenten) betrachtet wird */
+  agentId?: string;
   rootSessionId: string;
   rows: CostRow[];
   total: TokenBreakdown;
