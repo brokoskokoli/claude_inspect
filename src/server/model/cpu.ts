@@ -105,6 +105,8 @@ export interface HistoryOptions {
   /** Ab dieser Lücke gilt ein Abschnitt als "nicht gemessen" */
   gapMs: number;
   maxPoints?: number;
+  /** größter Abstand, der einer Messung als Zeitanteil zugerechnet wird (Standard: 2 Messabstände) */
+  maxStepMs?: number;
   /** so viele Prozessnamen als eigene Reihe, der Rest als "other" */
   series?: number;
 }
@@ -119,7 +121,7 @@ export function cpuHistory(samples: CpuSample[], opts: HistoryOptions): Omit<Cpu
   for (let i = 0; i < samples.length; i++) {
     const s = samples[i];
     // Anteil dieser Messung an der Zeit: Abstand zur vorigen, höchstens zwei Messabstände
-    const dt = Math.min(i > 0 ? s.t - samples[i - 1].t : opts.intervalMs, 2 * opts.intervalMs) / 1000;
+    const dt = Math.min(i > 0 ? s.t - samples[i - 1].t : opts.intervalMs, opts.maxStepMs ?? 2 * opts.intervalMs) / 1000;
     const byComm = new Map<string, number>();
     for (const p of s.procs) {
       byComm.set(p.comm, (byComm.get(p.comm) ?? 0) + p.pct);

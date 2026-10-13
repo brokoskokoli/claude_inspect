@@ -59,6 +59,10 @@ const SUBAGENT_STALE_MS = 10 * 60_000;
 /** Subagenten erscheinen auf dem Dashboard, wenn sie so kürzlich aktiv waren. */
 const SUBAGENT_DASHBOARD_MS = 30 * 60_000;
 
+/** Sparbetrieb ohne offenen Tab: Prozessliste alle 30 s, Komplettaktualisierung alle 2 min */
+const IDLE_POLL_MS = 30_000;
+const IDLE_REBUILD_MS = 120_000;
+
 export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
   readonly index = new ProjectIndex();
   readonly store = new TranscriptStore();
@@ -69,6 +73,12 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
   readonly history = new HistoryIndex();
   private historyReady = false;
   private historyRefreshedAt = 0;
+  /**
+   * Offene, sichtbare Browser-Tabs (Live-Verbindungen). Ohne Zuschauer läuft nur ein
+   * Sparbetrieb: Prozessliste alle 30 s (für die CPU-Messung), alles andere alle 2 min.
+   */
+  private viewers = 0;
+  private builtAt = 0;
   private historyReadyResolve!: () => void;
   /** Erfüllt, sobald der erste History-Scan durch ist (API-Aufrufe warten darauf). */
   readonly historyLoaded = new Promise<void>((r) => (this.historyReadyResolve = r));
@@ -121,7 +131,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       /* Fallback: nur Polling */
     }
     // Polling als Netz: Prozess-Liveness (kein Datei-Event beim Absturz) und verpasste Events.
-    this.poller = setInterval(() => void this.poll(), 3000);
+    this.startPoller();
     this.cpu.start();
   }
 
@@ -132,18 +142,43 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
     clearTimeout(this.timer);
   }
 
+  private get active(): boolean {
+    return this.viewers > 0;
+  }
+
+  private startPoller(): void {
+    clearInterval(this.poller);
+    this.poller = setInterval(() => void this.poll(), this.active ? 5000 : IDLE_POLL_MS);
+    this.cpu.setIdle(!this.active);
+  }
+
+  /** Anzahl offener Live-Verbindungen (sichtbare Tabs); schaltet zwischen Live- und Sparbetrieb. */
+  setViewers(n: number): void {
+    const was = this.active;
+    this.viewers = n;
+    if (was === this.active) return;
+    this.startPoller();
+    if (this.active) {
+      // Zuschauer zurück: sofort alles auf Stand bringen
+      this.dirty.processes = this.dirty.jobs = this.dirty.dashboard = true;
+      this.historyRefreshedAt = 0;
+      void this.poll();
+    }
+  }
+
   private onFsEvent(abs: string): void {
     const rel = relToClaude(abs);
     if (rel.startsWith('sessions/')) this.dirty.processes = true;
     else if (rel.startsWith('jobs/') || rel.startsWith('daemon/')) this.dirty.jobs = true;
     else if (rel.startsWith('projects/')) {
       if (rel.endsWith('.jsonl')) {
-        void this.onTranscriptChanged(abs);
+        if (this.active) void this.onTranscriptChanged(abs);
         if (!rel.includes('/subagents/')) void this.index.touch(abs);
       }
       this.dirty.dashboard = true;
     } else return;
-    this.schedule();
+    // ohne Zuschauer nur vormerken; der nächste Sparlauf holt es nach
+    if (this.active) this.schedule();
   }
 
   private async onTranscriptChanged(path: string): Promise<void> {
@@ -156,6 +191,20 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
   }
 
   private async poll(): Promise<void> {
+    if (!this.active) {
+      // Sparbetrieb: Prozessliste aktuell halten (CPU-Messung braucht die Claude-Prozesse),
+      // den Rest nur alle 2 Minuten
+      if (Date.now() - this.builtAt < IDLE_REBUILD_MS) {
+        if (!this.building) {
+          this.processes = await readProcesses();
+        }
+        return;
+      }
+      this.dirty.processes = true;
+      this.dirty.jobs = true;
+      this.schedule(0);
+      return;
+    }
     for (const t of this.store.all()) {
       try {
         const st = await stat(t.path);
@@ -190,11 +239,12 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       }
       if (this.spawnsReady) await this.spawns.refresh(this.index.list(), this.processes, false);
       // Statistik muss nicht im Sekundentakt nachziehen; laufende Agenten schreiben ständig
-      if (this.historyReady && Date.now() - this.historyRefreshedAt > 5000) {
+      if (this.historyReady && (!this.active || Date.now() - this.historyRefreshedAt > 5000)) {
         this.historyRefreshedAt = Date.now();
         await this.history.refresh(this.index.list(), this.projectOf, false);
       }
       this.dirty.dashboard = false;
+      this.builtAt = Date.now();
       const d = await this.buildDashboard();
       const { generatedAt: _g, ...cmp } = d;
       const json = JSON.stringify(cmp);
@@ -220,7 +270,11 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
   }
 
   async getDashboard(): Promise<Dashboard> {
-    if (!this.dashboard) await this.rebuild();
+    // Abruf ohne Live-Verbindung (z. B. API) im Sparbetrieb: nicht älter als 5 s ausliefern
+    if (!this.dashboard || (!this.active && Date.now() - this.builtAt > 5000)) {
+      this.dirty.processes = this.dirty.jobs = true;
+      await this.rebuild();
+    }
     return this.dashboard!;
   }
 

@@ -138,3 +138,9 @@ Außer CPU-Log und Analysen im eigenen Datenverzeichnis wird nichts auf Platte g
 Kopfdaten (unter 1 s); die komplette History (hier ~600 MB) wird im Hintergrund in
 2–3 s aggregiert und danach nur noch inkrementell nachgeführt. Vollständige Verläufe
 werden erst beim Öffnen geladen und mit einer Obergrenze im Speicher gehalten.
+
+Solange ein Dashboard-Tab sichtbar ist, aktualisiert sich alles live (CPU alle 3 s). Ist kein Tab
+sichtbar (geschlossen oder 15 s im Hintergrund), wechselt der Server in einen Sparbetrieb:
+Prozessliste alle 30 s, CPU alle 15 s, alles andere alle 2 Minuten – etwa 1 % eines Kerns
+(gemessen mit ~1.600 Transcripts und mehreren laufenden Agenten). Beim Zurückwechseln wird sofort
+nachgeladen.

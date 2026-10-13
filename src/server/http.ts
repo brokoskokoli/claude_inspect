@@ -137,7 +137,11 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
         res.write(`event: dashboard\ndata: ${JSON.stringify(await inspector.getDashboard())}\n\n`);
         res.write(`event: cpu\ndata: ${JSON.stringify(inspector.cpuSnapshot())}\n\n`);
         sseClients.add(res);
-        req.on('close', () => sseClients.delete(res));
+        inspector.setViewers(sseClients.size);
+        req.on('close', () => {
+          sseClients.delete(res);
+          inspector.setViewers(sseClients.size);
+        });
         return;
       }
 

@@ -16,6 +16,11 @@ const MIN_PCT = 1;
 const IDLE_WRITE_MS = 30_000;
 /** Dateien, die so lange nicht mehr geschrieben wurden, werden gelöscht (wie Claude Codes eigene Aufräumfrist). */
 const RETENTION_MS = 30 * 24 * 3600_000;
+/**
+ * Messabstand im Sparbetrieb (kein Tab offen). Gemessen wird verbrauchte CPU-Zeit, längere
+ * Abstände liefern also korrekte Mittelwerte – nur gröber. Spart vor allem die ps-Aufrufe.
+ */
+const IDLE_INTERVAL_MS = 15_000;
 
 export interface CpuMonitorOptions {
   /** Messwerte als CSV in DATA_DIR/cpu ablegen */
@@ -35,7 +40,9 @@ interface SessionBuffer {
  * Liest die Prozesstabelle (ps bzw. /proc), schreibt nur ins eigene Datenverzeichnis.
  */
 export class CpuMonitor {
+  /** Messabstand bei offenem Tab */
   readonly intervalMs = process.platform === 'win32' ? 10_000 : 3_000;
+  private currentMs = Math.max(IDLE_INTERVAL_MS, this.intervalMs);
   readonly dir = join(DATA_DIR, 'cpu');
   readonly cores = availableParallelism();
   private prev?: CpuTable;
@@ -56,12 +63,23 @@ export class CpuMonitor {
 
   start(): void {
     void this.tick();
-    this.timer = setInterval(() => void this.tick(), this.intervalMs);
+    this.timer = setInterval(() => void this.tick(), this.currentMs);
     if (this.opts.log) {
       void this.cleanup();
       this.cleanupTimer = setInterval(() => void this.cleanup(), 6 * 3600_000);
       this.cleanupTimer.unref();
     }
+  }
+
+  /** Sparbetrieb ein/aus (kein Tab offen → seltener messen) */
+  setIdle(idle: boolean): void {
+    const ms = idle ? Math.max(IDLE_INTERVAL_MS, this.intervalMs) : this.intervalMs;
+    if (ms === this.currentMs) return;
+    this.currentMs = ms;
+    if (!this.timer) return;
+    clearInterval(this.timer);
+    if (!idle) void this.tick();
+    this.timer = setInterval(() => void this.tick(), ms);
   }
 
   stop(): void {
@@ -141,7 +159,7 @@ export class CpuMonitor {
       if (last.t !== this.lastT) continue;
       sessions[id] = { pct: sampleTotal(last), spark: b.samples.slice(-SPARK_POINTS).map(sampleTotal) };
     }
-    return { t: this.lastT, intervalMs: this.intervalMs, cores: this.cores, sessions };
+    return { t: this.lastT, intervalMs: this.currentMs, cores: this.cores, sessions };
   }
 
   async history(sessionId: string): Promise<CpuHistory> {
@@ -157,7 +175,7 @@ export class CpuMonitor {
     // Messungen, die (noch) nicht in der Datei stehen, aus dem Speicher ergänzen
     const lastT = samples[samples.length - 1]?.t ?? 0;
     samples.push(...(this.buffers.get(sessionId)?.samples.filter((s) => s.t > lastT) ?? []));
-    const h = cpuHistory(samples, { intervalMs: this.intervalMs, gapMs: IDLE_WRITE_MS + 5 * this.intervalMs });
+    const h = cpuHistory(samples, { intervalMs: this.intervalMs, gapMs: IDLE_WRITE_MS + 5 * this.intervalMs, maxStepMs: 2 * IDLE_INTERVAL_MS });
     return { sessionId, logging: this.opts.log, file: samples.length ? file : undefined, cores: this.cores, ...h };
   }
 }

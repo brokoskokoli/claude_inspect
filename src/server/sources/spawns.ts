@@ -175,8 +175,9 @@ export class SpawnIndex {
 
   /** Neue Zeilen aller Transcripts nach claude-Aufrufen durchsuchen (inkrementell). */
   async refresh(transcripts: TranscriptFile[], processes: ProcessInfo[], full: boolean): Promise<void> {
+    let changed = full;
     for (const f of transcripts) {
-      await this.scanFile(f.path, f.size, f.sessionId);
+      if (await this.scanFile(f.path, f.size, f.sessionId)) changed = true;
       // Subagenten können ebenfalls claude-Aufrufe machen. Nach dem ersten
       // Durchlauf nur noch bei kürzlich aktiven Sessions nachsehen.
       if (!full && Date.now() - f.mtime > 3600_000) continue;
@@ -192,19 +193,31 @@ export class SpawnIndex {
         if (!m) continue;
         const path = join(dir, n);
         try {
-          await this.scanFile(path, (await stat(path)).size, f.sessionId, m[1]);
+          if (await this.scanFile(path, (await stat(path)).size, f.sessionId, m[1])) changed = true;
         } catch {
           /* gelöscht */
         }
       }
     }
-    for (const f of transcripts) await this.readChild(f);
+    for (const f of transcripts) if (await this.readChild(f)) changed = true;
+    // Zuordnen ist teuer (alle Aufrufe × alle Kinder) – nur bei neuen Daten oder geänderten Prozessen
+    const procKey = processes
+      .filter((p) => p.alive)
+      .map((p) => `${p.pid}:${p.sessionId}:${p.parentPid ?? ''}`)
+      .sort()
+      .join(',');
+    if (!changed && procKey === this.procKey) return;
+    this.procKey = procKey;
     this.link(processes);
   }
 
-  private async scanFile(path: string, size: number, sessionId: string, agentId?: string): Promise<void> {
+  private procKey = '';
+
+  /** true, wenn neue claude-Aufrufe dazugekommen sind */
+  private async scanFile(path: string, size: number, sessionId: string, agentId?: string): Promise<boolean> {
     let st = this.files.get(path);
-    if (st && st.size === size) return;
+    if (st && st.size === size) return false;
+    const before = st?.calls.length ?? -1;
     if (!st || size < st.size) {
       st = { size: 0, tail: new JsonlTail(path), calls: [] };
       this.files.set(path, st);
@@ -225,12 +238,14 @@ export class SpawnIndex {
     } catch {
       /* gelöscht */
     }
+    return st.calls.length !== before;
   }
 
   /** Kopf eines Transcripts: Einstiegspunkt, erster Prompt, Startzeit, Agent. */
-  private async readChild(f: TranscriptFile): Promise<void> {
+  private async readChild(f: TranscriptFile): Promise<boolean> {
     const cached = this.children.get(f.sessionId);
-    if (cached && cached.info.prompt !== undefined && cached.size <= f.size) return;
+    // unveränderte Datei nicht erneut lesen (auch wenn noch kein Prompt gefunden wurde)
+    if (cached && (cached.size === f.size || (cached.info.prompt !== undefined && cached.size <= f.size))) return false;
     const info: ChildInfo = { sessionId: f.sessionId };
     try {
       const { head } = await readHeadTail(f.path, 96 * 1024, 0);
@@ -254,6 +269,7 @@ export class SpawnIndex {
       /* gelöscht */
     }
     this.children.set(f.sessionId, { size: f.size, info });
+    return JSON.stringify(cached?.info) !== JSON.stringify(info);
   }
 
   private link(processes: ProcessInfo[]): void {

@@ -18,7 +18,7 @@
   import { resumeCommands } from '$shared/resume';
   import { api } from '../lib/api';
   import { ago, bytes, dateTime, modelName, shortPath, tokens, usd } from '../lib/format';
-  import { clock, live, onReview, onTranscript } from '../lib/live.svelte';
+  import { clock, live, onReconnect, onReview, onTranscript } from '../lib/live.svelte';
   import { href, type SessionTab } from '../lib/router.svelte';
 
   let { id, agent, tab, tool, line }: { id: string; agent?: string; tab: SessionTab; tool?: string; line?: number } = $props();
@@ -111,12 +111,18 @@
   }
   $effect(() => {
     untrack(() => void loadReview());
-    return onReview((run) => {
+    // Tab war im Hintergrund: verpasste Fortschrittsmeldungen nachholen
+    const offReconnect = onReconnect(() => void loadReview());
+    const offReview = onReview((run) => {
       if (run.sessionId !== id || !review) return;
       const i = review.runs.findIndex((r) => r.id === run.id);
       if (i >= 0) review.runs[i] = run;
       else review.runs = [run, ...review.runs];
     });
+    return () => {
+      offReconnect();
+      offReview();
+    };
   });
   function openAnalyze() {
     analyzeOpen = true;
