@@ -41,7 +41,8 @@ beim Login und nach Abstürzen neu und läuft ohne Token (nur von localhost erre
 Manuell gestartet gibt `claude-inspect` eine URL mit Zufallstoken (`?t=…`) aus; der Browser merkt
 es sich als Cookie. `--token` für einen festen Token, `--no-auth` für keinen, `--port` für einen
 anderen Port, `CLAUDE_CONFIG_DIR=/pfad` für ein anderes Datenverzeichnis, `--no-cpu-log` ohne
-CPU-Protokoll, `CLAUDE_INSPECT_DATA_DIR=/pfad` für einen anderen Ablageort des CPU-Protokolls.
+CPU-Protokoll, `--no-analyze` ohne *Analyze with Claude*, `CLAUDE_INSPECT_DATA_DIR=/pfad` für einen
+anderen Ablageort von CPU-Protokoll und Analysen.
 
 Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
 (`npm run dev` + `npm run dev:web` für die Entwicklung mit Hot-Reload).
@@ -73,6 +74,18 @@ Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
   Windows `%LOCALAPPDATA%\claude-inspect\cpu`), damit der Verlauf nach Sessionende abrufbar bleibt.
   Dateien älter als 30 Tage werden gelöscht. Gemessen wird nur, solange claude-inspect läuft;
   Prozesse, die kürzer als 3 s leben, fehlen. Abschalten mit `--no-cpu-log`.
+- **Analyze with Claude**: Knopf auf jeder Session. Im Pop-up wählt man, worauf geachtet wird
+  (Auftrag erfüllt, Effizienz & Kosten, Fehler & Umwege, Datenschutz, Sicherheit & riskante
+  Aktionen, Agenten & Delegation, Setup-Verbesserungen), dazu optional eine eigene Frage, Modell
+  und Antwortsprache. claude-inspect baut einen kompakten Bericht über die Session samt Subagenten
+  und gestarteten Sitzungen (Anfragen, Antworten, jeder Tool-Aufruf mit Status, Dauer und Kosten,
+  dazu automatische Befunde wie wiederholte Fehler, mehrfach gelesene Dateien, Zugriffe auf
+  sensible Dateien, Uploads, riskante Befehle), maskiert Geheimnisse und lässt ihn vom lokalen
+  `claude -p` auswerten – ohne Tools, MCP-Server und Einstellungen, nicht als Session gespeichert.
+  Die Antwort erscheint live im Tab *Analysis* und wird im Datenverzeichnis (`reviews/`) abgelegt.
+  Läuft über die eigene Claude-Code-Anmeldung und zählt zum Abo-Verbrauch; *View what is sent*
+  zeigt den genauen Bericht. Das ist die einzige Funktion, die Daten verschickt, und nur auf Klick.
+  `--no-analyze` blendet den Knopf aus.
 - **Abo-Budget**: Kosten als geschätzter Anteil am Wochenlimit und am 5-Stunden-Fenster des Tarifs
   (Max 20x, Max 5x, Pro). Der Tarif wird aus `~/.claude.json` erkannt (gelesen wird nur das
   Rate-Limit-Tier) und lässt sich im Browser umstellen. Anthropic nennt keine Dollar- oder
@@ -121,7 +134,7 @@ Neue Dateiformate: siehe [docs/FORMATS.md](https://github.com/brokoskokoli/claud
 
 ## Speicher & Leistung
 
-Außer dem CPU-Log im eigenen Datenverzeichnis wird nichts auf Platte geschrieben. Beim Start liest der Server nur Prozess-, Job- und
+Außer CPU-Log und Analysen im eigenen Datenverzeichnis wird nichts auf Platte geschrieben. Beim Start liest der Server nur Prozess-, Job- und
 Kopfdaten (unter 1 s); die komplette History (hier ~600 MB) wird im Hintergrund in
 2–3 s aggregiert und danach nur noch inkrementell nachgeführt. Vollständige Verläufe
 werden erst beim Öffnen geladen und mit einer Obergrenze im Speicher gehalten.

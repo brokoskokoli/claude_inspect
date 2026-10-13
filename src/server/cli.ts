@@ -42,12 +42,14 @@ Options:
   --token <t>      fixed access token instead of a random one      env: CLAUDE_INSPECT_TOKEN
   --no-auth        no token (still only reachable from localhost)  env: CLAUDE_INSPECT_NO_AUTH=1
   --no-cpu-log     don't record CPU usage to the data directory     env: CLAUDE_INSPECT_NO_CPU_LOG=1
+  --no-analyze     hide "Analyze with Claude" (never runs claude)   env: CLAUDE_INSPECT_NO_ANALYZE=1
   --out <dir>      demo: only write the demo data to <dir>
   -v, --version    print the version
   -h, --help       show this help
 
 Data directory: $CLAUDE_CONFIG_DIR or ~/.claude (read only)
-CPU log:        $CLAUDE_INSPECT_DATA_DIR/cpu (default: the platform's app data directory)`;
+CPU log:        $CLAUDE_INSPECT_DATA_DIR/cpu (default: the platform's app data directory)
+Analyses:       $CLAUDE_INSPECT_DATA_DIR/reviews`;
 
 const { values, positionals } = parseArgs({
   allowPositionals: true,
@@ -58,6 +60,7 @@ const { values, positionals } = parseArgs({
     token: { type: 'string', default: env.CLAUDE_INSPECT_TOKEN },
     'no-auth': { type: 'boolean', default: env.CLAUDE_INSPECT_NO_AUTH === '1' },
     'no-cpu-log': { type: 'boolean', default: env.CLAUDE_INSPECT_NO_CPU_LOG === '1' },
+    'no-analyze': { type: 'boolean', default: env.CLAUDE_INSPECT_NO_ANALYZE === '1' },
     out: { type: 'string' },
     help: { type: 'boolean', short: 'h', default: false },
     version: { type: 'boolean', short: 'v', default: false },
@@ -79,7 +82,7 @@ if (values.help) {
   await runDemo({ out: values.out, port: port(7718), open: values.open });
 } else if (cmd === undefined) {
   const { runServer } = await import('./run.js');
-  await runServer({ port: port(7717), open: values.open, dev: values.dev, noAuth: values['no-auth'], token: values.token, noCpuLog: values['no-cpu-log'] });
+  await runServer({ port: port(7717), open: values.open, dev: values.dev, noAuth: values['no-auth'], token: values.token, noCpuLog: values['no-cpu-log'], noAnalyze: values['no-analyze'] });
 } else {
   console.error(`Unknown command "${cmd}".\n\n${HELP}`);
   process.exit(1);

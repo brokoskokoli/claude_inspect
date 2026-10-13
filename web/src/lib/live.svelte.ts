@@ -1,3 +1,4 @@
+import type { ReviewRun } from '$shared/review';
 import type { CpuSnapshot, Dashboard } from '$shared/types';
 
 type TranscriptEvent = { sessionId: string; agentId?: string; total: number };
@@ -15,6 +16,14 @@ export function onTranscript(fn: (e: TranscriptEvent) => void): () => void {
   return () => transcriptListeners.delete(fn);
 }
 
+const reviewListeners = new Set<(r: ReviewRun) => void>();
+
+/** Fortschritt laufender Analysen ("Analyze with Claude") */
+export function onReview(fn: (r: ReviewRun) => void): () => void {
+  reviewListeners.add(fn);
+  return () => reviewListeners.delete(fn);
+}
+
 export function connect(): void {
   const es = new EventSource('/api/stream');
   es.onopen = () => (live.connected = true);
@@ -25,6 +34,10 @@ export function connect(): void {
   });
   es.addEventListener('cpu', (ev) => {
     live.cpu = JSON.parse((ev as MessageEvent).data);
+  });
+  es.addEventListener('review', (ev) => {
+    const data = JSON.parse((ev as MessageEvent).data) as ReviewRun;
+    for (const fn of reviewListeners) fn(data);
   });
   es.addEventListener('transcript', (ev) => {
     const data = JSON.parse((ev as MessageEvent).data) as TranscriptEvent;

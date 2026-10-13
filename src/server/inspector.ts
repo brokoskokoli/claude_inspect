@@ -23,7 +23,10 @@ import type {
   SubagentInfo,
   TranscriptPage,
 } from '../shared/types.js';
-import { CLAUDE_DIR, relToClaude } from './config.js';
+import { CLAUDE_DIR, DATA_DIR, relToClaude } from './config.js';
+import type { ReviewRequest, ReviewState } from '../shared/review.js';
+import { buildDigest } from './review/digest.js';
+import { findClaude, Reviewer } from './review/runner.js';
 import { CpuMonitor } from './cpu-monitor.js';
 import { registry } from './formats/index.js';
 import { HistoryIndex, type HistoryFilter, type ToolQuery } from './history/aggregator.js';
@@ -65,6 +68,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
   /** Aggregierte History (Tokens, Kosten, Tool-Aufrufe, Dateien) – nur im Speicher. */
   readonly history = new HistoryIndex();
   private historyReady = false;
+  private historyRefreshedAt = 0;
   private historyReadyResolve!: () => void;
   /** Erfüllt, sobald der erste History-Scan durch ist (API-Aufrufe warten darauf). */
   readonly historyLoaded = new Promise<void>((r) => (this.historyReadyResolve = r));
@@ -79,9 +83,12 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
   private building?: Promise<void>;
   /** CPU-Auslastung je Claude-Prozess samt Unterprozessen */
   private readonly cpu: CpuMonitor;
+  /** "Analyze with Claude": startet auf Knopfdruck `claude -p` (abschaltbar mit --no-analyze) */
+  readonly reviewer?: Reviewer;
 
-  constructor(opts: { cpuLog?: boolean } = {}) {
+  constructor(opts: { cpuLog?: boolean; analyze?: boolean } = {}) {
     super();
+    if (opts.analyze !== false) this.reviewer = new Reviewer(join(DATA_DIR, 'reviews'), (data) => this.emit('event', { type: 'review', data } satisfies StreamEvent));
     this.cpu = new CpuMonitor({
       log: opts.cpuLog ?? false,
       roots: () => new Map(this.processes.filter((p) => p.alive && p.pid > 0).map((p) => [p.pid, p.sessionId])),
@@ -182,7 +189,11 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
         this.jobs = await readJobs();
       }
       if (this.spawnsReady) await this.spawns.refresh(this.index.list(), this.processes, false);
-      if (this.historyReady) await this.history.refresh(this.index.list(), this.projectOf, false);
+      // Statistik muss nicht im Sekundentakt nachziehen; laufende Agenten schreiben ständig
+      if (this.historyReady && Date.now() - this.historyRefreshedAt > 5000) {
+        this.historyRefreshedAt = Date.now();
+        await this.history.refresh(this.index.list(), this.projectOf, false);
+      }
       this.dirty.dashboard = false;
       const d = await this.buildDashboard();
       const { generatedAt: _g, ...cmp } = d;
@@ -607,6 +618,35 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
 
   formats() {
     return registry.report();
+  }
+
+  /** Kompakter Bericht über die Session samt Subagenten und gestarteten Sitzungen (Grundlage der Analyse). */
+  async reviewDigest(sessionId: string) {
+    const [flow, cost] = [await this.flow(sessionId), await this.sessionCost(sessionId)];
+    const f = this.index.get(sessionId);
+    if (!flow || !f) return undefined;
+    const sum = await this.index.summary(f);
+    const costOf = new Map(cost?.rows.map((r) => [r.id, r.costUSD]));
+    const lanes = [];
+    for (const lane of flow.lanes) {
+      const t = await this.transcriptFor(lane.sessionId, lane.agentId);
+      if (t) lanes.push({ lane, entries: t.entries, costUSD: costOf.get(lane.id) ?? 0 });
+    }
+    return buildDigest({ title: sum.title, project: sum.project, cwd: sum.cwd, gitBranch: sum.gitBranch, costUSD: cost?.costUSD ?? 0, lanes });
+  }
+
+  async reviewState(sessionId: string): Promise<ReviewState | undefined> {
+    if (!this.index.get(sessionId)) return undefined;
+    if (!this.reviewer) return { available: false, disabled: true, runs: [] };
+    const claudePath = await findClaude();
+    return { available: !!claudePath, claudePath, disabled: false, digest: (await this.reviewDigest(sessionId))?.stats, runs: await this.reviewer.list(sessionId) };
+  }
+
+  async startReview(sessionId: string, req: ReviewRequest) {
+    if (!this.reviewer) throw new Error('Analysis is turned off (--no-analyze).');
+    const digest = await this.reviewDigest(sessionId);
+    if (!digest) throw new Error('unknown session');
+    return this.reviewer.start(sessionId, digest, req);
   }
 }
 

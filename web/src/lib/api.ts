@@ -12,6 +12,7 @@ import type {
   ToolCallRow,
   TranscriptPage,
 } from '$shared/types';
+import type { ReviewRequest, ReviewRun, ReviewState } from '$shared/review';
 
 export interface HistoryFilter {
   days?: number;
@@ -31,6 +32,13 @@ async function get<T>(url: string): Promise<T> {
   return r.json() as Promise<T>;
 }
 
+async function post<T>(url: string, body: unknown): Promise<T> {
+  const r = await fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  const data = (await r.json().catch(() => ({}))) as T & { error?: string };
+  if (!r.ok) throw new Error(data.error ?? String(r.status));
+  return data;
+}
+
 const enc = encodeURIComponent;
 
 export const api = {
@@ -46,6 +54,10 @@ export const api = {
   flow: (id: string) => get<Flow>(`/api/flow/${enc(id)}`),
   cpu: (id: string) => get<CpuHistory>(`/api/cpu/${enc(id)}`),
   cost: (id: string) => get<SessionCost>(`/api/cost/${enc(id)}`),
+  review: (id: string) => get<ReviewState>(`/api/review/${enc(id)}`),
+  reviewDigestUrl: (id: string) => `/api/review/${enc(id)}/digest`,
+  startReview: (id: string, req: ReviewRequest) => post<ReviewRun>(`/api/review/${enc(id)}`, req),
+  cancelReview: (runId: string) => post<{ cancelled: boolean }>(`/api/review-cancel/${enc(runId)}`, {}),
   stats: (f: HistoryFilter) => get<HistoryStats>(`/api/stats${qs({ ...f })}`),
   projects: () => get<string[]>('/api/projects'),
   tools: (p: HistoryFilter & { name?: string; q?: string; session?: string; file?: string; errors?: boolean; offset?: number; limit?: number }) =>

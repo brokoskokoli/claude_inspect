@@ -391,7 +391,8 @@ export interface FormatReport {
 export type StreamEvent =
   | { type: 'dashboard'; data: Dashboard }
   | { type: 'cpu'; data: CpuSnapshot }
-  | { type: 'transcript'; data: { sessionId: string; agentId?: string; total: number } };
+  | { type: 'transcript'; data: { sessionId: string; agentId?: string; total: number } }
+  | { type: 'review'; data: import('./review.js').ReviewRun };
 
 // ---------------------------------------------------------------------------
 // CPU-Auslastung (Claude-Prozess + alle Unterprozesse, 100 % = ein Kern)

@@ -17,6 +17,8 @@ export interface RunOptions {
   token?: string;
   /** don't write CPU measurements to the data directory */
   noCpuLog?: boolean;
+  /** hide "Analyze with Claude" (never starts claude) */
+  noAnalyze?: boolean;
 }
 
 /** Locates the built web UI – works from src/server (tsx), dist/app/server and an installed npm package. */
@@ -37,7 +39,7 @@ function openBrowser(url: string): void {
 }
 
 export async function runServer(opts: RunOptions): Promise<void> {
-  const inspector = new Inspector({ cpuLog: !opts.noCpuLog });
+  const inspector = new Inspector({ cpuLog: !opts.noCpuLog, analyze: !opts.noAnalyze });
   const t0 = Date.now();
   await inspector.start();
 

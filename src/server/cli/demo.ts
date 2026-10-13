@@ -413,6 +413,8 @@ export async function runDemo(opts: DemoOptions): Promise<void> {
 
   console.log(`Demo data in ${ROOT}`);
   // config.ts reads CLAUDE_CONFIG_DIR on import – set it before loading the server
+  // "Analyze with Claude" starts the real claude – it needs the user's own config dir (login)
+  process.env.CLAUDE_INSPECT_CLAUDE_CONFIG_DIR = process.env.CLAUDE_CONFIG_DIR ?? '';
   process.env.CLAUDE_CONFIG_DIR = ROOT;
   process.env.CLAUDE_INSPECT_DATA_DIR = `${ROOT}-data`;
   demoCpu(`${ROOT}-data`, s);

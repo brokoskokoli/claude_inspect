@@ -1,4 +1,4 @@
-export type SessionTab = 'transcript' | 'timeline' | 'graph' | 'tasks' | 'cpu' | 'cost';
+export type SessionTab = 'transcript' | 'timeline' | 'graph' | 'tasks' | 'cpu' | 'cost' | 'analysis';
 
 export type Route =
   | { name: 'dashboard' }

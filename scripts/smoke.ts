@@ -51,6 +51,12 @@ try {
   check(sessions.total > 0, `lists demo sessions (${sessions.total})`);
   const projects = await (await get('/api/projects')).json();
   check(projects.length > 0 && projects.every((p: { project: string }) => !/[\\/]/.test(p.project)), 'project names are plain folder names');
+  // Analysis: digest of a session (no claude run in the smoke test)
+  const sid = sessions.items[0].sessionId;
+  const review = await (await get(`/api/review/${sid}`)).json();
+  check(review.digest?.chars > 0 && Array.isArray(review.runs), 'builds the analysis digest of a session');
+  const csrf = await fetch(`${BASE}/api/review/${sid}`, { method: 'POST', headers: { 'content-type': 'text/plain' }, body: '{}' });
+  check(csrf.status === 415, 'rejects analysis requests without a JSON body');
   // CPU: measured from the real process table (ps, /proc or PowerShell) and written to the data directory
   let cpu: { points: unknown[]; file?: string } = { points: [] };
   for (let i = 0; i < 60 && cpu.points.length === 0; i++) {

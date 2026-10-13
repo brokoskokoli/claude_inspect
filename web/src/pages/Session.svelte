@@ -1,6 +1,9 @@
 <script lang="ts">
   import type { CpuHistory, Flow, SessionCost, SessionDetail } from '$shared/types';
+  import type { ReviewRun, ReviewState } from '$shared/review';
+  import AnalyzeDialog from '../components/AnalyzeDialog.svelte';
   import CostView from '../components/CostView.svelte';
+  import ReviewView from '../components/ReviewView.svelte';
   import CpuChart from '../components/CpuChart.svelte';
   import FlowGraph from '../components/FlowGraph.svelte';
   import TaskBoard from '../components/TaskBoard.svelte';
@@ -15,7 +18,7 @@
   import { resumeCommands } from '$shared/resume';
   import { api } from '../lib/api';
   import { ago, bytes, dateTime, modelName, shortPath, tokens, usd } from '../lib/format';
-  import { clock, live, onTranscript } from '../lib/live.svelte';
+  import { clock, live, onReview, onTranscript } from '../lib/live.svelte';
   import { href, type SessionTab } from '../lib/router.svelte';
 
   let { id, agent, tab, tool, line }: { id: string; agent?: string; tab: SessionTab; tool?: string; line?: number } = $props();
@@ -96,6 +99,35 @@
     };
   });
 
+  // "Analyze with Claude": Zustand (Verfügbarkeit, Umfang, bisherige Analysen) und Live-Fortschritt
+  let review = $state<ReviewState | null>(null);
+  let analyzeOpen = $state(false);
+  async function loadReview() {
+    try {
+      review = await api.review(id);
+    } catch {
+      /* Knopf bleibt ohne Umfangsangabe */
+    }
+  }
+  $effect(() => {
+    untrack(() => void loadReview());
+    return onReview((run) => {
+      if (run.sessionId !== id || !review) return;
+      const i = review.runs.findIndex((r) => r.id === run.id);
+      if (i >= 0) review.runs[i] = run;
+      else review.runs = [run, ...review.runs];
+    });
+  });
+  function openAnalyze() {
+    analyzeOpen = true;
+    void loadReview(); // Umfang aktualisieren
+  }
+  function started(run: ReviewRun) {
+    if (review && !review.runs.some((r) => r.id === run.id)) review.runs = [run, ...review.runs];
+    location.hash = href.session(id, undefined, { tab: 'analysis' });
+  }
+  const reviewRunning = $derived(review?.runs.some((r) => r.status === 'running') ?? false);
+
   const TABS: [SessionTab, string][] = [
     ['transcript', 'Transcript'],
     ['timeline', 'Timeline'],
@@ -103,6 +135,7 @@
     ['tasks', 'Tasks'],
     ['cpu', 'CPU'],
     ['cost', 'Cost'],
+    ['analysis', 'Analysis'],
   ];
 
   let detail = $state<SessionDetail | null>(null);
@@ -194,6 +227,9 @@
       {#if proc?.kind}<span class="badge">{proc.kind}</span>{/if}
       {#if proc?.agent}<span class="badge info">{proc.agent}</span>{/if}
       {#if proc?.bridgeSessionId}<span class="badge info">remote</span>{/if}
+      {#if review && !review.disabled}
+        <button class="btn analyze" onclick={openAnalyze} disabled={!review.available} title={review.available ? 'Let Claude review this session' : 'claude was not found on this machine'}>✦ Analyze with Claude</button>
+      {/if}
     </div>
     {#if proc?.name && sum.title && sum.title !== proc.name}<div class="muted">{sum.title}</div>{/if}
     {#if detail.spawnedBy}
@@ -242,10 +278,13 @@
     {#if resume.length}<div class="resume-row"><ResumeButtons commands={resume} /></div>{/if}
   </header>
 
+  <AnalyzeDialog sessionId={id} {review} bind:open={analyzeOpen} onstarted={started} />
+
   <nav class="tabs">
     {#each TABS as [key, label] (key)}
       <a href={href.session(id, key === 'transcript' ? agent : undefined, { tab: key })} class:on={tab === key}>
         {label}{#if key === 'tasks' && detail.tasks.length}<span class="n">{detail.tasks.length}</span>{/if}
+        {#if key === 'analysis' && review?.runs.length}<span class="n" class:live-n={reviewRunning}>{review.runs.length}</span>{/if}
         {#if key === 'graph' && detail.subagents.length + detail.spawned.length}<span class="n">{detail.subagents.length + detail.spawned.length + 1}</span>{/if}
       </a>
     {/each}
@@ -257,6 +296,8 @@
     {#if flow}<FlowGraph {flow} />{:else}<p class="muted">Loading flow …</p>{/if}
   {:else if tab === 'tasks'}
     <TaskBoard tasks={detail.tasks} />
+  {:else if tab === 'analysis'}
+    <ReviewView {review} onanalyze={openAnalyze} />
   {:else if tab === 'cost'}
     {#if cost}<CostView {cost} />{:else}<p class="muted">Loading cost …</p>{/if}
   {:else if tab === 'cpu'}
@@ -360,6 +401,19 @@
     margin-top: 12px;
     padding-top: 12px;
     border-top: 1px solid var(--border);
+  }
+  .analyze {
+    margin-left: auto;
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+    font-weight: 600;
+  }
+  .analyze:disabled {
+    opacity: 0.5;
+  }
+  .n.live-n {
+    background: var(--accent-soft);
+    color: var(--accent);
   }
   .spawned-by {
     display: flex;

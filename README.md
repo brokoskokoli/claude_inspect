@@ -23,7 +23,8 @@ No Claude Code data at hand? `npx claude-inspect demo --open` starts it with a f
 Permanent install with autostart: see [Installation](#installation).
 
 It is **read-only and passive** towards `~/.claude`: no hooks, no settings changes, no proxy, no data leaves
-your machine. The only thing it writes is a CPU log in its own data directory (see *CPU usage*).
+your machine. The only things it writes go to its own data directory: a CPU log (see *CPU usage*) and the
+results of *Analyze with Claude* – the one feature that sends data, and only when you click it.
 
 > Website: [brokoskokoli.github.io/claude_inspect](https://brokoskokoli.github.io/claude_inspect/) · Deutsch: [README.de.md](https://github.com/brokoskokoli/claude_inspect/blob/main/README.de.md) · Design notes (German): [KONZEPT.md](https://github.com/brokoskokoli/claude_inspect/blob/main/KONZEPT.md) · [Contributing](https://github.com/brokoskokoli/claude_inspect/blob/main/CONTRIBUTING.md)
 
@@ -52,6 +53,7 @@ becomes hard to tell *who is doing what*. claude-inspect answers:
 | **Spawn linking** | Links sessions started by `claude -p …` to the calling tool use via the process tree (exact), `--session-id`, prompt text, `--agent`, time window and working directory – with a confidence label. |
 | **Cost per agent tree** | Cost tab per session: API list-price estimate for the main agent plus all its subagents and spawned `claude` sessions, per agent and per model with input, output and cache tokens, plus a cost timeline with the most expensive moments. |
 | **Plan budget** | Cost as an estimated share of your plan's weekly limit and 5-hour window (Max 20x, Max 5x, Pro). The plan is detected from `~/.claude.json` (only the rate-limit tier is read) and can be changed in the browser. Anthropic publishes no dollar or token limits; the values are calibrated from real `/usage` readings against the API equivalent spent in the same time – to recalibrate with your own data (e.g. including a server's copy of `~/.claude`), see [Calibrating the plan budgets](https://github.com/brokoskokoli/claude_inspect/blob/main/CONTRIBUTING.md#calibrating-the-plan-budgets). Max 5x/20x are measured, Pro is extrapolated. |
+| **Analyze with Claude** | Button on every session: pick what to check – task outcome, efficiency & cost, errors & dead ends, privacy & data protection, security & risky actions, agents & delegation, setup improvements – plus an optional own question, model and answer language. claude-inspect builds a condensed digest of the session and all its subagents and spawned sessions (requests, answers, every tool call with status, duration and cost, plus computed observations such as repeated failures, repeated reads, access to sensitive files, uploads and risky commands), masks secrets, and runs your local `claude -p` on it – no tools, no MCP servers, no settings, not saved as a session. The answer streams into the *Analysis* tab and is stored in the data directory (`reviews/`). It runs on your own Claude Code login and counts towards your plan usage; *View what is sent* shows the exact digest. `--no-analyze` removes the button. |
 | **Statistics** | API list-price estimate, tokens per model/day/project, cache share, activity heatmap, tool statistics with error rate and p95 duration. |
 | **CPU usage** | CPU of each Claude Code process plus all its subprocesses (shells, builds, test runners, MCP servers …), measured every 3 s from the process table. Sparkline on the dashboard card, a *CPU* tab per session with a stacked chart by process name and the processes that used the most CPU time. Recorded as one CSV per session in the app data directory (`~/Library/Application Support/claude-inspect/cpu` on macOS, `~/.local/share/claude-inspect/cpu` on Linux, `%LOCALAPPDATA%\claude-inspect\cpu` on Windows), so it stays available after the session ended; files older than 30 days are deleted. Only measured while claude-inspect runs; processes that live less than 3 s are missed. `--no-cpu-log` turns recording off. |
 | **Tool explorer & files** | Every tool call across all sessions, filterable; which files agents read, edited or wrote. |
@@ -106,7 +108,7 @@ After `npm install -g claude-inspect@latest`, run `claude-inspect service instal
 Started manually, `claude-inspect` prints a URL with a random access token (`?t=…`) that the browser
 keeps as a cookie. Use `--token <t>` for a fixed token or `--no-auth` for none, `--port` for another port,
 `CLAUDE_CONFIG_DIR=/path/to/.claude` for another data directory, `--no-cpu-log` to not record CPU usage,
-`CLAUDE_INSPECT_DATA_DIR=/path` for another place for the CPU log. `claude-inspect --help` lists everything.
+`--no-analyze` to hide *Analyze with Claude*, `CLAUDE_INSPECT_DATA_DIR=/path` for another place for the CPU log and analyses. `claude-inspect --help` lists everything.
 
 ### Try it without your own data
 

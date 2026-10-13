@@ -3,6 +3,7 @@ import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { extname, join, normalize } from 'node:path';
+import type { ReviewRequest } from '../shared/review.js';
 import type { StreamEvent } from '../shared/types.js';
 import type { Inspector } from './inspector.js';
 import { sanitize } from './util/sanitize.js';
@@ -79,6 +80,38 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
     createReadStream(file).pipe(res);
   }
 
+  /**
+   * Die einzigen schreibenden Aufrufe: Analyse starten/abbrechen. Nur mit JSON-Body (erzwingt bei
+   * fremden Seiten einen CORS-Preflight, den der Server nie erlaubt) und lokalem Origin.
+   */
+  async function post(req: IncomingMessage, res: ServerResponse, p: string) {
+    const origin = req.headers.origin;
+    if (origin && !/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin)) return json(res, 403, { error: 'origin not allowed' });
+    if (!(req.headers['content-type'] ?? '').startsWith('application/json')) return json(res, 415, { error: 'JSON expected' });
+    let raw = '';
+    for await (const c of req) {
+      raw += c;
+      if (raw.length > 100_000) return json(res, 413, { error: 'too large' });
+    }
+    let body: Record<string, unknown>;
+    try {
+      body = JSON.parse(raw || '{}');
+    } catch {
+      return json(res, 400, { error: 'invalid JSON' });
+    }
+    let m = /^\/api\/review\/([\w-]+)$/.exec(p);
+    if (m) {
+      try {
+        return json(res, 200, await inspector.startReview(m[1], body as unknown as ReviewRequest));
+      } catch (e) {
+        return json(res, 400, { error: (e as Error).message });
+      }
+    }
+    m = /^\/api\/review-cancel\/([\w-]+)$/.exec(p);
+    if (m) return json(res, 200, { cancelled: inspector.reviewer?.cancel(m[1]) ?? false });
+    return json(res, 405, { error: 'read-only' });
+  }
+
   const server = createServer(async (req, res) => {
     try {
       const url = new URL(req.url ?? '/', 'http://localhost');
@@ -94,6 +127,7 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
       }
 
       const p = url.pathname;
+      if (req.method === 'POST') return await post(req, res, p);
       if (req.method !== 'GET') return json(res, 405, { error: 'read-only' });
 
       if (p === '/api/dashboard') return json(res, 200, await inspector.getDashboard());
@@ -176,6 +210,19 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
       if (m) {
         const cost = await inspector.sessionCost(m[1]);
         return cost ? json(res, 200, cost) : json(res, 404, { error: 'unknown session' });
+      }
+
+      m = /^\/api\/review\/([\w-]+)$/.exec(p);
+      if (m) {
+        const st = await inspector.reviewState(m[1]);
+        return st ? json(res, 200, st) : json(res, 404, { error: 'unknown session' });
+      }
+      m = /^\/api\/review\/([\w-]+)\/digest$/.exec(p);
+      if (m) {
+        const d = await inspector.reviewDigest(m[1]);
+        if (!d) return json(res, 404, { error: 'unknown session' });
+        res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' });
+        return res.end(d.text);
       }
 
       m = /^\/api\/flow\/([\w-]+)$/.exec(p);
