@@ -1,6 +1,6 @@
 {
   "name": "claude-inspect",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Claude Code dashboard & monitor: live sessions, subagents, spawned claude workers, tool calls, timelines, CPU and token usage and transcript history – read passively from ~/.claude, no hooks.",
   "keywords": [
     "claude-code",
