@@ -31,6 +31,7 @@ import { emptyTotals, estimateCost, mergeTotals } from '../shared/pricing.js';
 import { search, type SearchFile } from './history/search.js';
 import { analyze } from './model/analyze.js';
 import { laneData } from './model/flow.js';
+import { readPlan } from './sources/plan.js';
 import { readTasks } from './sources/tasks.js';
 import { readJobs } from './sources/jobs.js';
 import { readProcesses } from './sources/processes.js';
@@ -244,7 +245,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       const s = await this.index.summary(f);
       recentSessions.push({ ...s, live: liveIds.has(s.sessionId), spawnedBy: this.spawns.parentOf(s.sessionId)?.parentSessionId });
     }
-    return { generatedAt: Date.now(), claudeDir: CLAUDE_DIR, platform: process.platform, processes, orphanJobs, recentSessions };
+    return { generatedAt: Date.now(), claudeDir: CLAUDE_DIR, platform: process.platform, processes, orphanJobs, recentSessions, plan: await readPlan() };
   }
 
   private async sessionLive(sessionId: string, p: ProcessInfo): Promise<SessionLive | undefined> {

@@ -59,6 +59,7 @@
     "smoke": "tsx scripts/smoke.ts",
     "snapshot": "tsx src/server/cli-snapshot.ts",
     "fixtures": "tsx scripts/make-fixtures.ts",
+    "calibrate": "tsx scripts/calibrate-budget.ts",
     "prepublishOnly": "npm run check && npm test && npm run build"
   },
   "engines": {

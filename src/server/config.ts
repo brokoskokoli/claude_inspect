@@ -16,6 +16,9 @@ function defaultDataDir(): string {
  */
 export const DATA_DIR = process.env.CLAUDE_INSPECT_DATA_DIR || defaultDataDir();
 
+/** Globale Claude-Code-Konfiguration (Konto, Tarif). Liegt neben, nicht in ~/.claude. */
+export const CLAUDE_JSON = process.env.CLAUDE_CONFIG_DIR ? join(process.env.CLAUDE_CONFIG_DIR, '.claude.json') : join(homedir(), '.claude.json');
+
 export const paths = {
   projects: join(CLAUDE_DIR, 'projects'),
   sessions: join(CLAUDE_DIR, 'sessions'),

@@ -26,6 +26,31 @@ npm run build && npm run smoke   # builds, starts the CLI and checks the API
 
 CI runs the same steps on macOS, Linux and Windows with Node 22 and 24.
 
+## Calibrating the plan budgets
+
+The share of the weekly limit and of the 5-hour window shown in the UI is based on the values in
+`src/shared/budget.ts` (API list-price equivalent of a full limit per plan). Anthropic publishes no
+dollar or token limits, so they are calibrated from real data:
+
+1. Run `/usage` in Claude Code now and then – in the CLI, not the desktop app (only the CLI writes
+   the readings into the transcripts). More readings at higher percentages give better numbers.
+2. Collect the `~/.claude` directories of **all** machines that use the same account – the limit is
+   per account, so usage elsewhere would otherwise be missing. For a server, e.g.:
+   ```bash
+   rsync -a --exclude=.credentials.json server:~/.claude/ ~/claude-server/.claude/
+   ```
+3. Run the calibration from a clone of this repository:
+   ```bash
+   npm run calibrate -- ~/.claude ~/claude-server/.claude
+   ```
+   It sums the API equivalent of every model response (each response once, across all directories),
+   compares it with the `/usage` percentages and prints the dollar value of 100 % per period. A drop of
+   the weekly percentage before its reset (plan change) starts a new period.
+4. Put the new values for your plan into `PLANS` in `src/shared/budget.ts` and update
+   `BUDGET_CALIBRATED`.
+
+Users can also override the values for their own browser in the UI (*Budget* → *$…/week*).
+
 ## Project layout
 
 ```

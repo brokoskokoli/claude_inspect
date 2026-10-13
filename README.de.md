@@ -73,6 +73,13 @@ Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
   Windows `%LOCALAPPDATA%\claude-inspect\cpu`), damit der Verlauf nach Sessionende abrufbar bleibt.
   Dateien älter als 30 Tage werden gelöscht. Gemessen wird nur, solange claude-inspect läuft;
   Prozesse, die kürzer als 3 s leben, fehlen. Abschalten mit `--no-cpu-log`.
+- **Abo-Budget**: Kosten als geschätzter Anteil am Wochenlimit und am 5-Stunden-Fenster des Tarifs
+  (Max 20x, Max 5x, Pro). Der Tarif wird aus `~/.claude.json` erkannt (gelesen wird nur das
+  Rate-Limit-Tier) und lässt sich im Browser umstellen. Anthropic nennt keine Dollar- oder
+  Token-Grenzen; die Werte sind aus echten `/usage`-Messwerten gegen den im selben Zeitraum
+  angefallenen API-Gegenwert kalibriert. Max 5x/20x sind gemessen, Pro ist hochgerechnet.
+  Nachkalibrieren mit eigenen Daten (z. B. zusammen mit einer Kopie des `~/.claude` eines Servers):
+  siehe [Calibrating the plan budgets](https://github.com/brokoskokoli/claude_inspect/blob/main/CONTRIBUTING.md#calibrating-the-plan-budgets)
 - **Statistics**: API-Gegenwert (Schätzung nach Listenpreisen), Tokens je Modell/Tag/Projekt,
   Cache-Anteil, Aktivitäts-Heatmap, Tool-Statistik mit Fehlern und Dauer (p95)
 - **Tools**: alle Tool-Aufrufe aller Sessions, filterbar; Klick springt an die Stelle im Verlauf

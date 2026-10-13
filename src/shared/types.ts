@@ -1,3 +1,5 @@
+import type { PlanKey } from './budget.js';
+
 // Normiertes Domain-Model. Wird von Server und Frontend gemeinsam genutzt.
 // Die Decoder in src/server/formats übersetzen die Rohformate von Claude Code in diese Typen.
 
@@ -342,6 +344,8 @@ export interface Dashboard {
   processes: DashboardProcess[];
   orphanJobs: JobInfo[];
   recentSessions: SessionSummary[];
+  /** Abo-Tarif laut ~/.claude.json (Rate-Limit-Tier), falls erkennbar. */
+  plan?: PlanKey;
 }
 
 export interface SessionDetail {

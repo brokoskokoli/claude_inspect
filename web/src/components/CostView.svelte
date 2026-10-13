@@ -5,6 +5,8 @@
   import { href } from '../lib/router.svelte';
   import StatusDot from './StatusDot.svelte';
   import StackedColumns from './charts/StackedColumns.svelte';
+  import BudgetSettings from './BudgetSettings.svelte';
+  import { activePlan, pct } from '../lib/budget.svelte';
 
   let { cost }: { cost: SessionCost } = $props();
 
@@ -19,6 +21,9 @@
   const KIND_LABEL: Record<string, string> = { main: 'Main agent', subagent: 'Subagents', spawn: 'Spawned sessions' };
   const KIND_COLOR: Record<string, string> = { main: 'var(--series-1)', subagent: 'var(--series-3)', spawn: 'var(--series-7)' };
   let stackBy = $state<'kind' | 'model'>('kind');
+  let unit = $state<'usd' | 'week'>('usd');
+  const plan = $derived(activePlan());
+  const asWeek = $derived(unit === 'week' && !!plan);
   const tl = $derived(cost.timeline);
   const modelKeys = $derived(cost.byModel.map((m) => m.model));
   const day = (ms: number) => new Date(ms).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
@@ -37,7 +42,10 @@
     tl.buckets.map((b) => ({
       label: tick(b.start),
       title: range(b.start),
-      segments: Object.entries(stackBy === 'kind' ? b.byKind : b.byModel).map(([key, value]) => ({ key, value: value ?? 0 })),
+      segments: Object.entries(stackBy === 'kind' ? b.byKind : b.byModel).map(([key, value]) => ({
+        key,
+        value: asWeek && plan ? ((value ?? 0) / plan.weekUSD) * 100 : (value ?? 0),
+      })),
     })),
   );
   const bucketLabel = $derived.by(() => {
@@ -52,6 +60,7 @@
   );
   const rowById = $derived(new Map(cost.rows.map((r) => [r.id, r])));
   const fmtUsd = (v: number) => (v >= 100 || Number.isInteger(v) ? `$${Math.round(v)}` : `$${v.toFixed(2)}`);
+  const fmtPct = (v: number) => `${v >= 10 || Number.isInteger(v) ? Math.round(v) : v.toFixed(v < 1 ? 2 : 1)} %`;
 
   function rowHref(r: CostRow): string {
     return r.kind === 'subagent' ? href.session(r.sessionId, r.agentId) : href.session(r.sessionId);
@@ -74,6 +83,13 @@
     <div class="value">{tokens(cost.total.input + cost.total.cacheRead + cost.total.cacheWrite5m + cost.total.cacheWrite1h)}</div>
     <div class="sub faint">{tokens(cost.total.cacheRead)} read from cache · {tokens(cost.total.cacheWrite5m + cost.total.cacheWrite1h)} written</div>
   </div>
+  {#if plan}
+    <div class="card tile">
+      <div class="label">Share of {plan.label} budget (estimate)</div>
+      <div class="value">≈ {pct(cost.costUSD, plan.weekUSD)} <span class="unit">of a week</span></div>
+      <div class="sub faint">≈ {pct(cost.costUSD, plan.sessionUSD)} of a 5-hour window</div>
+    </div>
+  {/if}
   <div class="card tile">
     <div class="label">Delegated</div>
     <div class="value">{((1 - mainShare) * 100).toFixed(0)} %</div>
@@ -81,19 +97,28 @@
   </div>
 </section>
 
-<p class="faint small note">
+<div class="faint small note">
   Estimated at API list prices from the token usage in the transcripts; on a subscription these amounts are not billed directly.
   {#if cost.reportedCostUSD !== undefined}Claude Code itself reported {usd(cost.reportedCostUSD)} for the main agent.{/if}
   {#if cost.unpricedModels.length}<span class="badge">no price for {cost.unpricedModels.map(modelName).join(', ')} – not included</span>{/if}
-</p>
+  <BudgetSettings />
+</div>
 
 {#if tl.buckets.length > 1}
   <section class="card block">
     <div class="block-head">
       <h3>Over time <span class="faint small">per {bucketLabel}</span></h3>
+      <div class="controls">
+      {#if plan}
+        <div class="seg">
+          <button class:on={unit === 'usd'} onclick={() => (unit = 'usd')}>$</button>
+          <button class:on={unit === 'week'} onclick={() => (unit = 'week')}>% of week</button>
+        </div>
+      {/if}
       <div class="seg">
         <button class:on={stackBy === 'kind'} onclick={() => (stackBy = 'kind')}>By agent type</button>
         <button class:on={stackBy === 'model'} onclick={() => (stackBy = 'model')}>By model</button>
+      </div>
       </div>
     </div>
     <div class="legend">
@@ -103,14 +128,14 @@
         {#each modelKeys as m (m)}<span><span class="swatch" style:background={modelColor(m)}></span>{modelName(m)}</span>{/each}
       {/if}
     </div>
-    {#key stackBy}
+    {#key `${stackBy}|${asWeek}`}
       <StackedColumns
         {columns}
         keys={stackBy === 'kind' ? KIND_KEYS : modelKeys}
         colorOf={(k) => (stackBy === 'kind' ? KIND_COLOR[k] : modelColor(k))}
         labelOf={(k) => (stackBy === 'kind' ? KIND_LABEL[k] : modelName(k))}
-        format={fmtUsd}
-        ariaLabel="Estimated cost over time"
+        format={asWeek ? fmtPct : fmtUsd}
+        ariaLabel={asWeek ? `Share of the ${plan?.label} weekly budget over time` : 'Estimated cost over time'}
       />
     {/key}
 
@@ -121,6 +146,7 @@
           <li>
             <span class="when">{range(b.start)}</span>
             <span class="strong">{usd(b.costUSD)}</span>
+            {#if plan}<span class="muted">≈ {pct(b.costUSD, plan.weekUSD)} of week · {pct(b.costUSD, plan.sessionUSD)} of 5 h</span>{/if}
             <span class="faint small">{b.requests} requests · {tokens(b.outputTokens)} output</span>
             <span class="who">
               {#each b.top as t (t.id)}
@@ -293,6 +319,16 @@
     flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 6px;
+  }
+  .controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .unit {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
   }
   .block-head h3 {
     margin: 0;

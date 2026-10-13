@@ -8,6 +8,8 @@
   import { ago, duration, modelName, tokens, usd } from '../lib/format';
   import { clock } from '../lib/live.svelte';
   import { href } from '../lib/router.svelte';
+  import { activePlan, pct } from '../lib/budget.svelte';
+  import BudgetSettings from '../components/BudgetSettings.svelte';
 
   let filter = $state<HistoryFilter>({ days: 30 });
   let stats = $state<HistoryStats | null>(null);
@@ -39,6 +41,13 @@
     })),
   );
   const fmt = (v: number) => (metric === 'cost' ? (v >= 100 ? `$${Math.round(v)}` : `$${v.toFixed(v < 10 ? 2 : 0)}`) : tokens(Math.round(v)));
+  const plan = $derived(activePlan());
+  // Durchschnitt je Woche über den gewählten Zeitraum (mindestens eine Woche)
+  const perWeek = $derived.by(() => {
+    if (!stats?.from || !stats.to) return undefined;
+    const days = filter.days ?? (Date.parse(stats.to) - Date.parse(stats.from)) / 86_400_000;
+    return stats.totals.costUSD / Math.max(1, days / 7);
+  });
   const cacheShare = $derived.by(() => {
     const t = stats?.totals.tokens;
     if (!t) return 0;
@@ -50,6 +59,7 @@
 <div class="page-head">
   <h2>Statistics</h2>
   <HistoryFilters bind:filter />
+  <div class="budget-wrap"><BudgetSettings /></div>
   {#if stats && !stats.ready}<span class="faint">Scanning … {stats.scannedFiles} files</span>{/if}
 </div>
 
@@ -61,6 +71,9 @@
       <div class="label">API equivalent (estimate)</div>
       <div class="value">{usd(stats.totals.costUSD)}</div>
       <div class="sub faint">at list prices; not billed directly on a subscription</div>
+      {#if plan && perWeek !== undefined}
+        <div class="sub">≈ {pct(perWeek, plan.weekUSD)} of the {plan.label} weekly budget per week on average</div>
+      {/if}
     </div>
     <div class="card tile">
       <div class="label">Output tokens</div>
@@ -254,5 +267,9 @@
     .block-head {
       flex-wrap: wrap;
     }
+  }
+  .budget-wrap {
+    font-size: 12.5px;
+    color: var(--muted);
   }
 </style>
