@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import type { Entry, SearchHit, SearchResult } from '../../shared/types.js';
 import { toolSummary } from '../../shared/tools.js';
 import { paths } from '../config.js';
@@ -14,6 +15,9 @@ export interface SearchFile {
   project: string;
   title?: string;
 }
+
+const home = homedir();
+const tildify = (p: string) => (home && p.startsWith(home) ? '~' + p.slice(home.length) : p);
 
 function snippet(text: string, needle: string, radius = 90): string {
   const i = text.toLowerCase().indexOf(needle);
@@ -46,13 +50,22 @@ function searchable(e: Entry): string | undefined {
  * nach dem Suchbegriff durchsucht, nur Trefferzeilen werden dekodiert.
  * Neueste Dateien zuerst; bricht bei `limit` Treffern oder nach `budgetMs` ab.
  */
-export async function search(query: string, files: SearchFile[], knownSessions: Set<string>, limit = 200, budgetMs = 6000, perFile = 5): Promise<SearchResult> {
+export async function search(query: string, files: SearchFile[], knownSessions: Set<string>, limit = 200, budgetMs = 15_000, perFile = 5): Promise<Omit<SearchResult, 'agents'>> {
   const t0 = Date.now();
   const needle = query.trim().toLowerCase();
   const hits: SearchHit[] = [];
   let scanned = 0;
   let truncated = false;
   if (needle.length < 2) return { query, hits, scannedFiles: 0, totalFiles: files.length, truncated, ms: 0 };
+
+  // Dateinamen und Pfade der Transcripts (z. B. "agent-a1b2….jsonl", Session-Id, Pfadteile)
+  const pathNeedle = (needle.startsWith('~') && home ? home.toLowerCase() + needle.slice(1) : needle).replace(/\\/g, '/');
+  for (const f of files) {
+    const p = f.path.replace(/\\/g, '/');
+    if (!p.toLowerCase().includes(pathNeedle)) continue;
+    hits.push({ sessionId: f.sessionId, agentId: f.agentId, project: f.project, title: f.title, line: 0, kind: 'file', snippet: tildify(f.path) });
+    if (hits.length >= 50) break;
+  }
 
   outer: for (const f of files) {
     if (Date.now() - t0 > budgetMs) {

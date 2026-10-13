@@ -95,7 +95,7 @@
   {:else if r.name === 'files'}
     <Files />
   {:else if r.name === 'search'}
-    <Search q={r.q} />
+    {#key r.q}<Search q={r.q} />{/key}
   {:else if r.name === 'formats'}
     <Formats />
   {/if}

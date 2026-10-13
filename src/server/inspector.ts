@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { watch, type FSWatcher } from 'node:fs';
 import { stat } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 import type {
   CpuHistory,
@@ -11,6 +12,8 @@ import type {
   FlowLane,
   JobInfo,
   ProcessInfo,
+  SearchAgent,
+  SearchResult,
   SessionCost,
   CostBucket,
   CostRow,
@@ -513,16 +516,60 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
     return this.history.projects();
   }
 
-  async search(q: string) {
+  async search(q: string): Promise<SearchResult> {
     const files: SearchFile[] = [];
+    const subMeta = new Map<string, { type?: string; description?: string; path: string }>();
     for (const f of this.index.list()) {
       const sum = await this.index.summary(f);
       files.push({ path: f.path, sessionId: f.sessionId, project: sum.project, title: sum.title });
       for (const sf of await listSubagents(f.path)) {
         files.push({ path: sf.path, sessionId: f.sessionId, agentId: sf.agentId, project: sum.project, title: sf.meta.description ?? sum.title });
+        subMeta.set(`${f.sessionId}/${sf.agentId}`, { type: sf.meta.agentType, description: sf.meta.description, path: sf.path });
       }
     }
-    return search(q, files, new Set(this.index.list().map((f) => f.sessionId)));
+    const res = await search(q, files, new Set(this.index.list().map((f) => f.sessionId)));
+
+    // Agenten der Treffer samt Vorfahren (Hauptagent, per claude -p aufrufender Agent) für die Baumansicht
+    const agents: Record<string, SearchAgent> = {};
+    const home = homedir();
+    const tilde = (p: string) => (home && p.startsWith(home) ? '~' + p.slice(home.length) : p);
+    const add = async (sessionId: string, agentId: string | undefined, depth = 0): Promise<string | undefined> => {
+      const key = agentId ? `${sessionId}/${agentId}` : sessionId;
+      if (agents[key]) return key;
+      const f = this.index.get(sessionId);
+      if (!f || depth > 8) return undefined;
+      const sum = await this.index.summary(f);
+      if (agentId) {
+        const m = subMeta.get(key);
+        agents[key] = {
+          key,
+          sessionId,
+          agentId,
+          kind: 'subagent',
+          label: m?.type ?? 'subagent',
+          sublabel: m?.description,
+          project: sum.project,
+          parentKey: await add(sessionId, undefined, depth + 1),
+          file: tilde(m?.path ?? f.path),
+        };
+        return key;
+      }
+      const link = this.spawns.parentOf(sessionId);
+      const proc = this.processes.find((p) => p.sessionId === sessionId);
+      agents[key] = {
+        key,
+        sessionId,
+        kind: link ? 'spawn' : 'main',
+        label: proc?.name ?? sum.title ?? sessionId.slice(0, 8),
+        sublabel: link ? (this.spawns.childInfo(sessionId)?.agentSetting ?? 'claude -p') : undefined,
+        project: sum.project,
+        file: tilde(f.path),
+      };
+      if (link) agents[key].parentKey = await add(link.parentSessionId, link.parentAgentId, depth + 1);
+      return key;
+    };
+    for (const h of res.hits) if (h.kind !== 'history-prompt') await add(h.sessionId, h.agentId);
+    return { ...res, agents };
   }
 
   /**

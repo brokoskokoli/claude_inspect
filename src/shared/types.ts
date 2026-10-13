@@ -635,9 +635,27 @@ export interface SearchHit {
   snippet: string;
 }
 
+/** Agent, in dessen Transcript Treffer liegen – oder ein Vorfahr davon (für die Baumansicht). */
+export interface SearchAgent {
+  /** "<sessionId>" oder "<sessionId>/<agentId>" */
+  key: string;
+  sessionId: string;
+  agentId?: string;
+  kind: 'main' | 'subagent' | 'spawn';
+  label: string;
+  sublabel?: string;
+  project: string;
+  /** Agent, der diesen gestartet hat (Hauptagent bzw. Aufrufer per claude -p) */
+  parentKey?: string;
+  /** Transcript-Datei (mit ~ für das Home-Verzeichnis) */
+  file: string;
+}
+
 export interface SearchResult {
   query: string;
   hits: SearchHit[];
+  /** Agenten der Treffer und ihre Vorfahren, nach `key` */
+  agents: Record<string, SearchAgent>;
   scannedFiles: number;
   totalFiles: number;
   truncated: boolean;
