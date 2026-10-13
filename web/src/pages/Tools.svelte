@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Spinner from '../components/Spinner.svelte';
   import type { ToolCallRow } from '$shared/types';
   import { splitMcpName } from '$shared/tools';
   import HistoryFilters from '../components/HistoryFilters.svelte';
@@ -81,7 +82,7 @@
   </table>
 </div>
 {#if rows.length < total}
-  <div class="more"><button class="btn" disabled={loading} onclick={() => load(false)}>{loading ? 'Loading …' : `Load more (${(total - rows.length).toLocaleString('en-US')})`}</button></div>
+  <div class="more"><button class="btn" disabled={loading} onclick={() => load(false)}>{#if loading}<Spinner /> Loading …{:else}Load more ({(total - rows.length).toLocaleString('en-US')}){/if}</button></div>
 {/if}
 
 <style>

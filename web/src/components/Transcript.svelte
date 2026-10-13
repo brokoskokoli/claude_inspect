@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Spinner from './Spinner.svelte';
   import type { Entry, SpawnedSession, SubagentInfo, ToolResultEntry, ToolUseEntry } from '$shared/types';
   import { tick, untrack } from 'svelte';
   import { api } from '../lib/api';
@@ -203,7 +204,7 @@
 
 {#if error}<p class="badge error">{error}</p>{/if}
 {#if loading}
-  <p class="muted">Loading transcript …</p>
+  <p class="muted"><Spinner /> Loading transcript …</p>
 {:else}
   {#if items.length > shown}
     <div class="older"><button class="btn" onclick={() => (shown += WINDOW)}>Show older ({items.length - shown} hidden)</button></div>

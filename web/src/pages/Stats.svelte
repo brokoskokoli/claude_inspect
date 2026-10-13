@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Spinner from '../components/Spinner.svelte';
   import type { HistoryStats } from '$shared/types';
   import StackedColumns from '../components/charts/StackedColumns.svelte';
   import Heatmap from '../components/charts/Heatmap.svelte';
@@ -60,7 +61,7 @@
   <h2>Statistics</h2>
   <HistoryFilters bind:filter />
   <div class="budget-wrap"><BudgetSettings /></div>
-  {#if stats && !stats.ready}<span class="faint">Scanning … {stats.scannedFiles} files</span>{/if}
+  {#if stats && !stats.ready}<span class="faint"><Spinner /> Scanning … {stats.scannedFiles} files</span>{/if}
 </div>
 
 {#if error}<p class="badge error">{error}</p>{/if}
@@ -176,7 +177,7 @@
     </section>
   </div>
 {:else if !error}
-  <p class="muted">Loading …</p>
+  <p class="muted"><Spinner /> Loading …</p>
 {/if}
 
 <style>

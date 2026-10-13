@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Spinner from './Spinner.svelte';
   import { ASPECTS, REVIEW_MODELS, type ReviewAspect, type ReviewModel, type ReviewRun, type ReviewState } from '$shared/review';
   import { api } from '../lib/api';
   import { tokens } from '../lib/format';
@@ -123,7 +124,7 @@
 
       <div class="actions">
         <button class="btn" onclick={() => (open = false)}>Cancel</button>
-        <button class="btn primary" disabled={!canStart} onclick={start}>{busy ? 'Starting …' : "Let's go"}</button>
+        <button class="btn primary" disabled={!canStart} onclick={start}>{#if busy}<Spinner /> Starting …{:else}Let's go{/if}</button>
       </div>
     </div>
   </div>

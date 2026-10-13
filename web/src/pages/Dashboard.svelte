@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Spinner from '../components/Spinner.svelte';
   import ProcessCard from '../components/ProcessCard.svelte';
   import ResumeButtons from '../components/ResumeButtons.svelte';
   import SessionTable from '../components/SessionTable.svelte';
@@ -44,7 +45,7 @@
 </script>
 
 {#if !d}
-  <p class="muted">Loading …</p>
+  <p class="muted"><Spinner /> Loading …</p>
 {:else}
   <section>
     <div class="section-head">

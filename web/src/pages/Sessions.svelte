@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Spinner from '../components/Spinner.svelte';
   import type { SessionSummary } from '$shared/types';
   import SessionTable from '../components/SessionTable.svelte';
   import { api } from '../lib/api';
@@ -37,7 +38,7 @@
 <div class="card"><SessionTable sessions={items} /></div>
 
 {#if items.length < total}
-  <div class="more"><button class="btn" disabled={loading} onclick={() => load(false)}>{loading ? 'Loading …' : `Load more (${total - items.length})`}</button></div>
+  <div class="more"><button class="btn" disabled={loading} onclick={() => load(false)}>{#if loading}<Spinner /> Loading …{:else}Load more ({total - items.length}){/if}</button></div>
 {/if}
 
 <style>

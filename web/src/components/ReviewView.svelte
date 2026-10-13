@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Spinner from './Spinner.svelte';
   import { ASPECTS, REVIEW_MODELS, type ReviewRun, type ReviewState } from '$shared/review';
   import { api } from '../lib/api';
   import { dateTime, duration, usd } from '../lib/format';
@@ -24,7 +25,7 @@
 </script>
 
 {#if !review}
-  <p class="muted">Loading …</p>
+  <p class="muted"><Spinner /> Loading …</p>
 {:else if review.disabled}
   <p class="muted">Analysis is turned off for this claude-inspect instance (<code>--no-analyze</code>).</p>
 {:else if review.runs.length === 0}
@@ -63,7 +64,7 @@
         {#if run.text}
           <div class="md">{@html markdown(run.text)}</div>
         {:else if run.status === 'running'}
-          <p class="muted">Claude is reading the session ({run.digest.tokens.toLocaleString('en-US')} tokens) …</p>
+          <p class="muted"><Spinner /> Claude is reading the session ({run.digest.tokens.toLocaleString('en-US')} tokens) …</p>
         {/if}
         <div class="foot">
           {#if run.status === 'running'}

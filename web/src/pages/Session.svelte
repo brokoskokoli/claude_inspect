@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Spinner from '../components/Spinner.svelte';
   import type { CpuHistory, Flow, SessionCost, SessionDetail } from '$shared/types';
   import type { ReviewRun, ReviewState } from '$shared/review';
   import AnalyzeDialog from '../components/AnalyzeDialog.svelte';
@@ -217,7 +218,7 @@
 {#if error}
   <p class="badge error">{error}</p>
 {:else if !detail || !sum || !live.dashboard}
-  <p class="muted">Loading …</p>
+  <p class="muted"><Spinner /> Loading …</p>
 {:else}
   <div class="crumbs muted"><a href={href.sessions()}>Sessions</a> / {sum.project}</div>
   <div class="peek" class:show={peek} aria-hidden={!peek} inert={!peek}>
@@ -303,18 +304,18 @@
   </nav>
 
   {#if tab === 'timeline'}
-    {#if flow}<Timeline {flow} />{:else}<p class="muted">Loading flow …</p>{/if}
+    {#if flow}<Timeline {flow} />{:else}<p class="muted"><Spinner /> Loading flow …</p>{/if}
   {:else if tab === 'graph'}
-    {#if flow}<FlowGraph {flow} />{:else}<p class="muted">Loading flow …</p>{/if}
+    {#if flow}<FlowGraph {flow} />{:else}<p class="muted"><Spinner /> Loading flow …</p>{/if}
   {:else if tab === 'tasks'}
     <TaskBoard tasks={detail.tasks} />
   {:else if tab === 'analysis'}
     <ReviewView {review} onanalyze={openAnalyze} />
   {:else if tab === 'cost'}
-    {#if cost}<CostView {cost} />{:else}<p class="muted">Loading cost …</p>{/if}
+    {#if cost}<CostView {cost} />{:else}<p class="muted"><Spinner /> Loading cost …</p>{/if}
   {:else if tab === 'cpu'}
     {#if !cpu}
-      <p class="muted">Loading CPU usage …</p>
+      <p class="muted"><Spinner /> Loading CPU usage …</p>
     {:else if cpu.points.length === 0}
       <p class="muted">
         No CPU usage recorded for this session. claude-inspect measures while it is running{cpu.logging ? '' : ' (recording to disk is off: --no-cpu-log, only the last hour is kept in memory)'}.

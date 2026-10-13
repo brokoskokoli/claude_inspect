@@ -1,10 +1,23 @@
-<script lang="ts">
+<script lang="ts" module>
   import type { SearchResult } from '$shared/types';
+
+  /** Ergebnisse überleben das Verlassen der Seite (Zurück zu den Treffern), nur die letzten Suchen. */
+  interface Cached {
+    result?: SearchResult;
+    error?: string;
+    pending?: Promise<void>;
+    scrollY?: number;
+  }
+  const cache = new Map<string, Cached>();
+</script>
+
+<script lang="ts">
+  import Spinner from '../components/Spinner.svelte';
   import { api } from '../lib/api';
   import { dateTime } from '../lib/format';
   import { href } from '../lib/router.svelte';
 
-  import { untrack } from 'svelte';
+  import { onDestroy, tick, untrack } from 'svelte';
 
   let { q: routeQ }: { q: string } = $props();
   const initial = untrack(() => routeQ);
@@ -23,21 +36,57 @@
     'history-prompt': 'Prompt (history)',
   };
 
-  async function run() {
+  let current = '';
+
+  function lookup(query: string, fresh: boolean): Cached {
+    let c = cache.get(query);
+    if (c && fresh && !c.pending) {
+      cache.delete(query);
+      c = undefined;
+    }
+    if (!c) {
+      const entry: Cached = {};
+      entry.pending = api
+        .search(query)
+        .then(
+          (r) => void (entry.result = r),
+          (e) => void (entry.error = String(e)),
+        )
+        .finally(() => (entry.pending = undefined));
+      cache.set(query, entry);
+      while (cache.size > 5) cache.delete(cache.keys().next().value!);
+      c = entry;
+    }
+    return c;
+  }
+
+  /** @param fresh neu suchen statt das gemerkte Ergebnis zu zeigen (Klick auf "Search") */
+  async function run(fresh: boolean) {
     const query = q.trim();
     if (query.length < 2) return;
     history.replaceState(null, '', href.search(query));
-    loading = true;
+    current = query;
+    const c = lookup(query, fresh);
     error = '';
-    try {
-      result = await api.search(query);
-    } catch (e) {
-      error = String(e);
-    } finally {
-      loading = false;
+    if (c.pending) {
+      loading = true;
+      await c.pending;
+      if (current !== query) return;
+    }
+    result = c.result ?? null;
+    error = c.error ?? '';
+    loading = false;
+    // Zurück zur Trefferliste: an die alte Stelle scrollen
+    if (!fresh && c.scrollY) {
+      await tick();
+      window.scrollTo({ top: c.scrollY });
     }
   }
-  if (initial) void run();
+  if (initial) void run(false);
+  onDestroy(() => {
+    const c = cache.get(current);
+    if (c) c.scrollY = window.scrollY;
+  });
 
   function mark(snippet: string, needle: string): string {
     const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -56,15 +105,18 @@
   <h2>Search</h2>
   <span class="muted">Full text across all transcripts, subagents and the prompt history · at most 5 hits per file, newest first</span>
 </div>
-<form class="filters bar" onsubmit={(e) => (e.preventDefault(), run())}>
+<form class="filters bar" onsubmit={(e) => (e.preventDefault(), run(true))}>
   <input type="search" placeholder="Search term (at least 2 characters) …" bind:value={q} />
-  <button class="btn" type="submit" disabled={loading}>{loading ? 'Searching …' : 'Search'}</button>
+  <button class="btn" type="submit" disabled={loading}>{#if loading}<Spinner /> Searching …{:else}Search{/if}</button>
   {#if result}
     <span class="faint">{result.hits.length} hits · {result.scannedFiles}/{result.totalFiles} files · {(result.ms / 1000).toFixed(1)} s{result.truncated ? ' · stopped (limit)' : ''}</span>
   {/if}
 </form>
 
 {#if error}<p class="badge error">{error}</p>{/if}
+{#if loading && !result}
+  <p class="muted"><Spinner /> Searching all transcripts – this can take a few seconds …</p>
+{/if}
 {#if result}
   <div class="hits">
     {#each result.hits as h, i (i)}

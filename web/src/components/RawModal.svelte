@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Spinner from './Spinner.svelte';
   import { rawView } from '../lib/raw.svelte';
 
   function close() {
@@ -25,7 +26,7 @@
       {#if rawView.error}
         <p class="badge error">{rawView.error}</p>
       {:else if rawView.data === null}
-        <p class="muted">Loading …</p>
+        <p class="muted"><Spinner /> Loading …</p>
       {:else}
         <pre>{JSON.stringify(rawView.data, null, 2)}</pre>
       {/if}
