@@ -2,7 +2,7 @@ import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { addUsage, emptyTotals, estimateCost, mergeTotals, type TokenTotals } from '../../shared/pricing.js';
 import { toolSummary } from '../../shared/tools.js';
-import type { DayStat, Entry, FileStat, HistoryStats, ProjectStat, ToolCallRow, ToolStat, Usage } from '../../shared/types.js';
+import type { DayStat, Entry, FileStat, HistoryStats, ProjectStat, ToolCallRow, ToolStat } from '../../shared/types.js';
 import { registry } from '../formats/index.js';
 import type { DecodedEntry } from '../formats/transcript/common.js';
 import type { TranscriptFile } from '../sources/projects.js';
@@ -19,7 +19,24 @@ import { JsonlTail } from '../util/jsonl.js';
 interface UsageRec {
   model: string;
   ts: number;
-  usage: Usage;
+  /** schon zusammengefasst: sechs Zahlen statt des ganzen Usage-Objekts */
+  tokens: TokenTotals;
+}
+
+/** Wiederkehrende Texte (Modell- und Tool-Namen) nur einmal im Speicher halten. */
+const interned = new Map<string, string>();
+function intern(s: string): string {
+  let v = interned.get(s);
+  if (v === undefined) interned.set(s, (v = s));
+  return v;
+}
+
+/**
+ * Eigene Kopie eines gekürzten Strings. V8 legt Teilstrings als Verweis auf den Ausgangstext an –
+ * eine 200-Zeichen-Zusammenfassung hielte sonst den kompletten (evtl. mehrere KB großen) Befehl fest.
+ */
+function own(s: string): string {
+  return s.length < 13 ? s : Buffer.from(s, 'utf8').toString('utf8');
 }
 
 interface FileAgg {
@@ -37,6 +54,8 @@ interface FileAgg {
   firstTs?: number;
   lastTs?: number;
 }
+
+const CHUNK_BYTES = 2 * 1024 * 1024;
 
 const FILE_TOOLS: Record<string, 'reads' | 'edits' | 'writes'> = {
   Read: 'reads',
@@ -157,16 +176,19 @@ export class HistoryIndex {
     }
     agg.size = size;
     agg.project = project;
-    let lines;
-    try {
-      ({ lines } = await agg.tail.readNew());
-    } catch {
-      return;
-    }
-    for (const l of lines) {
-      if (l.value === undefined) continue;
-      const { out } = registry.decode<DecodedEntry[]>('transcript', l.value, path, l.line, { silent: true });
-      for (const e of out) this.fold(agg, e as Entry);
+    // in Stücken lesen: große Transcripts (50–100 MB) nicht komplett geparst im Speicher halten
+    for (let more = true; more; ) {
+      let lines;
+      try {
+        ({ lines, more } = await agg.tail.readNew(undefined, CHUNK_BYTES));
+      } catch {
+        return;
+      }
+      for (const l of lines) {
+        if (l.value === undefined) continue;
+        const { out } = registry.decode<DecodedEntry[]>('transcript', l.value, path, l.line, { silent: true });
+        for (const e of out) this.fold(agg, e as Entry);
+      }
     }
   }
 
@@ -186,8 +208,8 @@ export class HistoryIndex {
           agentId: agg.agentId,
           project: agg.project,
           toolUseId: e.toolUseId,
-          name: e.name,
-          summary: toolSummary(e.name, e.input).slice(0, 200),
+          name: intern(e.name),
+          summary: own(toolSummary(e.name, e.input).slice(0, 200)),
           ts: Number.isNaN(ts) ? 0 : ts,
           file,
         });
@@ -207,7 +229,9 @@ export class HistoryIndex {
         break;
     }
     if ((e.kind === 'assistant-text' || e.kind === 'thinking' || e.kind === 'tool-use') && e.usage && e.messageId && e.model && e.model !== '<synthetic>') {
-      agg.usage.set(e.messageId, { model: e.model, ts: Number.isNaN(ts) ? 0 : ts, usage: e.usage });
+      const tokens = emptyTotals();
+      addUsage(tokens, e.usage);
+      agg.usage.set(e.messageId, { model: intern(e.model), ts: Number.isNaN(ts) ? 0 : ts, tokens });
     }
   }
 
@@ -250,8 +274,7 @@ export class HistoryIndex {
       const p = proj(a);
       for (const u of a.usage.values()) {
         if (u.ts < since) continue;
-        const one = emptyTotals();
-        addUsage(one, u.usage);
+        const one = u.tokens;
         let m = byModel.get(u.model);
         if (!m) byModel.set(u.model, (m = emptyTotals()));
         mergeTotals(m, one);
@@ -344,12 +367,8 @@ export class HistoryIndex {
         seen.add(messageId);
         let t = out.get(u.model);
         if (!t) out.set(u.model, (t = emptyTotals()));
-        addUsage(t, u.usage);
-        if (each) {
-          const one = emptyTotals();
-          addUsage(one, u.usage);
-          each(u.model, u.ts, one);
-        }
+        mergeTotals(t, u.tokens);
+        if (each) each(u.model, u.ts, { ...u.tokens });
       }
     }
     return out;

@@ -12,6 +12,11 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import v8 from 'node:v8';
+
+// Läuft dauerhaft im Hintergrund: kleiner Heap statt Höchsttempo. Gemessen mit ~1.600 Transcripts
+// 140 statt 700 MB Speicher, der erste Scan dauert dafür ~20 % länger. Keine harte Grenze.
+v8.setFlagsFromString('--optimize-for-size');
 
 const env = process.env;
 

@@ -31,8 +31,10 @@ export class JsonlTail {
   /**
    * @param prefilter Optional: nur Zeilen parsen, deren Rohtext passt (spart bei
    *                  großen Dateien den Großteil der JSON.parse-Arbeit).
+   * @param maxBytes  Optional: höchstens so viel lesen; `more` sagt, ob noch etwas folgt.
+   *                  Hält den Speicherbedarf bei großen Dateien klein (statt alles auf einmal).
    */
-  async readNew(prefilter?: (text: string) => boolean): Promise<{ lines: JsonlLine[]; reset: boolean }> {
+  async readNew(prefilter?: (text: string) => boolean, maxBytes = Infinity): Promise<{ lines: JsonlLine[]; reset: boolean; more: boolean }> {
     const st = await stat(this.path);
     let reset = false;
     if (st.size < this.offset) {
@@ -42,11 +44,11 @@ export class JsonlTail {
       this.leftover = Buffer.alloc(0);
       reset = true;
     }
-    if (st.size === this.offset) return { lines: [], reset };
+    if (st.size === this.offset) return { lines: [], reset, more: false };
 
     const fh = await open(this.path, 'r');
     try {
-      const len = st.size - this.offset;
+      const len = Math.min(st.size - this.offset, maxBytes);
       const buf = Buffer.alloc(len);
       const { bytesRead } = await fh.read(buf, 0, len, this.offset);
       const chunk = Buffer.concat([this.leftover, buf.subarray(0, bytesRead)]);
@@ -62,7 +64,7 @@ export class JsonlTail {
         start = i + 1;
       }
       this.leftover = Buffer.from(chunk.subarray(start));
-      return { lines, reset };
+      return { lines, reset, more: this.offset < st.size };
     } finally {
       await fh.close();
     }

@@ -224,15 +224,19 @@ export class SpawnIndex {
     }
     st.size = size;
     try {
-      const { lines, reset } = await st.tail.readNew((t) => t.includes('"Bash"') && t.includes('claude'));
-      if (reset) st.calls = [];
-      for (const l of lines) {
-        const raw = l.value;
-        if (!isObj(raw) || raw.type !== 'assistant') continue;
-        const content = obj(raw.message)?.content;
-        if (!Array.isArray(content)) continue;
-        for (const b of content) {
-          if (isObj(b) && b.type === 'tool_use' && b.name === 'Bash') st.calls.push(...parseCall(raw, b, sessionId, agentId));
+      // in Stücken lesen, damit große Dateien nicht komplett im Speicher landen
+      for (let more = true; more; ) {
+        const r = await st.tail.readNew((t) => t.includes('"Bash"') && t.includes('claude'), 8 * 1024 * 1024);
+        more = r.more;
+        if (r.reset) st.calls = [];
+        for (const l of r.lines) {
+          const raw = l.value;
+          if (!isObj(raw) || raw.type !== 'assistant') continue;
+          const content = obj(raw.message)?.content;
+          if (!Array.isArray(content)) continue;
+          for (const b of content) {
+            if (isObj(b) && b.type === 'tool_use' && b.name === 'Bash') st.calls.push(...parseCall(raw, b, sessionId, agentId));
+          }
         }
       }
     } catch {
