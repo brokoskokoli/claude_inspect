@@ -12,6 +12,7 @@ import type {
   JobInfo,
   ProcessInfo,
   SessionCost,
+  CostBucket,
   CostRow,
   SessionDetail,
   SessionLive,
@@ -544,14 +545,21 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
   async sessionCost(rootSessionId: string): Promise<SessionCost | undefined> {
     const flow = await this.flow(rootSessionId);
     if (!flow) return undefined;
-    await this.historyLoaded;
+    // nur die Dateien dieses Baums einlesen, statt auf den ersten vollständigen History-Scan zu warten
+    for (const sid of new Set(flow.lanes.map((l) => l.sessionId))) {
+      const f = this.index.get(sid);
+      if (f) await this.history.ensureSession(f, await this.projectOf(f));
+    }
     const seen = new Set<string>();
     const total = emptyTotals();
     const byModel = new Map<string, ReturnType<typeof emptyTotals>>();
     const unpriced = new Set<string>();
     let costUSD = 0;
+    const points: { ts: number; cost: number; output: number; model: string; lane: FlowLane }[] = [];
     const rows: CostRow[] = flow.lanes.map((lane) => {
-      const usage = this.history.usageOf(lane.sessionId, lane.agentId, seen);
+      const usage = this.history.usageOf(lane.sessionId, lane.agentId, seen, (model, ts, one) => {
+        if (ts) points.push({ ts, cost: estimateCost(model, one) ?? 0, output: one.output, model, lane });
+      });
       const tokens = emptyTotals();
       let cost = 0;
       const models = [...usage.entries()].map(([model, t]) => {
@@ -584,7 +592,6 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
     const rootFile = this.index.get(rootSessionId);
     return {
       rootSessionId,
-      ready: this.historyReady,
       rows,
       total,
       costUSD,
@@ -593,10 +600,62 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
         .sort((a, b) => (b.costUSD ?? 0) - (a.costUSD ?? 0)),
       unpricedModels: [...unpriced],
       reportedCostUSD: rootFile ? (await this.index.summary(rootFile)).costUSD : undefined,
+      timeline: costTimeline(points),
     };
   }
 
   formats() {
     return registry.report();
   }
+}
+
+const MIN = 60_000;
+const BUCKET_SIZES = [1, 2, 5, 10, 15, 30, 60, 120, 180, 360, 720, 1440].map((m) => m * MIN);
+
+/** Verteilt die Modellantworten auf höchstens ~120 gleich lange Zeitabschnitte. */
+function costTimeline(points: { ts: number; cost: number; output: number; model: string; lane: FlowLane }[]): SessionCost['timeline'] {
+  if (!points.length) return { bucketMs: MIN, buckets: [] };
+  let first = Infinity;
+  let last = -Infinity;
+  for (const p of points) {
+    first = Math.min(first, p.ts);
+    last = Math.max(last, p.ts);
+  }
+  const span = last - first;
+  const bucketMs = BUCKET_SIZES.find((b) => span / b <= 120) ?? Math.ceil(span / 120 / (1440 * MIN)) * 1440 * MIN;
+  // an der lokalen Uhr ausrichten (volle Minuten/Stunden/Tage)
+  const offset = new Date(first).getTimezoneOffset() * MIN;
+  const start = Math.floor((first - offset) / bucketMs) * bucketMs + offset;
+  const n = Math.floor((last - start) / bucketMs) + 1;
+  const buckets: (CostBucket & { lanes: Map<string, { label: string; sublabel?: string; costUSD: number }> })[] = Array.from({ length: n }, (_, i) => ({
+    start: start + i * bucketMs,
+    costUSD: 0,
+    outputTokens: 0,
+    requests: 0,
+    byKind: {},
+    byModel: {},
+    top: [],
+    lanes: new Map(),
+  }));
+  for (const p of points) {
+    const b = buckets[Math.floor((p.ts - start) / bucketMs)];
+    b.costUSD += p.cost;
+    b.outputTokens += p.output;
+    b.requests++;
+    b.byKind[p.lane.kind] = (b.byKind[p.lane.kind] ?? 0) + p.cost;
+    b.byModel[p.model] = (b.byModel[p.model] ?? 0) + p.cost;
+    let l = b.lanes.get(p.lane.id);
+    if (!l) b.lanes.set(p.lane.id, (l = { label: p.lane.label, sublabel: p.lane.sublabel, costUSD: 0 }));
+    l.costUSD += p.cost;
+  }
+  return {
+    bucketMs,
+    buckets: buckets.map(({ lanes, ...b }) => ({
+      ...b,
+      top: [...lanes.entries()]
+        .map(([id, l]) => ({ id, ...l }))
+        .sort((x, y) => y.costUSD - x.costUSD)
+        .slice(0, 3),
+    })),
+  };
 }

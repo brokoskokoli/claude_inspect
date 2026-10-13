@@ -92,24 +92,7 @@ export class HistoryIndex {
         for (const p of this.files.keys()) if (p.startsWith(subagentDir(f.path))) seen.add(p);
         continue;
       }
-      const dir = subagentDir(f.path);
-      let names: string[] = [];
-      try {
-        names = await readdir(dir);
-      } catch {
-        /* keine Subagenten */
-      }
-      for (const n of names) {
-        const m = /^agent-(.+)\.jsonl$/.exec(n);
-        if (!m) continue;
-        const path = join(dir, n);
-        seen.add(path);
-        try {
-          await this.scan(path, (await stat(path)).size, f.sessionId, m[1], project);
-        } catch {
-          /* gelöscht */
-        }
-      }
+      await this.scanSubagents(f, project, seen);
     }
     // Von Claude Code aufgeräumte Dateien vergessen
     for (const p of [...this.files.keys()]) if (!seen.has(p)) this.files.delete(p);
@@ -117,7 +100,51 @@ export class HistoryIndex {
     this.ready = true;
   }
 
+  private async scanSubagents(f: TranscriptFile, project: string, seen?: Set<string>): Promise<void> {
+    const dir = subagentDir(f.path);
+    let names: string[] = [];
+    try {
+      names = await readdir(dir);
+    } catch {
+      /* keine Subagenten */
+    }
+    for (const n of names) {
+      const m = /^agent-(.+)\.jsonl$/.exec(n);
+      if (!m) continue;
+      const path = join(dir, n);
+      seen?.add(path);
+      try {
+        await this.scan(path, (await stat(path)).size, f.sessionId, m[1], project);
+      } catch {
+        /* gelöscht */
+      }
+    }
+  }
+
+  /**
+   * Eine Session samt Subagenten sofort auf Stand bringen, ohne auf den ersten
+   * vollständigen Scan zu warten (für die Kostenansicht direkt nach dem Start).
+   */
+  async ensureSession(f: TranscriptFile, project: string): Promise<void> {
+    try {
+      await this.scan(f.path, (await stat(f.path)).size, f.sessionId, undefined, project);
+    } catch {
+      return; // gelöscht
+    }
+    await this.scanSubagents(f, project);
+  }
+
+  /** Läuft parallel zum Hintergrund-Scan: pro Datei nur ein Lesevorgang gleichzeitig. */
+  private scanning = new Map<string, Promise<void>>();
+
   private async scan(path: string, size: number, sessionId: string, agentId: string | undefined, project: string): Promise<void> {
+    for (let running = this.scanning.get(path); running; running = this.scanning.get(path)) await running;
+    const p = this.scanUnlocked(path, size, sessionId, agentId, project).finally(() => this.scanning.delete(path));
+    this.scanning.set(path, p);
+    return p;
+  }
+
+  private async scanUnlocked(path: string, size: number, sessionId: string, agentId: string | undefined, project: string): Promise<void> {
     let agg = this.files.get(path);
     if (agg && agg.size === size) return;
     if (!agg || size < agg.size) {
@@ -299,7 +326,12 @@ export class HistoryIndex {
    * `seen` enthält bereits gezählte Message-Ids, damit bei Fork/Resume kopierte Antworten
    * im selben Baum nicht doppelt zählen.
    */
-  usageOf(sessionId: string, agentId: string | undefined, seen: Set<string>): Map<string, TokenTotals> {
+  usageOf(
+    sessionId: string,
+    agentId: string | undefined,
+    seen: Set<string>,
+    each?: (model: string, ts: number, one: TokenTotals) => void,
+  ): Map<string, TokenTotals> {
     const out = new Map<string, TokenTotals>();
     for (const a of this.files.values()) {
       if (a.sessionId !== sessionId || a.agentId !== agentId) continue;
@@ -309,6 +341,11 @@ export class HistoryIndex {
         let t = out.get(u.model);
         if (!t) out.set(u.model, (t = emptyTotals()));
         addUsage(t, u.usage);
+        if (each) {
+          const one = emptyTotals();
+          addUsage(one, u.usage);
+          each(u.model, u.ts, one);
+        }
       }
     }
     return out;

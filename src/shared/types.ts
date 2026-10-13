@@ -525,10 +525,21 @@ export interface CostRow {
   costUSD: number;
 }
 
+/** Ein Zeitabschnitt der Kosten-Zeitleiste einer Session. */
+export interface CostBucket {
+  /** Beginn (ms seit Epoch) */
+  start: number;
+  costUSD: number;
+  outputTokens: number;
+  requests: number;
+  byKind: Partial<Record<CostRow['kind'], number>>;
+  byModel: Record<string, number>;
+  /** teuerste Agenten in diesem Abschnitt */
+  top: { id: string; label: string; sublabel?: string; costUSD: number }[];
+}
+
 export interface SessionCost {
   rootSessionId: string;
-  /** false, solange der erste History-Scan läuft */
-  ready: boolean;
   rows: CostRow[];
   total: TokenBreakdown;
   costUSD: number;
@@ -537,6 +548,8 @@ export interface SessionCost {
   unpricedModels: string[];
   /** Von Claude Code selbst gemeldete Kosten des Hauptagenten (cost-state), falls vorhanden. */
   reportedCostUSD?: number;
+  /** Kosten über die Zeit, lückenlos vom ersten bis zum letzten Abschnitt. */
+  timeline: { bucketMs: number; buckets: CostBucket[] };
 }
 
 export interface DayStat {

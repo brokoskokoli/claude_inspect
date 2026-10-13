@@ -65,6 +65,7 @@ Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
   MCP-Server …) als gestapelter Verlauf je Programmname, dazu die Prozesse mit der meisten CPU-Zeit
   - *Cost*: geschätzte Kosten (API-Listenpreis) der Session samt aller Subagenten und per
   `claude` gestarteten Sitzungen, je Agent und je Modell mit Tokens (Input, Output, Cache)
+  und als Zeitleiste mit den teuersten Momenten
   - Beim Hochscrollen blendet sich eine kompakte Kopfzeile mit Sprung nach oben/unten ein
 - **CPU**: alle 3 s aus der Prozesstabelle gemessen (100 % = ein Kern), Verlaufslinie auf der
   Dashboard-Karte. Pro Session eine CSV-Datei im App-Datenverzeichnis (macOS

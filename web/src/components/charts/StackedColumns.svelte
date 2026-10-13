@@ -2,6 +2,8 @@
   import { tipAt } from '../../lib/tooltip';
   export interface Column {
     label: string;
+    /** Überschrift im Tooltip (Standard: label) */
+    title?: string;
     segments: { key: string; value: number }[];
   }
 
@@ -102,7 +104,7 @@
   {#if hover}
     {@const c = columns[hover.i]}
     <div class="tip" use:tipAt={{ x: hover.x, y: hover.y }}>
-      <div class="tip-title">{c.label} · {format(totals[hover.i])}</div>
+      <div class="tip-title">{c.title ?? c.label} · {format(totals[hover.i])}</div>
       {#each keys.filter((k) => c.segments.some((s) => s.key === k && s.value > 0)) as k (k)}
         <div class="tip-row">
           <span class="swatch" style:background={colorOf(k)}></span>

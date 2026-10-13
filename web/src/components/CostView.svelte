@@ -4,6 +4,7 @@
   import { modelName, tokens, usd } from '../lib/format';
   import { href } from '../lib/router.svelte';
   import StatusDot from './StatusDot.svelte';
+  import StackedColumns from './charts/StackedColumns.svelte';
 
   let { cost }: { cost: SessionCost } = $props();
 
@@ -12,6 +13,45 @@
   const agents = $derived(cost.rows.filter((r) => r.kind === 'subagent').length);
   const spawns = $derived(cost.rows.filter((r) => r.kind === 'spawn').length);
   const mainShare = $derived(cost.costUSD ? (cost.rows[0]?.costUSD ?? 0) / cost.costUSD : 0);
+
+  // --- Zeitleiste
+  const KIND_KEYS = ['main', 'subagent', 'spawn'];
+  const KIND_LABEL: Record<string, string> = { main: 'Main agent', subagent: 'Subagents', spawn: 'Spawned sessions' };
+  const KIND_COLOR: Record<string, string> = { main: 'var(--series-1)', subagent: 'var(--series-3)', spawn: 'var(--series-7)' };
+  let stackBy = $state<'kind' | 'model'>('kind');
+  const tl = $derived(cost.timeline);
+  const modelKeys = $derived(cost.byModel.map((m) => m.model));
+  const day = (ms: number) => new Date(ms).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+  const hm = (ms: number) => new Date(ms).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const multiDay = $derived(tl.buckets.length > 0 && day(tl.buckets[0].start) !== day(tl.buckets[tl.buckets.length - 1].start));
+  function tick(ms: number): string {
+    if (tl.bucketMs >= 86_400_000) return day(ms);
+    return multiDay && (hm(ms) === '00:00' || ms === tl.buckets[0]?.start) ? `${day(ms)} ${hm(ms)}` : hm(ms);
+  }
+  function range(ms: number): string {
+    const end = ms + tl.bucketMs;
+    if (tl.bucketMs >= 86_400_000) return tl.bucketMs === 86_400_000 ? day(ms) : `${day(ms)} – ${day(end)}`;
+    return `${multiDay ? day(ms) + ' ' : ''}${hm(ms)}–${hm(end)}`;
+  }
+  const columns = $derived(
+    tl.buckets.map((b) => ({
+      label: tick(b.start),
+      title: range(b.start),
+      segments: Object.entries(stackBy === 'kind' ? b.byKind : b.byModel).map(([key, value]) => ({ key, value: value ?? 0 })),
+    })),
+  );
+  const bucketLabel = $derived.by(() => {
+    const m = tl.bucketMs / 60_000;
+    return m < 60 ? `${m} min` : m < 1440 ? `${m / 60} h` : `${m / 1440} d`;
+  });
+  const peaks = $derived(
+    [...tl.buckets]
+      .filter((b) => b.costUSD > 0)
+      .sort((a, b) => b.costUSD - a.costUSD)
+      .slice(0, 5),
+  );
+  const rowById = $derived(new Map(cost.rows.map((r) => [r.id, r])));
+  const fmtUsd = (v: number) => (v >= 100 || Number.isInteger(v) ? `$${Math.round(v)}` : `$${v.toFixed(2)}`);
 
   function rowHref(r: CostRow): string {
     return r.kind === 'subagent' ? href.session(r.sessionId, r.agentId) : href.session(r.sessionId);
@@ -45,8 +85,59 @@
   Estimated at API list prices from the token usage in the transcripts; on a subscription these amounts are not billed directly.
   {#if cost.reportedCostUSD !== undefined}Claude Code itself reported {usd(cost.reportedCostUSD)} for the main agent.{/if}
   {#if cost.unpricedModels.length}<span class="badge">no price for {cost.unpricedModels.map(modelName).join(', ')} – not included</span>{/if}
-  {#if !cost.ready}<span class="badge">history scan still running – numbers may be incomplete</span>{/if}
 </p>
+
+{#if tl.buckets.length > 1}
+  <section class="card block">
+    <div class="block-head">
+      <h3>Over time <span class="faint small">per {bucketLabel}</span></h3>
+      <div class="seg">
+        <button class:on={stackBy === 'kind'} onclick={() => (stackBy = 'kind')}>By agent type</button>
+        <button class:on={stackBy === 'model'} onclick={() => (stackBy = 'model')}>By model</button>
+      </div>
+    </div>
+    <div class="legend">
+      {#if stackBy === 'kind'}
+        {#each KIND_KEYS.filter((k) => cost.rows.some((r) => r.kind === k)) as k (k)}<span><span class="swatch" style:background={KIND_COLOR[k]}></span>{KIND_LABEL[k]}</span>{/each}
+      {:else}
+        {#each modelKeys as m (m)}<span><span class="swatch" style:background={modelColor(m)}></span>{modelName(m)}</span>{/each}
+      {/if}
+    </div>
+    {#key stackBy}
+      <StackedColumns
+        {columns}
+        keys={stackBy === 'kind' ? KIND_KEYS : modelKeys}
+        colorOf={(k) => (stackBy === 'kind' ? KIND_COLOR[k] : modelColor(k))}
+        labelOf={(k) => (stackBy === 'kind' ? KIND_LABEL[k] : modelName(k))}
+        format={fmtUsd}
+        ariaLabel="Estimated cost over time"
+      />
+    {/key}
+
+    {#if peaks.length}
+      <h4>Most expensive moments</h4>
+      <ol class="peaks">
+        {#each peaks as b (b.start)}
+          <li>
+            <span class="when">{range(b.start)}</span>
+            <span class="strong">{usd(b.costUSD)}</span>
+            <span class="faint small">{b.requests} requests · {tokens(b.outputTokens)} output</span>
+            <span class="who">
+              {#each b.top as t (t.id)}
+                {@const r = rowById.get(t.id)}
+                <span class="who-item">
+                  {#if r}<a href={rowHref(r)} title={t.sublabel}>{t.label}</a>{:else}{t.label}{/if}
+                  {#if t.sublabel && r?.kind !== 'main'}<span class="faint who-sub">{t.sublabel}</span>{/if}
+                  <span class="faint">{usd(t.costUSD)}</span>
+                </span>
+              {/each}
+            </span>
+          </li>
+        {/each}
+      </ol>
+    {/if}
+  </section>
+{/if}
 
 <section class="card block">
   <h3>By agent</h3>
@@ -194,6 +285,65 @@
     height: 9px;
     border-radius: 2px;
     margin-right: 4px;
+  }
+  .block-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .block-head h3 {
+    margin: 0;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  h4 {
+    font-size: 13px;
+    margin: 16px 0 6px;
+  }
+  .peaks {
+    margin: 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .peaks li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+    align-items: baseline;
+  }
+  .when {
+    font-variant-numeric: tabular-nums;
+    min-width: 120px;
+  }
+  .who {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 14px;
+    flex-basis: 100%;
+  }
+  .who-item {
+    display: inline-flex;
+    gap: 5px;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .who-sub {
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .strong {
     font-weight: 600;
