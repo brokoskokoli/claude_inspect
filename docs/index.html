@@ -30,7 +30,7 @@
         "url": "https://brokoskokoli.github.io/claude_inspect/",
         "downloadUrl": "https://www.npmjs.com/package/claude-inspect",
         "codeRepository": "https://github.com/brokoskokoli/claude_inspect",
-        "softwareVersion": "0.4.1",
+        "softwareVersion": "0.7.0",
         "license": "https://opensource.org/licenses/MIT",
         "image": "https://brokoskokoli.github.io/claude_inspect/screenshots/dashboard.jpg",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
@@ -438,7 +438,21 @@
 
         <div class="feature">
           <div class="text">
-            <span class="tag">New in 0.4</span>
+            <span class="tag">New in 0.7</span>
+            <h3>Analyze a session with Claude</h3>
+            <p>One click on any session: pick what to check, and Claude reviews the whole run – main agent, subagents and spawned workers – and tells you what went well and what didn't.</p>
+            <ul>
+              <li>Task outcome, efficiency &amp; cost, errors &amp; dead ends, privacy &amp; data protection, security &amp; risky actions, delegation, setup improvements – or your own question</li>
+              <li>Built-in checks flag repeated failures, files read over and over, access to <code>.env</code> or <code>~/.ssh</code>, uploads and risky commands</li>
+              <li>Runs on your own <code>claude</code> login, without tools; secrets are masked and you can see exactly what is sent</li>
+            </ul>
+          </div>
+          <img src="screenshots/analysis.jpg" width="1272" height="796" loading="lazy" alt="Analysis tab: Claude's review of an orchestrator session with findings rated High, Medium and Low" />
+        </div>
+
+        <div class="feature">
+          <div class="text">
+            <span class="tag">CPU</span>
             <h3>CPU usage per session</h3>
             <p>Some agents quietly burn your CPU: a test runner in watch mode, a build that never ends, an MCP server stuck in a loop. claude-inspect measures every Claude Code process together with all of its subprocesses.</p>
             <ul>
@@ -503,6 +517,27 @@
         <p class="sub">Recent releases. Full notes on <a href="https://github.com/brokoskokoli/claude_inspect/releases">GitHub Releases</a>.</p>
         <div class="releases">
           <div class="release new">
+            <div class="ver">0.7.0<span class="date">October 2026</span></div>
+            <div>
+              <h4>Analyze with Claude</h4>
+              <p>Let Claude review a session and its subagents for outcome, efficiency, privacy, security, delegation and setup improvements – on your own <code>claude</code> login, with secrets masked. Also: far less CPU in the background with large histories.</p>
+            </div>
+          </div>
+          <div class="release">
+            <div class="ver">0.6.0<span class="date">October 2026</span></div>
+            <div>
+              <h4>Plan budget</h4>
+              <p>Cost as an estimated share of your plan's weekly limit and 5-hour window (Max 20x, Max 5x, Pro).</p>
+            </div>
+          </div>
+          <div class="release">
+            <div class="ver">0.5.0<span class="date">October 2026</span></div>
+            <div>
+              <h4>Cost per agent tree</h4>
+              <p>A <em>Cost</em> tab per session: API list-price estimate for the main agent, its subagents and spawned sessions, with a timeline of the most expensive moments.</p>
+            </div>
+          </div>
+          <div class="release">
             <div class="ver">0.4.0<span class="date">October 2026</span></div>
             <div>
               <h4>CPU usage of agents and their subprocesses</h4>
@@ -554,7 +589,8 @@ claude-inspect demo --open</pre>
               <li>Reads <code>~/.claude</code> only – no hooks, no settings changes, no proxy.</li>
               <li>Listens on <code>127.0.0.1</code> only and rejects foreign <code>Host</code> headers.</li>
               <li>Never reads credential files, masks tokens in the raw view.</li>
-              <li>The only thing it writes is the CPU log in its own data directory – timestamps, PIDs, program names and percentages, no command lines.</li>
+              <li>It writes only to its own data directory: the CPU log (timestamps, PIDs, program names, percentages) and saved analyses.</li>
+              <li>Nothing is sent anywhere – except when you click <em>Analyze with Claude</em>, which uses your local <code>claude</code>.</li>
             </ul>
           </div>
         </div>
