@@ -1,5 +1,6 @@
 <script lang="ts">
-  import type { CpuHistory, Flow, SessionDetail } from '$shared/types';
+  import type { CpuHistory, Flow, SessionCost, SessionDetail } from '$shared/types';
+  import CostView from '../components/CostView.svelte';
   import CpuChart from '../components/CpuChart.svelte';
   import FlowGraph from '../components/FlowGraph.svelte';
   import TaskBoard from '../components/TaskBoard.svelte';
@@ -68,12 +69,40 @@
     });
   });
 
+  let cost = $state<SessionCost | null>(null);
+  let costTimer: ReturnType<typeof setTimeout> | undefined;
+  async function loadCost() {
+    try {
+      cost = await api.cost(id);
+    } catch (e) {
+      error = String(e);
+    }
+  }
+  // Kosten nur im Kosten-Tab laden; live gedrosselt nachführen (auch Subagenten und gestartete Sessions)
+  $effect(() => {
+    if (tab !== 'cost') return;
+    untrack(() => void loadCost());
+    const off = onTranscript(() => {
+      if (costTimer) return;
+      costTimer = setTimeout(() => {
+        costTimer = undefined;
+        void loadCost();
+      }, 5000);
+    });
+    return () => {
+      off();
+      clearTimeout(costTimer);
+      costTimer = undefined;
+    };
+  });
+
   const TABS: [SessionTab, string][] = [
     ['transcript', 'Transcript'],
     ['timeline', 'Timeline'],
     ['graph', 'Call graph'],
     ['tasks', 'Tasks'],
     ['cpu', 'CPU'],
+    ['cost', 'Cost'],
   ];
 
   let detail = $state<SessionDetail | null>(null);
@@ -100,6 +129,27 @@
     });
   });
 
+  // Beim Hochscrollen eine kompakte Kopfzeile einblenden (Titel, Status, Sprung nach oben/unten);
+  // beim Runterscrollen und solange der Kopf sichtbar ist, bleibt sie weg.
+  let headEl = $state<HTMLElement | undefined>();
+  let peek = $state(false);
+  let lastY = 0;
+  function onScroll() {
+    const y = window.scrollY;
+    const headGone = !!headEl && headEl.getBoundingClientRect().bottom < 52;
+    if (!headGone) peek = false;
+    else if (y < lastY - 4) peek = true;
+    else if (y > lastY + 4) peek = false;
+    lastY = y;
+  }
+  function toTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function toBottom() {
+    peek = false;
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  }
+
   // phones: the metadata block is collapsed by default (desktop always shows it)
   let metaOpen = $state(false);
 
@@ -117,13 +167,26 @@
   );
 </script>
 
+<svelte:window onscroll={onScroll} />
+
 {#if error}
   <p class="badge error">{error}</p>
 {:else if !detail || !sum || !live.dashboard}
   <p class="muted">Loading …</p>
 {:else}
   <div class="crumbs muted"><a href={href.sessions()}>Sessions</a> / {sum.project}</div>
-  <header class="head card">
+  <div class="peek" class:show={peek} aria-hidden={!peek} inert={!peek}>
+    <StatusDot state={mainState} size={9} />
+    <strong class="peek-title">{proc?.name ?? sum.title ?? sum.sessionId}</strong>
+    {#if sel}<span class="muted peek-sub">› {sel.agentType ?? 'Subagent'}</span>{/if}
+    {#if isLive}<span class="badge accent">live</span>{/if}
+    <span class="faint peek-meta">{modelName(liveProc?.session?.model ?? sum.model)}{sum.gitBranch ? ` · ${sum.gitBranch}` : ''}</span>
+    <span class="peek-actions">
+      <button class="btn" onclick={toTop} title="Jump to the top">↑ Top</button>
+      <button class="btn" onclick={toBottom} title="Jump to the latest entry">↓ Latest</button>
+    </span>
+  </div>
+  <header class="head card" bind:this={headEl}>
     <div class="title-row">
       <StatusDot state={mainState} size={11} />
       <h1>{proc?.name ?? sum.title ?? sum.sessionId}</h1>
@@ -194,6 +257,8 @@
     {#if flow}<FlowGraph {flow} />{:else}<p class="muted">Loading flow …</p>{/if}
   {:else if tab === 'tasks'}
     <TaskBoard tasks={detail.tasks} />
+  {:else if tab === 'cost'}
+    {#if cost}<CostView {cost} />{:else}<p class="muted">Loading cost …</p>{/if}
   {:else if tab === 'cpu'}
     {#if !cpu}
       <p class="muted">Loading CPU usage …</p>
@@ -205,7 +270,7 @@
       <section class="card cpu-card"><CpuChart history={cpu} /></section>
     {/if}
   {:else}
-  <div class="layout">
+  <div class="layout" class:peeking={peek}>
     <aside>
       <div class="aside-head muted">
         Agents <span class="faint">{detail.subagents.length + 1}{detail.spawned.length ? ` + ${detail.spawned.length} spawned` : ''}</span>
@@ -235,6 +300,58 @@
 {/if}
 
 <style>
+  .peek {
+    position: fixed;
+    top: 52px;
+    left: 0;
+    right: 0;
+    z-index: 9;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 7px 24px;
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.06);
+    transform: translateY(-110%);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      transform 0.18s ease,
+      opacity 0.18s ease;
+  }
+  .peek.show {
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .peek-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .peek-sub,
+  .peek-meta {
+    white-space: nowrap;
+    font-size: 12.5px;
+  }
+  .peek-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  @media (max-width: 640px) {
+    .peek {
+      padding: 6px 12px;
+    }
+    .peek-meta {
+      display: none;
+    }
+  }
   .cpu-card {
     padding: 16px;
     min-width: 0;
@@ -335,9 +452,13 @@
   aside {
     position: sticky;
     top: 64px;
+    transition: top 0.18s ease;
     max-height: calc(100vh - 80px);
     overflow-y: auto;
     overflow-x: hidden;
+  }
+  .peeking aside {
+    top: 108px;
   }
   .aside-head {
     font-size: 12px;

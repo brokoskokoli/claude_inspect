@@ -294,6 +294,26 @@ export class HistoryIndex {
     };
   }
 
+  /**
+   * Tokens je Modell eines Transkripts (Hauptagent oder Subagent) für die Kostenansicht.
+   * `seen` enthält bereits gezählte Message-Ids, damit bei Fork/Resume kopierte Antworten
+   * im selben Baum nicht doppelt zählen.
+   */
+  usageOf(sessionId: string, agentId: string | undefined, seen: Set<string>): Map<string, TokenTotals> {
+    const out = new Map<string, TokenTotals>();
+    for (const a of this.files.values()) {
+      if (a.sessionId !== sessionId || a.agentId !== agentId) continue;
+      for (const [messageId, u] of a.usage) {
+        if (seen.has(messageId)) continue;
+        seen.add(messageId);
+        let t = out.get(u.model);
+        if (!t) out.set(u.model, (t = emptyTotals()));
+        addUsage(t, u.usage);
+      }
+    }
+    return out;
+  }
+
   toolCalls(q: ToolQuery): { total: number; rows: ToolCallRow[]; names: string[] } {
     const { aggs, since } = this.selected(q);
     const needle = q.q?.toLowerCase();

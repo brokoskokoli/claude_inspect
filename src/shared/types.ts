@@ -508,6 +508,37 @@ export interface ModelStat {
   costUSD?: number;
 }
 
+/** Eine Zeile der Kostenansicht einer Session: Hauptagent, Subagent oder per `claude` gestartete Session. */
+export interface CostRow {
+  id: string;
+  sessionId: string;
+  agentId?: string;
+  kind: 'main' | 'subagent' | 'spawn';
+  label: string;
+  sublabel?: string;
+  parentId?: string;
+  depth: number;
+  status?: FlowLane['status'];
+  byModel: ModelStat[];
+  tokens: TokenBreakdown;
+  /** Summe der bekannten Preise; Modelle ohne Preis zählen nicht mit. */
+  costUSD: number;
+}
+
+export interface SessionCost {
+  rootSessionId: string;
+  /** false, solange der erste History-Scan läuft */
+  ready: boolean;
+  rows: CostRow[];
+  total: TokenBreakdown;
+  costUSD: number;
+  byModel: ModelStat[];
+  /** Modelle ohne bekannten Listenpreis (nicht in costUSD enthalten). */
+  unpricedModels: string[];
+  /** Von Claude Code selbst gemeldete Kosten des Hauptagenten (cost-state), falls vorhanden. */
+  reportedCostUSD?: number;
+}
+
 export interface DayStat {
   day: string; // YYYY-MM-DD (lokal)
   byModel: Record<string, { output: number; costUSD: number }>;

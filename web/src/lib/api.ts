@@ -6,6 +6,7 @@ import type {
   FormatReport,
   HistoryStats,
   SearchResult,
+  SessionCost,
   SessionDetail,
   SessionSummary,
   ToolCallRow,
@@ -44,6 +45,7 @@ export const api = {
   formats: () => get<FormatReport>('/api/formats'),
   flow: (id: string) => get<Flow>(`/api/flow/${enc(id)}`),
   cpu: (id: string) => get<CpuHistory>(`/api/cpu/${enc(id)}`),
+  cost: (id: string) => get<SessionCost>(`/api/cost/${enc(id)}`),
   stats: (f: HistoryFilter) => get<HistoryStats>(`/api/stats${qs({ ...f })}`),
   projects: () => get<string[]>('/api/projects'),
   tools: (p: HistoryFilter & { name?: string; q?: string; session?: string; file?: string; errors?: boolean; offset?: number; limit?: number }) =>

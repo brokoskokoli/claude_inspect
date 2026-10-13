@@ -11,6 +11,8 @@ import type {
   FlowLane,
   JobInfo,
   ProcessInfo,
+  SessionCost,
+  CostRow,
   SessionDetail,
   SessionLive,
   SessionSummary,
@@ -24,6 +26,7 @@ import { CLAUDE_DIR, relToClaude } from './config.js';
 import { CpuMonitor } from './cpu-monitor.js';
 import { registry } from './formats/index.js';
 import { HistoryIndex, type HistoryFilter, type ToolQuery } from './history/aggregator.js';
+import { emptyTotals, estimateCost, mergeTotals } from '../shared/pricing.js';
 import { search, type SearchFile } from './history/search.js';
 import { analyze } from './model/analyze.js';
 import { laneData } from './model/flow.js';
@@ -532,6 +535,65 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       origin = { kind: job?.fork || job?.launch?.fork ? 'fork' : 'resume', sessionId: from, title: of ? (await this.index.summary(of)).title : undefined };
     }
     return { rootSessionId, lanes, origin };
+  }
+
+  /**
+   * Geschätzte Kosten einer Session samt aller Subagenten und per `claude` gestarteten
+   * Sitzungen (rekursiv, gleicher Baum wie Zeitleiste und Graph).
+   */
+  async sessionCost(rootSessionId: string): Promise<SessionCost | undefined> {
+    const flow = await this.flow(rootSessionId);
+    if (!flow) return undefined;
+    await this.historyLoaded;
+    const seen = new Set<string>();
+    const total = emptyTotals();
+    const byModel = new Map<string, ReturnType<typeof emptyTotals>>();
+    const unpriced = new Set<string>();
+    let costUSD = 0;
+    const rows: CostRow[] = flow.lanes.map((lane) => {
+      const usage = this.history.usageOf(lane.sessionId, lane.agentId, seen);
+      const tokens = emptyTotals();
+      let cost = 0;
+      const models = [...usage.entries()].map(([model, t]) => {
+        mergeTotals(tokens, t);
+        let m = byModel.get(model);
+        if (!m) byModel.set(model, (m = emptyTotals()));
+        mergeTotals(m, t);
+        const c = estimateCost(model, t);
+        if (c === undefined) unpriced.add(model);
+        else cost += c;
+        return { model, tokens: t, costUSD: c };
+      });
+      mergeTotals(total, tokens);
+      costUSD += cost;
+      return {
+        id: lane.id,
+        sessionId: lane.sessionId,
+        agentId: lane.agentId,
+        kind: lane.kind,
+        label: lane.label,
+        sublabel: lane.sublabel,
+        parentId: lane.parentId,
+        depth: lane.depth,
+        status: lane.status,
+        byModel: models.sort((a, b) => (b.costUSD ?? 0) - (a.costUSD ?? 0)),
+        tokens,
+        costUSD: cost,
+      };
+    });
+    const rootFile = this.index.get(rootSessionId);
+    return {
+      rootSessionId,
+      ready: this.historyReady,
+      rows,
+      total,
+      costUSD,
+      byModel: [...byModel.entries()]
+        .map(([model, tokens]) => ({ model, tokens, costUSD: estimateCost(model, tokens) }))
+        .sort((a, b) => (b.costUSD ?? 0) - (a.costUSD ?? 0)),
+      unpricedModels: [...unpriced],
+      reportedCostUSD: rootFile ? (await this.index.summary(rootFile)).costUSD : undefined,
+    };
   }
 
   formats() {

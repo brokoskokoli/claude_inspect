@@ -172,6 +172,12 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
       m = /^\/api\/cpu\/([\w-]+)$/.exec(p);
       if (m) return json(res, 200, await inspector.cpuHistory(m[1]));
 
+      m = /^\/api\/cost\/([\w-]+)$/.exec(p);
+      if (m) {
+        const cost = await inspector.sessionCost(m[1]);
+        return cost ? json(res, 200, cost) : json(res, 404, { error: 'unknown session' });
+      }
+
       m = /^\/api\/flow\/([\w-]+)$/.exec(p);
       if (m) {
         const flow = await inspector.flow(m[1]);
