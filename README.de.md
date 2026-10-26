@@ -17,7 +17,7 @@ npx claude-inspect --open          # Node.js ≥ 22 · macOS, Linux, Windows
 ```
 
 Liest **passiv** die Dateien unter `~/.claude`, ohne Hooks und ohne Konfigurationsänderung.
-Das Einzige, was es schreibt, ist ein CPU-Protokoll im eigenen Datenverzeichnis (siehe *CPU*).
+Geschrieben wird nur ins eigene Datenverzeichnis: Suchindex (siehe *Search*), CPU-Protokoll (siehe *CPU*) und Analysen.
 
 > English: [README.md](https://github.com/brokoskokoli/claude_inspect/blob/main/README.md) · Website: [brokoskokoli.github.io/claude_inspect](https://brokoskokoli.github.io/claude_inspect/) · Mitmachen: [CONTRIBUTING.md](https://github.com/brokoskokoli/claude_inspect/blob/main/CONTRIBUTING.md)
 >
@@ -41,7 +41,7 @@ beim Login und nach Abstürzen neu und läuft ohne Token (nur von localhost erre
 Manuell gestartet gibt `claude-inspect` eine URL mit Zufallstoken (`?t=…`) aus; der Browser merkt
 es sich als Cookie. `--token` für einen festen Token, `--no-auth` für keinen, `--port` für einen
 anderen Port, `CLAUDE_CONFIG_DIR=/pfad` für ein anderes Datenverzeichnis, `--no-cpu-log` ohne
-CPU-Protokoll, `--no-analyze` ohne *Analyze with Claude*, `CLAUDE_INSPECT_DATA_DIR=/pfad` für einen
+CPU-Protokoll, `--no-analyze` ohne *Analyze with Claude*, `--no-launch` ohne *Resume* im Terminal, `CLAUDE_INSPECT_DATA_DIR=/pfad` für einen
 anderen Ablageort von CPU-Protokoll und Analysen.
 
 Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
@@ -88,6 +88,14 @@ Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
   Läuft über die eigene Claude-Code-Anmeldung und zählt zum Abo-Verbrauch; *View what is sent*
   zeigt den genauen Bericht. Das ist die einzige Funktion, die Daten verschickt, und nur auf Klick.
   `--no-analyze` blendet den Knopf aus.
+- **Im Terminal fortsetzen**: *▶ Resume* bei beendeten Sessions (Dashboard, Session-Seite, Session-Liste)
+  öffnet ein neues Fenster des Standard-Terminals im Ordner der Session und startet `claude --resume` mit
+  den Optionen, mit denen die Session lief: Berechtigungsmodus (z. B. `--dangerously-skip-permissions`) und
+  Agent (`--agent`), wie sie im Transcript stehen. Modell und Effort kommen wie gewohnt aus den Einstellungen.
+  Dazu *Fork* und bei Hintergrund-Sessions *Attach*; jeder Befehl lässt sich auch kopieren. macOS: das
+  Programm für `.command`-Dateien (Terminal, iTerm …), Linux: `$TERMINAL` oder das erste gefundene
+  Terminal, Windows: PowerShell im Standard-Terminal. Der Browser schickt nur die Session-Id, den Befehl
+  baut der Server selbst. `--no-launch` blendet den Knopf aus.
 - **Abo-Budget**: Kosten als geschätzter Anteil am Wochenlimit und am 5-Stunden-Fenster des Tarifs
   (Max 20x, Max 5x, Pro). Der Tarif wird aus `~/.claude.json` erkannt (gelesen wird nur das
   Rate-Limit-Tier) und lässt sich im Browser umstellen. Anthropic nennt keine Dollar- oder
@@ -99,7 +107,10 @@ Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
   Cache-Anteil, Aktivitäts-Heatmap, Tool-Statistik mit Fehlern und Dauer (p95)
 - **Tools**: alle Tool-Aufrufe aller Sessions, filterbar; Klick springt an die Stelle im Verlauf
 - **Files**: welche Dateien Agenten gelesen/geändert haben
-- **Search**: Volltext über alle Verläufe, Subagenten und die Eingabe-Historie
+- **Search**: Volltext über alle Verläufe, Subagenten und die Eingabe-Historie sowie Session- und Agent-Namen;
+  durchsucht immer alle Dateien, ohne Rücksicht auf Groß-/Kleinschreibung, Zeilenumbrüche und Tabs. Dafür liegt ein
+  Suchindex im Datenverzeichnis (`search-index/`, etwa ein Sechstel von `~/.claude/projects`), der einmalig beim
+  ersten Start aufgebaut (rund 40 s für 2,7 GB) und danach nur um neue Zeilen ergänzt wird
 - **Claude-Aufrufe**: Sitzungen, die ein Agent per Bash startet (`claude -p …`,
   `claude --agent …`), werden dem aufrufenden Tool-Aufruf zugeordnet und erscheinen im
   Agentenbaum, auf der Dashboard-Karte und am Bash-Aufruf. Konfidenz:
@@ -136,7 +147,7 @@ Neue Dateiformate: siehe [docs/FORMATS.md](https://github.com/brokoskokoli/claud
 
 ## Speicher & Leistung
 
-Außer CPU-Log und Analysen im eigenen Datenverzeichnis wird nichts auf Platte geschrieben. Beim Start liest der Server nur Prozess-, Job- und
+Außer Suchindex, CPU-Log und Analysen im eigenen Datenverzeichnis wird nichts auf Platte geschrieben. Beim Start liest der Server nur Prozess-, Job- und
 Kopfdaten (unter 1 s); die komplette History (hier ~600 MB) wird im Hintergrund in
 2–3 s aggregiert und danach nur noch inkrementell nachgeführt. Vollständige Verläufe
 werden erst beim Öffnen geladen und mit einer Obergrenze im Speicher gehalten.

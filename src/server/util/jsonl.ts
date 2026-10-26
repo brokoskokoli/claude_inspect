@@ -28,6 +28,11 @@ export class JsonlTail {
 
   constructor(readonly path: string) {}
 
+  /** Byte-Offset hinter der letzten vollständig gelesenen Zeile (zum Fortsetzen nach einem Neustart). */
+  get consumed(): number {
+    return this.offset - this.leftover.length;
+  }
+
   /**
    * @param prefilter Optional: nur Zeilen parsen, deren Rohtext passt (spart bei
    *                  großen Dateien den Großteil der JSON.parse-Arbeit).

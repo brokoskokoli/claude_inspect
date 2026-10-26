@@ -16,6 +16,7 @@
   import StatusDot from '../components/StatusDot.svelte';
   import Transcript from '../components/Transcript.svelte';
   import ResumeButtons from '../components/ResumeButtons.svelte';
+  import { sessionName } from '$shared/names';
   import { resumeCommands } from '$shared/resume';
   import { api } from '../lib/api';
   import { ago, bytes, dateTime, modelName, shortPath, tokens, usd } from '../lib/format';
@@ -214,7 +215,16 @@
   const job = $derived(detail?.job);
   const resume = $derived(
     sum && live.dashboard
-      ? resumeCommands({ sessionId: sum.sessionId, cwd: sum.cwd, platform: live.dashboard.platform, live: isLive, processKind: proc?.kind, jobShort: job?.short })
+      ? resumeCommands({
+          sessionId: sum.sessionId,
+          cwd: proc?.cwd ?? sum.cwd,
+          platform: live.dashboard.platform,
+          live: isLive && !liveProc?.inactive,
+          processKind: proc?.kind,
+          jobShort: job?.short,
+          permissionMode: sum.permissionMode,
+          agent: proc?.agent ?? sum.agentSetting,
+        })
       : [],
   );
 </script>
@@ -229,7 +239,7 @@
   <div class="crumbs muted"><a href={href.sessions()}>Sessions</a> / {sum.project}</div>
   <div class="peek" class:show={peek} aria-hidden={!peek} inert={!peek}>
     <StatusDot state={mainState} size={9} />
-    <strong class="peek-title">{proc?.name ?? sum.title ?? sum.sessionId}</strong>
+    <strong class="peek-title">{sessionName(proc, sum.title).name ?? sum.sessionId}</strong>
     {#if sel}<span class="muted peek-sub">› {sel.agentType ?? 'Subagent'}</span>{/if}
     {#if isLive}<span class="badge accent">live</span>{/if}
     <span class="faint peek-meta">{modelName(liveProc?.session?.model ?? sum.model)}{sum.gitBranch ? ` · ${sum.gitBranch}` : ''}</span>
@@ -241,7 +251,7 @@
   <header class="head card" bind:this={headEl}>
     <div class="title-row">
       <StatusDot state={mainState} size={11} />
-      <h1>{proc?.name ?? sum.title ?? sum.sessionId}</h1>
+      <h1>{sessionName(proc, sum.title).name ?? sum.sessionId}</h1>
       {#if isLive}<span class="badge accent">live</span>{/if}
       {#if proc?.kind}<span class="badge">{proc.kind}</span>{/if}
       {#if proc?.agent}<span class="badge info">{proc.agent}</span>{/if}
@@ -250,7 +260,7 @@
         <button class="btn analyze" onclick={openAnalyze} disabled={!review.available} title={review.available ? `Let Claude review this ${sel ? 'subagent' : 'session'}` : 'claude was not found on this machine'}>✦ Analyze {sel ? 'subagent' : 'with Claude'}</button>
       {/if}
     </div>
-    {#if proc?.name && sum.title && sum.title !== proc.name}<div class="muted">{sum.title}</div>{/if}
+    {#if sessionName(proc, sum.title).subtitle}<div class="muted">{sessionName(proc, sum.title).subtitle}</div>{/if}
     {#if detail.spawnedBy}
       {@const by = detail.spawnedBy}
       <div class="spawned-by">
@@ -294,7 +304,7 @@
       {/if}
       <div><dt>File</dt><dd class="mono faint">{sum.sessionId}.jsonl · {bytes(sum.size)}</dd></div>
     </dl>
-    {#if resume.length}<div class="resume-row"><ResumeButtons commands={resume} /></div>{/if}
+    {#if resume.length}<div class="resume-row"><ResumeButtons commands={resume} sessionId={sum.sessionId} launch={live.dashboard.launch} /></div>{/if}
   </header>
 
   <AnalyzeDialog sessionId={id} agentId={agent} agentLabel={sel ? `${sel.agentType ?? 'subagent'}${sel.description ? ` – ${sel.description}` : ''}` : undefined} {review} bind:open={analyzeOpen} onstarted={started} />

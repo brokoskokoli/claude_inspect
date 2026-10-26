@@ -1,4 +1,5 @@
 // Terminal-Ausgabe "laufende Agenten + letzte Aktion" – nützlich zum Testen der Parser.
+import { sessionName } from '../shared/names.js';
 import { Inspector } from './inspector.js';
 
 const inspector = new Inspector();
@@ -12,7 +13,7 @@ const ago = (iso?: string) => (iso ? `${Math.round((Date.now() - Date.parse(iso)
 for (const dp of d.processes) {
   const { process: p, job, session: s } = dp;
   const mark = p.alive ? (p.status === 'idle' ? '○' : '●') : '✕';
-  console.log(`${mark} ${p.name ?? s?.title ?? p.sessionId.slice(0, 8)}  [${p.kind ?? '?'}/${p.status ?? '?'}]  pid ${p.pid}  ${p.cwd ?? ''}  v${p.version ?? '?'}`);
+  console.log(`${mark} ${sessionName(p, s?.title).name ?? p.sessionId.slice(0, 8)}  [${p.kind ?? '?'}/${p.status ?? '?'}]  pid ${p.pid}  ${p.cwd ?? ''}  v${p.version ?? '?'}`);
   if (dp.spawnedBy) console.log(`    ⇠ started by ${dp.spawnedBy.parentTitle ?? dp.spawnedBy.parentSessionId.slice(0, 8)} [${dp.spawnedBy.confidence}: ${dp.spawnedBy.evidence.join(', ')}]`);
   if (job) console.log(`    job ${job.short}: ${job.state} – ${job.detail ?? ''}`);
   if (s) {

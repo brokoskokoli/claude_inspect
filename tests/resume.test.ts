@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { resumeCommands } from '../src/shared/resume.js';
+import { launchFlags, resumeCommands } from '../src/shared/resume.js';
 
 const id = '7fccd176-dafe-40e3-b646-96e4d987b75b';
 
@@ -52,4 +52,16 @@ test('the directory part really works in this OS shell (sh / PowerShell)', () =>
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test('resume keeps the permission mode and agent the session ran with', () => {
+  const [r, f] = resumeCommands({ sessionId: id, cwd: '/r', platform: 'darwin', live: false, permissionMode: 'bypassPermissions', agent: 'wp-supervisor' });
+  assert.equal(r.command, `cd '/r' && claude --resume ${id} --dangerously-skip-permissions --agent wp-supervisor`);
+  assert.deepEqual(r.args, ['--resume', id, '--dangerously-skip-permissions', '--agent', 'wp-supervisor']);
+  assert.equal(r.cwd, '/r');
+  assert.equal(f.command, `cd '/r' && claude --resume ${id} --fork-session --dangerously-skip-permissions --agent wp-supervisor`);
+  assert.deepEqual(launchFlags({ permissionMode: 'auto' }), ['--permission-mode', 'auto']);
+  assert.deepEqual(launchFlags({ permissionMode: 'default' }), []);
+  // nur gültige Namen und bekannte Modi – nichts, was die Shell anders lesen könnte
+  assert.deepEqual(launchFlags({ permissionMode: 'evil; rm -rf ~', agent: 'x; rm -rf ~' }), []);
 });

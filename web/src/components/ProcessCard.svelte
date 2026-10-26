@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { DashboardProcess, SubagentInfo } from '$shared/types';
+  import { sessionName } from '$shared/names';
   import { splitMcpName } from '$shared/tools';
   import { ago, duration, modelName, shortPath, toMs, tokens, usd } from '../lib/format';
   import { clock, live } from '../lib/live.svelte';
@@ -15,8 +16,9 @@
   const s = $derived(item.session);
   const job = $derived(item.job);
   const state = $derived(!p.alive ? 'dead' : s?.current?.kind === 'error' ? 'error' : p.status === 'idle' ? 'idle' : 'busy');
-  const title = $derived(p.name ?? s?.title ?? p.sessionId.slice(0, 8));
-  const subtitle = $derived(p.name && s?.title && s.title !== p.name ? s.title : undefined);
+  const names = $derived(sessionName(p, s?.title));
+  const title = $derived(names.name ?? p.sessionId.slice(0, 8));
+  const subtitle = $derived(names.subtitle);
   const running = $derived(s?.subagents.filter((a) => a.status === 'running') ?? []);
   const others = $derived(s?.subagents.filter((a) => a.status !== 'running').slice(-4).reverse() ?? []);
   // Job-Details nur zeigen, wenn der Job zu *diesem* Prozess gehört (nicht nur "geparkt").

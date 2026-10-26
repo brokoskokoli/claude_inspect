@@ -25,6 +25,8 @@ export interface DecodeContext {
   file: string;
   /** Zeilennummer bei JSONL-Quellen, sonst 0. */
   line: number;
+  /** Höchstlänge von Texten; ohne Angabe LIMITS.maxString (der Suchindex braucht sie ungekürzt). */
+  maxString?: number;
   /** Meldet unbekannte Felder in verschachtelten Objekten an den Drift-Report. */
   reportUnknown(recordType: string, obj: Raw | undefined, known: readonly string[]): Raw | undefined;
 }

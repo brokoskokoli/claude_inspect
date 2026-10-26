@@ -255,6 +255,8 @@ export interface SessionLive {
   model?: string;
   effort?: string;
   permissionMode?: string;
+  /** Agent-Definition der Session (`claude --agent …`) */
+  agentSetting?: string;
   gitBranch?: string;
   lastActivityAt?: string;
   contextTokens?: number;
@@ -282,6 +284,14 @@ export interface DashboardProcess {
    * die als Prozess weiterläuft). Gehört nicht zu den laufenden Agenten.
    */
   inactive?: SessionEnded;
+  /** Wo und mit welchen Optionen die Session fortgesetzt wird (siehe resumeCommands) */
+  resume?: ResumeOptions;
+}
+
+export interface ResumeOptions {
+  cwd?: string;
+  permissionMode?: string;
+  agent?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -325,6 +335,11 @@ export interface SessionSummary {
   firstTimestamp?: string;
   lastTimestamp?: string;
   title?: string;
+  /** Alle Namen der Session: eigener Titel, Agent-Name, KI-Titel (für die Suche) */
+  names?: string[];
+  /** Zuletzt gültiger Berechtigungsmodus und Agent-Definition – zum Fortsetzen mit denselben Optionen */
+  permissionMode?: string;
+  agentSetting?: string;
   lastPrompt?: string;
   versions: string[];
   model?: string;
@@ -346,6 +361,8 @@ export interface Dashboard {
   recentSessions: SessionSummary[];
   /** Abo-Tarif laut ~/.claude.json (Rate-Limit-Tier), falls erkennbar. */
   plan?: PlanKey;
+  /** Sessions lassen sich per Knopf in einem Terminal fortsetzen (aus mit --no-launch) */
+  launch: boolean;
 }
 
 export interface SessionDetail {
@@ -660,6 +677,10 @@ export interface SearchResult {
   agents: Record<string, SearchAgent>;
   scannedFiles: number;
   totalFiles: number;
+  /** Trefferlimit erreicht; in `moreFiles` weiteren Dateien steht der Begriff auch */
   truncated: boolean;
+  moreFiles?: number;
+  /** Suchindex wird noch aufgebaut: Ergebnis unvollständig */
+  indexing?: { files: number; total: number };
   ms: number;
 }

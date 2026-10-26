@@ -19,13 +19,14 @@ export class FormatRegistry {
   }
 
   /** Wählt den am besten passenden Decoder und dekodiert den Record. */
-  decode<Out>(source: SourceKind, raw: unknown, file: string, line = 0, opts: { silent?: boolean } = {}): { out: Out; decoder: string } {
+  decode<Out>(source: SourceKind, raw: unknown, file: string, line = 0, opts: { silent?: boolean; maxString?: number } = {}): { out: Out; decoder: string } {
     const record: Raw = isObj(raw) ? raw : { __nonObject: raw };
     const version = str(record.version) ?? str(record.cliVersion);
     const ctx: DecodeContext = {
       source,
       file,
       line,
+      maxString: opts.maxString,
       reportUnknown: (recordType, o, known) => {
         if (!o) return undefined;
         let extra: Raw | undefined;

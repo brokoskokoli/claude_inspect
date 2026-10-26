@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import { watch, type FSWatcher } from 'node:fs';
 import { stat } from 'node:fs/promises';
@@ -12,6 +13,7 @@ import type {
   FlowLane,
   JobInfo,
   ProcessInfo,
+  ResumeOptions,
   SearchAgent,
   SearchResult,
   SessionCost,
@@ -33,8 +35,12 @@ import { findClaude, Reviewer } from './review/runner.js';
 import { CpuMonitor } from './cpu-monitor.js';
 import { registry } from './formats/index.js';
 import { HistoryIndex, type HistoryFilter, type ToolQuery } from './history/aggregator.js';
+import { sessionName } from '../shared/names.js';
+import { resumeCommands } from '../shared/resume.js';
+import { openInTerminal } from './launch.js';
 import { emptyTotals, estimateCost, mergeTotals } from '../shared/pricing.js';
 import { search, type SearchFile } from './history/search.js';
+import { SearchIndex } from './history/search-index.js';
 import { analyze } from './model/analyze.js';
 import { laneData } from './model/flow.js';
 import { readPlan } from './sources/plan.js';
@@ -65,6 +71,8 @@ const SUBAGENT_DASHBOARD_MS = 30 * 60_000;
 /** Sparbetrieb ohne offenen Tab: Prozessliste alle 30 s, Komplettaktualisierung alle 2 min */
 const IDLE_POLL_MS = 30_000;
 const IDLE_REBUILD_MS = 120_000;
+/** Kompletter Abgleich des Suchindex (räumt von Claude Code gelöschte Transcripts weg) */
+const SEARCH_FULL_MS = 3600_000;
 
 export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
   readonly index = new ProjectIndex();
@@ -76,6 +84,9 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
   readonly history = new HistoryIndex();
   private historyReady = false;
   private historyRefreshedAt = 0;
+  /** Suchindex im Datenverzeichnis, je ~/.claude-Verzeichnis ein eigener */
+  readonly searchIndex = new SearchIndex(join(DATA_DIR, 'search-index', createHash('sha1').update(CLAUDE_DIR).digest('hex').slice(0, 12)));
+  private searchIndexedAt = 0;
   /**
    * Offene, sichtbare Browser-Tabs (Live-Verbindungen). Ohne Zuschauer läuft nur ein
    * Sparbetrieb: Prozessliste alle 30 s (für die CPU-Messung), alles andere alle 2 min.
@@ -99,8 +110,12 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
   /** "Analyze with Claude": startet auf Knopfdruck `claude -p` (abschaltbar mit --no-analyze) */
   readonly reviewer?: Reviewer;
 
-  constructor(opts: { cpuLog?: boolean; analyze?: boolean } = {}) {
+  /** Fortsetzen per Knopf im Terminal (aus mit --no-launch) */
+  readonly launchEnabled: boolean;
+
+  constructor(opts: { cpuLog?: boolean; analyze?: boolean; launch?: boolean } = {}) {
     super();
+    this.launchEnabled = opts.launch !== false;
     if (opts.analyze !== false) this.reviewer = new Reviewer(join(DATA_DIR, 'reviews'), (data) => this.emit('event', { type: 'review', data } satisfies StreamEvent));
     this.cpu = new CpuMonitor({
       log: opts.cpuLog ?? false,
@@ -123,6 +138,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       .then(() => {
         this.historyReady = true;
         this.historyReadyResolve();
+        return this.updateSearchIndex(true);
       });
     try {
       // macOS/Windows: rekursives Watching nativ. Linux (Node ≥ 20): ebenfalls unterstützt.
@@ -245,6 +261,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       if (this.historyReady && (!this.active || Date.now() - this.historyRefreshedAt > 5000)) {
         this.historyRefreshedAt = Date.now();
         await this.history.refresh(this.index.list(), this.projectOf, false);
+        if (this.searchIndex.ready) void this.updateSearchIndex(Date.now() - this.searchIndexedAt > SEARCH_FULL_MS);
       }
       this.dirty.dashboard = false;
       this.builtAt = Date.now();
@@ -283,6 +300,13 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
 
   // -------------------------------------------------------------------------
 
+  /** Ordner, Berechtigungsmodus und Agent zum Fortsetzen: aus dem Prozess, sonst aus dem Transcript. */
+  private async resumeOptions(sessionId: string, proc: ProcessInfo | undefined): Promise<ResumeOptions> {
+    const f = this.index.get(sessionId);
+    const sum = f ? await this.index.summary(f) : undefined;
+    return { cwd: proc?.cwd ?? sum?.cwd, permissionMode: sum?.permissionMode, agent: proc?.agent ?? sum?.agentSetting };
+  }
+
   private jobFor(p: ProcessInfo): JobInfo | undefined {
     return this.jobs.find((j) => j.short === p.jobId) ?? this.jobs.find((j) => j.short === p.parkedJobId);
   }
@@ -291,7 +315,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
     const procs = [...this.processes].sort((a, b) => Number(b.alive) - Number(a.alive) || (b.updatedAt ?? b.startedAt ?? 0) - (a.updatedAt ?? a.startedAt ?? 0));
     const processes: DashboardProcess[] = [];
     for (const p of procs) {
-      const dp: DashboardProcess = { process: p, job: this.jobFor(p), spawnedBy: await this.spawnParent(p.sessionId) };
+      const dp: DashboardProcess = { process: p, job: this.jobFor(p), spawnedBy: await this.spawnParent(p.sessionId), resume: await this.resumeOptions(p.sessionId, p) };
       if (p.alive) {
         try {
           dp.session = await this.sessionLive(p.sessionId, p);
@@ -313,7 +337,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       const s = await this.index.summary(f);
       recentSessions.push({ ...s, live: liveIds.has(s.sessionId), spawnedBy: this.spawns.parentOf(s.sessionId)?.parentSessionId });
     }
-    return { generatedAt: Date.now(), claudeDir: CLAUDE_DIR, platform: process.platform, processes, orphanJobs, recentSessions, plan: await readPlan() };
+    return { generatedAt: Date.now(), claudeDir: CLAUDE_DIR, platform: process.platform, processes, orphanJobs, recentSessions, plan: await readPlan(), launch: this.launchEnabled };
   }
 
   private async sessionLive(sessionId: string, p: ProcessInfo): Promise<SessionLive | undefined> {
@@ -333,6 +357,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       model: a.model,
       effort: a.effort,
       permissionMode: a.permissionMode,
+      agentSetting: a.agentSetting,
       gitBranch: (await this.index.summary(f)).gitBranch,
       lastActivityAt: a.lastActivityAt,
       contextTokens: a.contextTokens,
@@ -354,7 +379,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
     if (!link) return undefined;
     const pf = this.index.get(link.parentSessionId);
     const proc = this.processes.find((p) => p.alive && p.sessionId === link.parentSessionId);
-    return { ...link, parentTitle: proc?.name ?? (pf ? (await this.index.summary(pf)).title : undefined) };
+    return { ...link, parentTitle: sessionName(proc, pf ? (await this.index.summary(pf)).title : undefined).name };
   }
 
   /** Von einer Session per `claude`-Aufruf gestartete Sitzungen mit Status. */
@@ -429,8 +454,49 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
     return out.sort((a, b) => (a.lastActivityAt ?? '').localeCompare(b.lastActivityAt ?? ''));
   }
 
+  /**
+   * Suchindex nachziehen. `full`: alle Transcripts samt Subagenten (beim Start, dann stündlich,
+   * räumt Gelöschtes weg); sonst nur Sessions, die in der letzten Stunde geschrieben wurden.
+   */
+  private async updateSearchIndex(full: boolean): Promise<void> {
+    if (full) this.searchIndexedAt = Date.now();
+    const paths: string[] = [];
+    for (const f of this.index.list()) {
+      if (!full && Date.now() - f.mtime > 3600_000) continue;
+      paths.push(f.path);
+      for (const sf of await listSubagents(f.path)) paths.push(sf.path);
+    }
+    await this.searchIndex.update(paths, full);
+  }
+
   // -------------------------------------------------------------------------
   // API
+
+  /**
+   * Setzt eine Session in einem neuen Terminalfenster fort (`kind` wie in resumeCommands).
+   * Der Befehl entsteht hier aus den eigenen Daten; vom Browser kommt nur die Session-Id.
+   */
+  async launch(sessionId: string, kind: string): Promise<{ command: string }> {
+    if (!this.launchEnabled) throw new Error('launching is turned off (--no-launch)');
+    const f = this.index.get(sessionId);
+    if (!f) throw new Error('unknown session');
+    const dp = this.dashboard?.processes.find((p) => p.process.sessionId === sessionId && p.process.alive) ?? this.dashboard?.processes.find((p) => p.process.sessionId === sessionId);
+    const proc = dp?.process;
+    const job = proc ? this.jobFor(proc) : this.jobs.find((j) => j.sessionId === sessionId || j.resumeSessionId === sessionId);
+    const cmd = resumeCommands({
+      sessionId,
+      platform: process.platform,
+      live: !!proc?.alive && !dp?.inactive,
+      processKind: proc?.kind,
+      jobShort: job?.short,
+      ...(await this.resumeOptions(sessionId, proc)),
+    }).find((c) => c.kind === kind);
+    if (!cmd) throw new Error(`"${kind}" is not possible for this session right now`);
+    const claude = await findClaude();
+    if (!claude) throw new Error('claude was not found on this machine');
+    await openInTerminal(claude, cmd.args, cmd.cwd ?? homedir(), join(DATA_DIR, 'launch'));
+    return { command: cmd.command };
+  }
 
   async sessions(offset: number, limit: number, q?: string): Promise<{ total: number; items: SessionSummary[] }> {
     let files = this.index.list();
@@ -440,7 +506,8 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       const matches: SessionSummary[] = [];
       for (const f of files) {
         const s = await this.index.summary(f);
-        if ([s.project, s.title, s.lastPrompt, s.sessionId, s.cwd].some((x) => x?.toLowerCase().includes(needle))) matches.push(s);
+        const procNames = this.processes.filter((p) => p.sessionId === s.sessionId).map((p) => p.name);
+        if ([s.project, s.title, ...(s.names ?? []), ...procNames, s.lastPrompt, s.sessionId, s.cwd].some((x) => x?.toLowerCase().includes(needle))) matches.push(s);
       }
       return {
         total: matches.length,
@@ -521,13 +588,16 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
     const subMeta = new Map<string, { type?: string; description?: string; path: string }>();
     for (const f of this.index.list()) {
       const sum = await this.index.summary(f);
-      files.push({ path: f.path, sessionId: f.sessionId, project: sum.project, title: sum.title });
+      const procNames = this.processes.filter((p) => p.sessionId === f.sessionId && p.name).map((p) => p.name!);
+      files.push({ path: f.path, sessionId: f.sessionId, project: sum.project, title: sum.title, names: [...(sum.names ?? []), ...procNames] });
       for (const sf of await listSubagents(f.path)) {
-        files.push({ path: sf.path, sessionId: f.sessionId, agentId: sf.agentId, project: sum.project, title: sf.meta.description ?? sum.title });
+        files.push({ path: sf.path, sessionId: f.sessionId, agentId: sf.agentId, project: sum.project, title: sf.meta.description ?? sum.title, names: sf.meta.description ? [sf.meta.description] : [] });
         subMeta.set(`${f.sessionId}/${sf.agentId}`, { type: sf.meta.agentType, description: sf.meta.description, path: sf.path });
       }
     }
-    const res = await search(q, files, new Set(this.index.list().map((f) => f.sessionId)));
+    // neueste Zeilen laufender Sessions mitnehmen (während des ersten Aufbaus nicht darauf warten)
+    if (this.searchIndex.ready) await this.updateSearchIndex(false);
+    const res = await search(q, files, new Set(this.index.list().map((f) => f.sessionId)), this.searchIndex);
 
     // Agenten der Treffer samt Vorfahren (Hauptagent, per claude -p aufrufender Agent) für die Baumansicht
     const agents: Record<string, SearchAgent> = {};
@@ -560,7 +630,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
         key,
         sessionId,
         kind: link ? 'spawn' : 'main',
-        label: proc?.name ?? sum.title ?? sessionId.slice(0, 8),
+        label: sessionName(proc, sum.title).name ?? sessionId.slice(0, 8),
         sublabel: link ? (this.spawns.childInfo(sessionId)?.agentSetting ?? 'claude -p') : undefined,
         project: sum.project,
         file: tilde(f.path),
@@ -617,7 +687,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
         id: mainId,
         sessionId: f.sessionId,
         kind,
-        label: proc?.name ?? sum.title ?? this.spawns.childInfo(f.sessionId)?.prompt?.split('\n', 1)[0].slice(0, 80) ?? f.sessionId.slice(0, 8),
+        label: sessionName(proc, sum.title ?? this.spawns.childInfo(f.sessionId)?.prompt?.split('\n', 1)[0].slice(0, 80)).name ?? f.sessionId.slice(0, 8),
         sublabel: kind === 'spawn' ? (this.spawns.childInfo(f.sessionId)?.agentSetting ?? 'claude') : sum.project,
         parentId: parent?.id,
         viaToolUseId: parent?.via,

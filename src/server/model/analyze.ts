@@ -6,6 +6,7 @@ export interface TranscriptAnalysis {
   model?: string;
   effort?: string;
   permissionMode?: string;
+  agentSetting?: string;
   gitBranch?: string;
   title?: string;
   lastPrompt?: string;
@@ -78,6 +79,7 @@ export function analyze(entries: Entry[]): TranscriptAnalysis {
       case 'meta': {
         const d = e.data;
         if (e.metaType === 'permission-mode' && str(d.permissionMode)) a.permissionMode = str(d.permissionMode);
+        if (e.metaType === 'agent-setting' && str(d.agentSetting)) a.agentSetting = str(d.agentSetting);
         if (e.metaType === 'custom-title' && str(d.customTitle)) titles.custom = str(d.customTitle)!;
         if (e.metaType === 'agent-name' && str(d.agentName)) titles.agent = str(d.agentName)!;
         if (e.metaType === 'ai-title' && str(d.aiTitle)) titles.ai = str(d.aiTitle)!;

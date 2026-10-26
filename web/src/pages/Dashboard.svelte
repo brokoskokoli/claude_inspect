@@ -3,6 +3,7 @@
   import ProcessCard from '../components/ProcessCard.svelte';
   import ResumeButtons from '../components/ResumeButtons.svelte';
   import SessionTable from '../components/SessionTable.svelte';
+  import { sessionName } from '$shared/names';
   import { resumeCommands } from '$shared/resume';
   import type { DashboardProcess } from '$shared/types';
   import { ago, shortPath } from '../lib/format';
@@ -38,7 +39,14 @@
   // Kein Transcript (IDE-Prozess ohne Gespräch) → nichts fortzusetzen
   const resumeFor = (p: DashboardProcess) =>
     d && (p.session || p.process.alive === false) && p.inactive?.reason !== 'no-conversation'
-      ? resumeCommands({ sessionId: p.process.sessionId, cwd: p.process.cwd, platform: d.platform, live: p.process.alive && !p.inactive, processKind: p.process.kind, jobShort: p.job?.short })
+      ? resumeCommands({
+          sessionId: p.process.sessionId,
+          platform: d.platform,
+          live: p.process.alive && !p.inactive,
+          processKind: p.process.kind,
+          jobShort: p.job?.short,
+          ...p.resume,
+        })
       : [];
   const dead = $derived(d?.processes.filter((p) => !p.process.alive) ?? []);
   const busy = $derived(alive.filter((p) => p.process.status !== 'idle').length);
@@ -72,12 +80,12 @@
           <tbody>
             {#each inactive as item (item.process.pid)}
               <tr class="clickable" onclick={() => (location.hash = href.session(item.process.sessionId))}>
-                <td>{item.process.name ?? item.session?.title ?? item.process.sessionId.slice(0, 8)}</td>
+                <td>{sessionName(item.process, item.session?.title).name ?? item.process.sessionId.slice(0, 8)}</td>
                 <td class="muted small">{shortPath(item.process.cwd)}</td>
                 <td class="muted small">{INACTIVE_REASON[item.inactive!.reason]}{#if item.inactive!.reason === 'no-conversation' && item.process.entrypoint} ({item.process.entrypoint}){/if}{#if item.job?.state} · job {item.job.state}{/if}</td>
                 <td class="muted small mono">pid {item.process.pid}</td>
                 <td class="muted nowrap">{ago(item.inactive!.at ?? item.session?.lastActivityAt, clock.now)}</td>
-                <td class="nowrap"><ResumeButtons commands={resumeFor(item)} compact /></td>
+                <td class="nowrap"><ResumeButtons commands={resumeFor(item)} compact sessionId={item.process.sessionId} launch={d.launch} /></td>
               </tr>
             {/each}
           </tbody>
@@ -123,10 +131,10 @@
               <tbody>
                 {#each dead as item (item.process.pid)}
                   <tr class="clickable" onclick={() => (location.hash = href.session(item.process.sessionId))}>
-                    <td>{item.process.name ?? item.process.sessionId.slice(0, 8)}</td>
+                    <td>{sessionName(item.process, item.session?.title).name ?? item.process.sessionId.slice(0, 8)}</td>
                     <td class="muted small">{shortPath(item.process.cwd)}</td>
                     <td class="muted nowrap">{ago(item.process.updatedAt ?? item.process.startedAt, clock.now)}</td>
-                    <td class="nowrap"><ResumeButtons commands={resumeFor(item)} compact /></td>
+                    <td class="nowrap"><ResumeButtons commands={resumeFor(item)} compact sessionId={item.process.sessionId} launch={d.launch} /></td>
                   </tr>
                 {/each}
               </tbody>

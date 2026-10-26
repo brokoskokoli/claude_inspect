@@ -81,7 +81,7 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
   }
 
   /**
-   * Die einzigen schreibenden Aufrufe: Analyse starten/abbrechen. Nur mit JSON-Body (erzwingt bei
+   * Die einzigen Aufrufe, die etwas auslösen: Analyse starten/abbrechen, Session im Terminal fortsetzen. Nur mit JSON-Body (erzwingt bei
    * fremden Seiten einen CORS-Preflight, den der Server nie erlaubt) und lokalem Origin.
    */
   async function post(req: IncomingMessage, res: ServerResponse, p: string) {
@@ -109,6 +109,14 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
     }
     m = /^\/api\/review-cancel\/([\w-]+)$/.exec(p);
     if (m) return json(res, 200, { cancelled: inspector.reviewer?.cancel(m[1]) ?? false });
+    m = /^\/api\/launch\/([\w-]+)$/.exec(p);
+    if (m) {
+      try {
+        return json(res, 200, await inspector.launch(m[1], String(body.kind ?? 'resume')));
+      } catch (e) {
+        return json(res, 400, { error: (e as Error).message });
+      }
+    }
     return json(res, 405, { error: 'read-only' });
   }
 

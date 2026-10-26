@@ -1,11 +1,18 @@
 <script lang="ts">
   import type { SessionSummary } from '$shared/types';
   import { ago, bytes, dateTime, modelName, usd } from '../lib/format';
-  import { clock } from '../lib/live.svelte';
+  import { resumeCommands } from '$shared/resume';
+  import { clock, live } from '../lib/live.svelte';
   import { href } from '../lib/router.svelte';
+  import ResumeButtons from './ResumeButtons.svelte';
   import StatusDot from './StatusDot.svelte';
 
   let { sessions }: { sessions: SessionSummary[] } = $props();
+
+  // Beendete Sessions lassen sich direkt aus der Liste im Terminal fortsetzen
+  const canLaunch = $derived(!!live.dashboard?.launch);
+  const resumeOf = (s: SessionSummary) =>
+    resumeCommands({ sessionId: s.sessionId, cwd: s.cwd, platform: live.dashboard!.platform, live: false, permissionMode: s.permissionMode, agent: s.agentSetting }).filter((c) => c.kind === 'resume');
 </script>
 
 <div class="wrap">
@@ -19,6 +26,7 @@
         <th class="hide-s">Model</th>
         <th class="hide-s num">Subagents</th>
         <th class="hide-s num">Size</th>
+        {#if canLaunch}<th class="hide-s"></th>{/if}
       </tr>
     </thead>
     <tbody>
@@ -37,6 +45,7 @@
           <td class="hide-s muted">{modelName(s.model)}{#if s.costUSD !== undefined}<div class="small">{usd(s.costUSD)}</div>{/if}</td>
           <td class="hide-s num">{s.subagentCount || ''}</td>
           <td class="hide-s num muted">{bytes(s.size)}</td>
+          {#if canLaunch}<td class="hide-s nowrap">{#if !s.live && s.cwd}<ResumeButtons commands={resumeOf(s)} compact sessionId={s.sessionId} launch />{/if}</td>{/if}
         </tr>
       {/each}
     </tbody>

@@ -1,12 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import type { Entry, SearchHit, SearchResult } from '../../shared/types.js';
-import { toolSummary } from '../../shared/tools.js';
+import type { SearchHit, SearchResult } from '../../shared/types.js';
 import { paths } from '../config.js';
 import { registry } from '../formats/index.js';
 import type { HistoryPrompt } from '../formats/history/prompt.js';
-import type { DecodedEntry } from '../formats/transcript/common.js';
 import { pathTail } from '../sources/projects.js';
+import { normalize, type SearchIndex } from './search-index.js';
+import { queryTrigrams } from './trigrams.js';
 
 export interface SearchFile {
   path: string;
@@ -14,6 +14,8 @@ export interface SearchFile {
   agentId?: string;
   project: string;
   title?: string;
+  /** Namen dieser Session bzw. dieses Subagenten, nach denen gesucht werden kann */
+  names?: string[];
 }
 
 const home = homedir();
@@ -24,108 +26,53 @@ function snippet(text: string, needle: string, radius = 90): string {
   if (i < 0) return text.slice(0, radius * 2);
   const start = Math.max(0, i - radius);
   const end = Math.min(text.length, i + needle.length + radius);
-  return (start > 0 ? '…' : '') + text.slice(start, end).replace(/\s+/g, ' ') + (end < text.length ? '…' : '');
-}
-
-/** Durchsuchbarer Text eines Eintrags – Anhänge und Zustands-Records bewusst nicht. */
-function searchable(e: Entry): string | undefined {
-  switch (e.kind) {
-    case 'user-text':
-    case 'assistant-text':
-    case 'thinking':
-      return e.text;
-    case 'tool-use':
-      return `${toolSummary(e.name, e.input)}\n${JSON.stringify(e.input)}`;
-    case 'tool-result':
-      return e.parts.map((p) => (p.type === 'text' ? p.text : '')).join('\n');
-    case 'system':
-      return e.text;
-    default:
-      return undefined;
-  }
+  return (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '');
 }
 
 /**
- * Volltextsuche direkt über die JSONL-Dateien (kein Index): Rohtext wird
- * nach dem Suchbegriff durchsucht, nur Trefferzeilen werden dekodiert.
- * Neueste Dateien zuerst; bricht bei `limit` Treffern oder nach `budgetMs` ab.
+ * Volltextsuche über den Suchindex – immer über alle Transcripts, ohne Zeitlimit. Groß- und
+ * Kleinschreibung sowie Art und Anzahl von Leerzeichen und Zeilenumbrüchen spielen keine Rolle.
+ * Dazu Treffer in Session- und Agent-Namen und in Dateinamen. Neueste Dateien zuerst; ab `limit`
+ * Treffern wird nur noch gezählt, in wie vielen weiteren Dateien etwas steht.
  */
-export async function search(query: string, files: SearchFile[], knownSessions: Set<string>, limit = 200, budgetMs = 15_000, perFile = 5): Promise<Omit<SearchResult, 'agents'>> {
+export async function search(query: string, files: SearchFile[], knownSessions: Set<string>, index: SearchIndex, limit = 500, perFile = 5): Promise<Omit<SearchResult, 'agents'>> {
   const t0 = Date.now();
-  const needle = query.trim().toLowerCase();
+  const needle = normalize(query).toLowerCase();
   const hits: SearchHit[] = [];
   let scanned = 0;
-  let truncated = false;
-  if (needle.length < 2) return { query, hits, scannedFiles: 0, totalFiles: files.length, truncated, ms: 0 };
+  let moreFiles = 0;
+  const indexing = index.ready ? undefined : { ...index.progress };
+  if (needle.length < 2) return { query, hits, scannedFiles: 0, totalFiles: files.length, truncated: false, ms: 0 };
+
+  // Namen von Sessions und Agenten (eigener Titel, Agent-Name, KI-Titel, Prozessname, Subagent-Beschreibung)
+  for (const f of files) {
+    for (const name of new Set(f.names)) {
+      if (!normalize(name).toLowerCase().includes(needle)) continue;
+      hits.push({ sessionId: f.sessionId, agentId: f.agentId, project: f.project, title: f.title, line: 0, kind: 'name', snippet: name });
+    }
+  }
 
   // Dateinamen und Pfade der Transcripts (z. B. "agent-a1b2….jsonl", Session-Id, Pfadteile)
   const pathNeedle = (needle.startsWith('~') && home ? home.toLowerCase() + needle.slice(1) : needle).replace(/\\/g, '/');
+  let fileHits = 0;
   for (const f of files) {
     const p = f.path.replace(/\\/g, '/');
     if (!p.toLowerCase().includes(pathNeedle)) continue;
     hits.push({ sessionId: f.sessionId, agentId: f.agentId, project: f.project, title: f.title, line: 0, kind: 'file', snippet: tildify(f.path) });
-    if (hits.length >= 50) break;
+    if (++fileHits >= 50) break;
   }
 
-  outer: for (const f of files) {
-    if (Date.now() - t0 > budgetMs) {
-      truncated = true;
-      break;
-    }
-    let text: string;
-    try {
-      text = await readFile(f.path, 'utf8');
-    } catch {
+  const trigrams = queryTrigrams(needle);
+  const re = new RegExp(needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  for (const f of files) {
+    const found = await index.search(f.path, re, hits.length < limit ? perFile : 1, trigrams);
+    scanned++;
+    if (!found.length) continue;
+    if (hits.length >= limit) {
+      moreFiles++;
       continue;
     }
-    scanned++;
-    const lower = text.toLowerCase();
-    let pos = lower.indexOf(needle);
-    let lineNo = 0;
-    let counted = 0;
-    let lastLine = -1;
-    let inFile = 0;
-    while (pos !== -1 && inFile < perFile) {
-      for (let i = text.indexOf('\n', counted); i !== -1 && i < pos; i = text.indexOf('\n', i + 1)) {
-        lineNo++;
-        counted = i + 1;
-      }
-      const lineStart = counted;
-      const lineEnd = text.indexOf('\n', pos);
-      if (lineNo !== lastLine) {
-        lastLine = lineNo;
-        try {
-          const raw = JSON.parse(text.slice(lineStart, lineEnd === -1 ? undefined : lineEnd));
-          const { out } = registry.decode<DecodedEntry[]>('transcript', raw, f.path, lineNo, { silent: true });
-          for (const e of out as Entry[]) {
-            const s = searchable(e);
-            if (!s || !s.toLowerCase().includes(needle)) continue;
-            hits.push({
-              sessionId: f.sessionId,
-              agentId: f.agentId,
-              project: f.project,
-              title: f.title,
-              line: lineNo,
-              kind: e.kind,
-              toolName: e.kind === 'tool-use' ? e.name : undefined,
-              toolUseId: e.kind === 'tool-use' || e.kind === 'tool-result' ? e.toolUseId : undefined,
-              ts: e.timestamp,
-              snippet: snippet(s, needle),
-            });
-            inFile++;
-            break;
-          }
-        } catch {
-          /* defekte Zeile */
-        }
-        if (hits.length >= limit) {
-          truncated = true;
-          break outer;
-        }
-      }
-      if (lineEnd === -1) break;
-      pos = lower.indexOf(needle, lineEnd);
-    }
+    for (const h of found) hits.push({ sessionId: f.sessionId, agentId: f.agentId, project: f.project, title: f.title, ...h });
   }
 
   // Prompts aus history.jsonl, deren Session-Transcript nicht mehr existiert
@@ -133,10 +80,10 @@ export async function search(query: string, files: SearchFile[], knownSessions: 
     try {
       const lines = (await readFile(paths.history, 'utf8')).split('\n');
       for (let i = lines.length - 1; i >= 0 && hits.length < limit; i--) {
-        if (!lines[i].toLowerCase().includes(needle)) continue;
+        if (!lines[i]) continue;
         try {
           const p = registry.decode<HistoryPrompt>('history', JSON.parse(lines[i]), paths.history, i, { silent: true }).out;
-          if (!p.display.toLowerCase().includes(needle) || (p.sessionId && knownSessions.has(p.sessionId))) continue;
+          if (!normalize(p.display).toLowerCase().includes(needle) || (p.sessionId && knownSessions.has(p.sessionId))) continue;
           hits.push({
             sessionId: p.sessionId ?? '',
             project: p.project ? pathTail(p.project) : '?',
@@ -144,7 +91,7 @@ export async function search(query: string, files: SearchFile[], knownSessions: 
             line: i,
             kind: 'history-prompt',
             ts: p.timestamp ? new Date(p.timestamp).toISOString() : undefined,
-            snippet: snippet(p.display, needle),
+            snippet: snippet(normalize(p.display), needle),
           });
         } catch {
           /* defekte Zeile */
@@ -154,5 +101,5 @@ export async function search(query: string, files: SearchFile[], knownSessions: 
       /* keine history.jsonl */
     }
   }
-  return { query, hits, scannedFiles: scanned, totalFiles: files.length, truncated, ms: Date.now() - t0 };
+  return { query, hits, scannedFiles: scanned, totalFiles: files.length, truncated: moreFiles > 0, moreFiles, indexing, ms: Date.now() - t0 };
 }

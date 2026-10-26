@@ -35,7 +35,10 @@
     system: 'System',
     'history-prompt': 'Prompt (history)',
     file: 'File name',
+    name: 'Name',
   };
+  /** Treffer, die zur Session als Ganzes gehören, stehen in ihrer Gruppe oben */
+  const isTop = (h: SearchHit) => h.kind === 'file' || h.kind === 'name';
 
   let current = '';
 
@@ -84,13 +87,28 @@
     }
   }
   if (initial) void run(false);
+
+  // Solange der Suchindex aufgebaut wird, ist das Ergebnis unvollständig: regelmäßig neu suchen
+  let retry: ReturnType<typeof setTimeout> | undefined;
+  $effect(() => {
+    if (!result?.indexing || loading) return;
+    const query = result.query;
+    retry = setTimeout(() => {
+      if (current === query) void run(true);
+    }, 4000);
+    return () => clearTimeout(retry);
+  });
+
   onDestroy(() => {
+    clearTimeout(retry);
     const c = cache.get(current);
     if (c) c.scrollY = window.scrollY;
   });
 
-  function mark(snippet: string, needle: string): string {
+  function mark(snippet: string, query: string): string {
     const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // wie auf dem Server: Leerzeichen und Zeilenumbrüche zählen als ein Leerzeichen
+    const needle = query.replace(/\s+/g, ' ').trim();
     const i = snippet.toLowerCase().indexOf(needle.toLowerCase());
     if (i < 0) return esc(snippet);
     return esc(snippet.slice(0, i)) + '<mark>' + esc(snippet.slice(i, i + needle.length)) + '</mark>' + esc(snippet.slice(i + needle.length));
@@ -98,7 +116,7 @@
 
   function target(h: SearchHit): string | undefined {
     if (h.kind === 'history-prompt') return undefined;
-    if (h.kind === 'file') return href.session(h.sessionId, h.agentId, { tab: 'transcript' });
+    if (isTop(h)) return href.session(h.sessionId, h.agentId, { tab: 'transcript' });
     return href.session(h.sessionId, h.agentId, h.toolUseId ? { tool: h.toolUseId } : { line: h.line });
   }
 
@@ -127,10 +145,10 @@
       if (p) p.children.push(n);
       else roots.push(n);
     }
-    // neueste Treffer zuerst, Dateinamen-Treffer oben
+    // neueste Treffer zuerst, Namens- und Dateinamen-Treffer oben
     const order = (n: Node): number => {
-      n.hits.sort((a, b) => Number(b.kind === 'file') - Number(a.kind === 'file') || (b.ts ?? '').localeCompare(a.ts ?? ''));
-      let latest = Math.max(0, ...n.hits.map((h) => (h.kind === 'file' ? Infinity : h.ts ? Date.parse(h.ts) : 0)));
+      n.hits.sort((a, b) => Number(isTop(b)) - Number(isTop(a)) || (b.ts ?? '').localeCompare(a.ts ?? ''));
+      let latest = Math.max(0, ...n.hits.map((h) => (isTop(h) ? Infinity : h.ts ? Date.parse(h.ts) : 0)));
       for (const c of n.children) latest = Math.max(latest, order(c));
       n.children.sort((a, b) => b.latest - a.latest);
       return (n.latest = latest);
@@ -143,15 +161,18 @@
 
 <div class="page-head">
   <h2>Search</h2>
-  <span class="muted">Full text and file names across all transcripts, subagents and the prompt history · grouped by agent · at most 5 hits per file</span>
+  <span class="muted">Full text, session and agent names and file names across all transcripts, subagents and the prompt history · ignores case and line breaks · grouped by agent · at most 5 hits per file</span>
 </div>
 <form class="filters bar" onsubmit={(e) => (e.preventDefault(), run(true))}>
   <input type="search" placeholder="Search term (at least 2 characters) …" bind:value={q} />
   <button class="btn" type="submit" disabled={loading}>{#if loading}<Spinner /> Searching …{:else}Search{/if}</button>
   {#if result}
-    <span class="faint">{result.hits.length} hits · {result.scannedFiles}/{result.totalFiles} files · {(result.ms / 1000).toFixed(1)} s{result.truncated ? ' · stopped early (time or hit limit) – refine the term for complete results' : ''}</span>
+    <span class="faint">{result.hits.length} hits · {result.totalFiles} files · {(result.ms / 1000).toFixed(1)} s{result.truncated ? ` · hit limit reached, ${result.moreFiles ?? 'more'} more files contain the term – refine it to see them` : ''}</span>
   {/if}
 </form>
+{#if result?.indexing}
+  <p class="badge info indexing"><Spinner /> Building the search index ({result.indexing.files}/{result.indexing.total} files) – only once, results are incomplete until it is done and update by themselves</p>
+{/if}
 
 {#if error}<p class="badge error">{error}</p>{/if}
 {#if loading && !result}
@@ -196,7 +217,7 @@
               <span class="badge">{KIND[h.kind] ?? h.kind}{h.toolName ? ` · ${h.toolName}` : ''}</span>
               <span class="faint when">{dateTime(h.ts)}</span>
             </div>
-            <div class="snip" class:mono={h.kind === 'file'}>{@html mark(h.snippet, h.kind === 'file' ? result!.query.replace(/^~/, '') : result!.query)}</div>
+            <div class="snip" class:mono={h.kind === 'file'} class:name={h.kind === 'name'}>{@html mark(h.snippet, h.kind === 'file' ? result!.query.replace(/^~/, '') : result!.query)}</div>
           </a>
         {/each}
       </div>
@@ -270,6 +291,16 @@
   a.hit:hover {
     background: var(--surface-2);
     text-decoration: none;
+  }
+  .indexing {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    margin: 0 0 12px;
+    white-space: normal;
+  }
+  .snip.name {
+    color: var(--text);
   }
   .orphans-head {
     font-size: 14px;

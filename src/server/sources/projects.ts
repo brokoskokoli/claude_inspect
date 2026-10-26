@@ -148,8 +148,11 @@ async function summarize(f: TranscriptFile): Promise<SessionSummary> {
           if (e.metaType === 'agent-name' && str(d.agentName)) titles.agent = str(d.agentName)!;
           if (e.metaType === 'ai-title' && str(d.aiTitle)) titles.ai = str(d.aiTitle)!;
           if (e.metaType === 'last-prompt' && str(d.lastPrompt)) s.lastPrompt = str(d.lastPrompt);
+          if (e.metaType === 'permission-mode' && str(d.permissionMode)) s.permissionMode = str(d.permissionMode);
+          if (e.metaType === 'agent-setting' && str(d.agentSetting)) s.agentSetting = str(d.agentSetting);
           if (e.metaType === 'cost-state' && num(d.totalCostUSD) !== undefined) s.costUSD = num(d.totalCostUSD);
         }
+        if (e.kind === 'user-text' && e.permissionMode) s.permissionMode = e.permissionMode;
         if ((e.kind === 'assistant-text' || e.kind === 'tool-use' || e.kind === 'thinking') && e.model && e.model !== '<synthetic>') {
           s.model = e.model;
         }
@@ -166,6 +169,7 @@ async function summarize(f: TranscriptFile): Promise<SessionSummary> {
     /* optional */
   }
   s.title = titles.custom ?? titles.agent ?? titles.ai;
+  s.names = [...new Set(Object.values(titles))];
   s.versions = [...versions].sort(compareVersions);
   s.project = projectName(s.cwd, f.projectDir);
   return s;

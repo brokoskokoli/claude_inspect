@@ -57,6 +57,7 @@ export const api = {
   review: (id: string, agent?: string) => get<ReviewState>(`/api/review/${enc(id)}${qs({ agent })}`),
   reviewDigestUrl: (id: string, agent?: string, full?: boolean) => `/api/review/${enc(id)}/digest${qs({ agent, full })}`,
   startReview: (id: string, req: ReviewRequest) => post<ReviewRun>(`/api/review/${enc(id)}`, req),
+  launch: (sessionId: string, kind: string) => post<{ command: string }>(`/api/launch/${enc(sessionId)}`, { kind }),
   cancelReview: (runId: string) => post<{ cancelled: boolean }>(`/api/review-cancel/${enc(runId)}`, {}),
   stats: (f: HistoryFilter) => get<HistoryStats>(`/api/stats${qs({ ...f })}`),
   projects: () => get<string[]>('/api/projects'),

@@ -504,8 +504,8 @@
         <div class="grid">
           <div class="card"><h4>Tool explorer</h4><p>Every tool call across all sessions, filterable by tool, project, file and errors.</p></div>
           <div class="card"><h4>Files</h4><p>Which files your agents read, edited or wrote – and in which sessions.</p></div>
-          <div class="card"><h4>Full-text search</h4><p>Across all transcripts, subagents and the prompt history, including sessions Claude Code already cleaned up.</p></div>
-          <div class="card"><h4>Resume from the dashboard</h4><p>Copyable <em>Resume</em>, <em>Attach</em> or <em>Fork</em> commands for every session, quoted safely for your shell.</p></div>
+          <div class="card"><h4>Full-text search</h4><p>Across all transcripts, subagents, session names and the prompt history, including sessions Claude Code already cleaned up. Always every file, backed by a local search index.</p></div>
+          <div class="card"><h4>Resume from the dashboard</h4><p><em>Resume</em>, <em>Attach</em> or <em>Fork</em> in a new terminal window with the options the session ran with (permission mode, agent) – or copy the command.</p></div>
           <div class="card"><h4>Task boards</h4><p>A session's TaskCreate/TaskUpdate list as a board with dependencies.</p></div>
           <div class="card"><h4>Schema drift detection</h4><p>Versioned decoders per record. Unknown records and fields are never dropped and are listed on the <em>Formats</em> page.</p></div>
           <div class="card"><h4>Dark mode</h4><p>Light, dark or system theme, remembered per browser.</p></div>
@@ -570,7 +570,7 @@
             <div class="ver">0.2.2<span class="date">October 2026</span></div>
             <div>
               <h4>Resume sessions from the dashboard</h4>
-              <p>One-click copy of <code>claude --resume</code>, <code>claude attach</code> or a fork command, depending on the session's state – PowerShell syntax on Windows.</p>
+              <p>One click opens your default terminal in the session's folder and runs <code>claude --resume</code> (or <code>attach</code>/fork) with the permission mode and agent the session used. The command can also be copied – PowerShell syntax on Windows.</p>
             </div>
           </div>
           <div class="release">
@@ -604,7 +604,7 @@ claude-inspect demo --open</pre>
               <li>Reads <code>~/.claude</code> only – no hooks, no settings changes, no proxy.</li>
               <li>Listens on <code>127.0.0.1</code> only and rejects foreign <code>Host</code> headers.</li>
               <li>Never reads credential files, masks tokens in the raw view.</li>
-              <li>It writes only to its own data directory: the CPU log (timestamps, PIDs, program names, percentages) and saved analyses.</li>
+              <li>It writes only to its own data directory: the search index, the CPU log (timestamps, PIDs, program names, percentages) and saved analyses.</li>
               <li>Nothing is sent anywhere – except when you click <em>Analyze with Claude</em>, which uses your local <code>claude</code>.</li>
             </ul>
           </div>

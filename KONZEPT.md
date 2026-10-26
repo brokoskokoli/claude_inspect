@@ -171,7 +171,8 @@ Task      { id, sessionId, subject, description, status, blocks[], blockedBy[] }
 6. **Dateien**
    - Welche Dateien welche Session geändert hat, mit Diff aus `structuredPatch` bzw. `file-history`.
 7. **History und Suche**
-   - Volltextsuche über Prompts (`history.jsonl`, sofort) sowie über Antworten und Tool-Inputs (Streaming-Suche direkt über die JSONL-Dateien, Treffer erscheinen progressiv).
+   - Volltextsuche über Prompts (`history.jsonl`), Antworten, Thinking, Tool-Inputs und -Ergebnisse sowie Session- und Agent-Namen, immer über alle Dateien. Grundlage ist ein Suchindex im eigenen Datenverzeichnis (`search-index/`): je Transcript eine Textdatei mit dem durchsuchbaren Text, ungekürzt, ohne JSON-Escapes und mit zusammengefassten Leerzeichen. Der Index wächst nur um neue Zeilen; der Stand je Transcript (Byte-Offset) überlebt Neustarts. Gesucht wird ohne Rücksicht auf Groß-/Kleinschreibung und Zeilenumbrüche, damit aus der Oberfläche kopierter Text gefunden wird. Je Indexdatei merkt sich ein Bitfeld (`<id>.tri`), welche Dreierfolgen von Zeichen vorkommen (ASCII ohne Groß-/Kleinschreibung, alles andere als ein Zeichen, damit nie ein Treffer verloren geht); die Suche liest nur Dateien, die alle Dreierfolgen des Begriffs enthalten.
+   - Fortsetzen: *Resume*/*Fork*/*Attach* öffnet ein neues Fenster des Standard-Terminals im Ordner der Session und startet `claude --resume` mit dem zuletzt gültigen Berechtigungsmodus und der Agent-Definition aus dem Transcript (`permission-mode`, `agent-setting`). Der Server baut den Befehl selbst, der Browser schickt nur Session-Id und Art; abschaltbar mit `--no-launch`.
    - Aktivitäts-Heatmap nach Tag und Projekt.
 8. **Kosten und Tokens**
    - Nach Session, Projekt, Modell und Tag, aufgeteilt in Input, Output, Cache-Read und Cache-Write sowie nach Subagent.
@@ -208,4 +209,4 @@ Task      { id, sessionId, subject, description, status, blocks[], blockedBy[] }
 - **Umfang:** Erst einmal nur Claude Code. Die Adapter-Architektur bleibt trotzdem offen für andere Agenten.
 - **Stack:** TypeScript durchgehend (Backend Node.js und Frontend).
 - **Zugriff:** Nur lokal im Browser (`127.0.0.1`), keine Auth über das URL-Token hinaus.
-- **Persistenz:** Keine für Sessions und Index, alles wird aus `~/.claude` gelesen und nur im Speicher gehalten. Ausnahme: CPU-Messwerte als CSV im eigenen Datenverzeichnis (siehe oben).
+- **Persistenz:** Keine für Sessions und Index, alles wird aus `~/.claude` gelesen und nur im Speicher gehalten. Ausnahmen im eigenen Datenverzeichnis: CPU-Messwerte als CSV (siehe oben) und der Suchindex (siehe *History und Suche*).

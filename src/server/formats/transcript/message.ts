@@ -67,13 +67,13 @@ const ASSISTANT_MESSAGE_FIELDS = [
 /** Vollständige Dateiinhalte in toolUseResult (Edit/Write) – für die Anzeige unnötig. */
 const DROP_IN_RESULT = new Set(['originalFile']);
 
-function resultParts(content: unknown): ResultPart[] {
-  if (typeof content === 'string') return [{ type: 'text', ...clip(content) }];
+function resultParts(content: unknown, max?: number): ResultPart[] {
+  if (typeof content === 'string') return [{ type: 'text', ...clip(content, max) }];
   return arr(content).map((b): ResultPart => {
     if (!isObj(b)) return { type: 'other', value: b };
     switch (b.type) {
       case 'text':
-        return { type: 'text', ...clip(str(b.text) ?? '') };
+        return { type: 'text', ...clip(str(b.text) ?? '', max) };
       case 'image':
         return { type: 'image', mediaType: str(obj(b.source)?.media_type) };
       case 'tool_reference':
@@ -97,13 +97,13 @@ function decodeUser(raw: Raw, ctx: DecodeContext): DecodedEntry[] {
   };
 
   if (typeof content === 'string') {
-    out.push({ ...env, kind: 'user-text', text: clip(content).text, ...userFields });
+    out.push({ ...env, kind: 'user-text', text: clip(content, ctx.maxString).text, ...userFields });
   } else {
     for (const b of arr(content)) {
       if (!isObj(b)) continue;
       switch (b.type) {
         case 'text':
-          out.push({ ...env, kind: 'user-text', text: clip(str(b.text) ?? '').text, ...userFields });
+          out.push({ ...env, kind: 'user-text', text: clip(str(b.text) ?? '', ctx.maxString).text, ...userFields });
           break;
         case 'tool_result': {
           const tur = raw.toolUseResult;
@@ -111,7 +111,7 @@ function decodeUser(raw: Raw, ctx: DecodeContext): DecodedEntry[] {
             ...env,
             kind: 'tool-result',
             toolUseId: str(b.tool_use_id) ?? '',
-            parts: resultParts(b.content),
+            parts: resultParts(b.content, ctx.maxString),
             isError: b.is_error === true,
             structured: tur === undefined ? undefined : sanitize(tur, { dropKeys: DROP_IN_RESULT }),
             denied: str(raw.toolDenialKind),
@@ -158,10 +158,10 @@ function decodeAssistant(raw: Raw, ctx: DecodeContext): DecodedEntry[] {
     if (!isObj(b)) continue;
     switch (b.type) {
       case 'text':
-        out.push({ ...env, ...fields, kind: 'assistant-text', text: clip(str(b.text) ?? '').text });
+        out.push({ ...env, ...fields, kind: 'assistant-text', text: clip(str(b.text) ?? '', ctx.maxString).text });
         break;
       case 'thinking':
-        out.push({ ...env, ...fields, kind: 'thinking', text: clip(str(b.thinking) ?? '').text });
+        out.push({ ...env, ...fields, kind: 'thinking', text: clip(str(b.thinking) ?? '', ctx.maxString).text });
         break;
       case 'redacted_thinking':
         out.push({ ...env, ...fields, kind: 'thinking', text: '', redacted: true });
@@ -174,7 +174,7 @@ function decodeAssistant(raw: Raw, ctx: DecodeContext): DecodedEntry[] {
           kind: 'tool-use',
           toolUseId: str(b.id) ?? '',
           name: str(b.name) ?? '?',
-          input: (sanitize(obj(b.input) ?? {}) as Raw) ?? {},
+          input: (sanitize(obj(b.input) ?? {}, { maxString: ctx.maxString }) as Raw) ?? {},
         });
         break;
       default:
