@@ -45,14 +45,19 @@ export interface SpawnCall {
 const home = homedir();
 const expandHome = (p: string) => (p === '~' || p.startsWith('~/') ? home + p.slice(1) : p);
 const trimDir = (p: string) => p.replace(/[\\/]+$/, '');
+/** Pfad zum Vergleichen: einheitlicher Trenner, unter Windows ohne Groß-/Kleinschreibung */
+const pathKey = (p: string) => {
+  const k = trimDir(p).replace(/\\/g, '/');
+  return process.platform === 'win32' ? k.toLowerCase() : k;
+};
 
 /** Pfad-Argumente eines Befehls (`/…`, `~/…`, `./…`, `../…`), absolut. */
 export function commandPaths(command: string, base: string | undefined): string[] {
   const out = new Set<string>();
   for (const m of command.matchAll(/(?:^|[\s"'=(])((?:~|\.{1,2})?\/[^\s"';&|<>()`]*)/g)) {
     const p = expandHome(m[1]);
-    if (isAbsolute(p)) out.add(trimDir(resolve(p)));
-    else if (base) out.add(trimDir(resolve(expandHome(base), p)));
+    if (isAbsolute(p)) out.add(pathKey(resolve(p)));
+    else if (base) out.add(pathKey(resolve(expandHome(base), p)));
     if (out.size >= 50) break;
   }
   return [...out];
@@ -213,7 +218,7 @@ export function scoreSpawn(child: ChildInfo, call: SpawnCall): { score: number; 
   }
   const dir = child.cwd ? normalize(child.cwd).replace(/[\\/]+$/, '') : '';
   const dirInCommand =
-    (!!child.cwd && !!call.paths?.includes(trimDir(child.cwd))) ||
+    (!!child.cwd && !!call.paths?.includes(pathKey(child.cwd))) ||
     (dir.length >= 8 && new RegExp(`${dir.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}(?![\\w.-])`).test(call.normCommand));
   if (dirInCommand && call.indirect) {
     score += 25;
