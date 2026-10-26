@@ -1,4 +1,5 @@
 import type {
+  CostWindow,
   CpuHistory,
   Dashboard,
   FileStat,
@@ -54,6 +55,7 @@ export const api = {
   flow: (id: string, agent?: string) => get<Flow>(`/api/flow/${enc(id)}${qs({ agent })}`),
   cpu: (id: string) => get<CpuHistory>(`/api/cpu/${enc(id)}`),
   cost: (id: string, agent?: string) => get<SessionCost>(`/api/cost/${enc(id)}${qs({ agent })}`),
+  costWindow: (id: string, agent: string | undefined, from: number, to: number) => get<CostWindow>(`/api/cost-window/${enc(id)}${qs({ agent, from, to })}`),
   review: (id: string, agent?: string) => get<ReviewState>(`/api/review/${enc(id)}${qs({ agent })}`),
   reviewDigestUrl: (id: string, agent?: string, full?: boolean) => `/api/review/${enc(id)}/digest${qs({ agent, full })}`,
   startReview: (id: string, req: ReviewRequest) => post<ReviewRun>(`/api/review/${enc(id)}`, req),

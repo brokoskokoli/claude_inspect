@@ -94,6 +94,8 @@ export interface ToolQuery extends HistoryFilter {
 
 export class HistoryIndex {
   private files = new Map<string, FileAgg>();
+  /** Dateien je Session (Hauptsession und Subagenten) – für usageOf bei großen Bäumen */
+  private bySession = new Map<string, Set<FileAgg>>();
   ready = false;
   totalFiles = 0;
 
@@ -118,7 +120,11 @@ export class HistoryIndex {
     // ein Durchgang statt Sessions × Dateien (war bei ~1.500 Sessions der größte CPU-Verbraucher)
     for (const [p, a] of this.files) if (a.agentId && untouched.has(a.sessionId)) seen.add(p);
     // Von Claude Code aufgeräumte Dateien vergessen
-    for (const p of [...this.files.keys()]) if (!seen.has(p)) this.files.delete(p);
+    for (const [p, a] of [...this.files]) {
+      if (seen.has(p)) continue;
+      this.files.delete(p);
+      this.bySession.get(a.sessionId)?.delete(a);
+    }
     this.totalFiles = this.files.size;
     this.ready = true;
   }
@@ -171,8 +177,12 @@ export class HistoryIndex {
     let agg = this.files.get(path);
     if (agg && agg.size === size) return;
     if (!agg || size < agg.size) {
+      if (agg) this.bySession.get(sessionId)?.delete(agg);
       agg = { path, size: 0, sessionId, agentId, project, tail: new JsonlTail(path), usage: new Map(), calls: [], callIdx: new Map(), prompts: [] };
       this.files.set(path, agg);
+      let set = this.bySession.get(sessionId);
+      if (!set) this.bySession.set(sessionId, (set = new Set()));
+      set.add(agg);
     }
     agg.size = size;
     agg.project = project;
@@ -360,8 +370,8 @@ export class HistoryIndex {
     each?: (model: string, ts: number, one: TokenTotals) => void,
   ): Map<string, TokenTotals> {
     const out = new Map<string, TokenTotals>();
-    for (const a of this.files.values()) {
-      if (a.sessionId !== sessionId || a.agentId !== agentId) continue;
+    for (const a of this.bySession.get(sessionId) ?? []) {
+      if (a.agentId !== agentId) continue;
       for (const [messageId, u] of a.usage) {
         if (seen.has(messageId)) continue;
         seen.add(messageId);

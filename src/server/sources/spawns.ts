@@ -1,5 +1,6 @@
 import { readdir, stat } from 'node:fs/promises';
-import { join } from 'node:path';
+import { homedir } from 'node:os';
+import { isAbsolute, join, resolve } from 'node:path';
 import type { ProcessInfo, SpawnConfidence, SpawnLink } from '../../shared/types.js';
 import { isObj, obj, str } from '../formats/util.js';
 import { JsonlTail, readHeadTail } from '../util/jsonl.js';
@@ -17,6 +18,11 @@ import { subagentDir } from './subagents.js';
  *   Zeit             Kind startet kurz nach dem Aufruf
  *   Agent            `--agent X` im Befehl = agent-setting des Kindes
  *   Verzeichnis      `cd <cwd des Kindes>` im Befehl oder gleiches cwd
+ *
+ * Dazu indirekte Starts: Ein Skript, `osascript`, tmux o. Ä. öffnet ein Terminal, in dem
+ * `claude` läuft. Dann steht kein claude-Aufruf im Befehl, und der Prozess hängt am Terminal
+ * statt am Aufrufer. Solche Kinder (auch interaktive) werden nur verknüpft, wenn der Befehl
+ * ihren Ordner, ihren Namen oder ihren ersten Prompt nennt und sie kurz danach starten.
  */
 
 export interface SpawnCall {
@@ -30,6 +36,26 @@ export interface SpawnCall {
   cwd?: string;
   agentFlag?: string;
   sessionFlags: string[];
+  /** Start über Skript/Terminal statt eines claude-Aufrufs im Befehl */
+  indirect?: boolean;
+  /** Pfade im Befehl, absolut aufgelöst (relativ zum `cd` bzw. Arbeitsverzeichnis) */
+  paths?: string[];
+}
+
+const home = homedir();
+const expandHome = (p: string) => (p === '~' || p.startsWith('~/') ? home + p.slice(1) : p);
+const trimDir = (p: string) => p.replace(/[\\/]+$/, '');
+
+/** Pfad-Argumente eines Befehls (`/…`, `~/…`, `./…`, `../…`), absolut. */
+export function commandPaths(command: string, base: string | undefined): string[] {
+  const out = new Set<string>();
+  for (const m of command.matchAll(/(?:^|[\s"'=(])((?:~|\.{1,2})?\/[^\s"';&|<>()`]*)/g)) {
+    const p = expandHome(m[1]);
+    if (isAbsolute(p)) out.add(trimDir(resolve(p)));
+    else if (base) out.add(trimDir(resolve(expandHome(base), p)));
+    if (out.size >= 50) break;
+  }
+  return [...out];
 }
 
 export interface ChildInfo {
@@ -40,6 +66,8 @@ export interface ChildInfo {
   agentSetting?: string;
   cwd?: string;
   prompt?: string;
+  /** eigener Titel bzw. Agent-Name (`claude --name …`) */
+  name?: string;
 }
 
 /** `claude` als eigenständiges Kommando (auch mit Pfad), nicht z. B. "claude-inspect" oder ".claude/". */
@@ -47,6 +75,15 @@ const CLAUDE_CMD = /(?:^|[\s;&|(`]|\$\()(?:[\w./~-]*\/)?claude(?=\s|$)/m;
 /** Aufrufe, die keine Sitzung erzeugen. */
 const NO_SESSION = /^\s*(?:which|type|command -v)\b|claude\s+(?:--version|-v|update|doctor|mcp|config|install)\b/;
 const NOT_A_CALL_BEFORE = /(?:\bwhich|\btype|command\s+-v|\bpgrep(?:\s+-\w+)*|\bpkill(?:\s+-\w+)*|\bkillall|\bman)\s+["']?[\w./~-]*$/;
+/** Befehle, die ein Terminal oder ein Startskript öffnen – darin kann claude laufen. */
+const LAUNCHER = /\bosascript\b|\btmux\b|\bscreen\s+-|\bopen\s+-a\b|terminal\b|\bwt(?:\.exe)?\s|\.claude\/[\w./-]+\.(?:sh|py|js|ts|ps1)\b|[\w-]*(?:session|spawn|launch)[\w-]*\.(?:sh|py|ps1)\b/i;
+/**
+ * Interaktive Kinder brauchen mehr als Zeit und Ordner (die hätte auch jemand haben können, der
+ * dort von Hand eine Session startet): Name oder Prompt muss zusätzlich passen.
+ */
+const INTERACTIVE_MIN = 60;
+/** Indirekte Starts: so viel vom Befehl reicht für Ordner, Namen und Prompt */
+const INDIRECT_MAX = 16_000;
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
 
 export function normalize(s: string): string {
@@ -89,7 +126,29 @@ export function parseCall(raw: Record<string, unknown>, block: Record<string, un
   const input = obj(block.input);
   const command = str(input?.command);
   const ts = Date.parse(str(raw.timestamp) ?? '');
-  if (!command || Number.isNaN(ts) || !CLAUDE_CMD.test(command)) return [];
+  if (!command || Number.isNaN(ts)) return [];
+  if (!CLAUDE_CMD.test(command)) {
+    if (!LAUNCHER.test(command)) return [];
+    const text = command.slice(0, INDIRECT_MAX);
+    const cd = /(?:^|[\s;&(])cd\s+["']?([^\s"';&]+)/.exec(command)?.[1];
+    const base = cd ? (isAbsolute(expandHome(cd)) ? expandHome(cd) : str(raw.cwd) && resolve(str(raw.cwd)!, cd)) : str(raw.cwd);
+    return [
+      {
+        sessionId,
+        agentId,
+        toolUseId: str(block.id) ?? '',
+        ts,
+        command: text,
+        normCommand: normalize(text),
+        words: new Set(words(text)),
+        cwd: /(?:^|[\s;&(])cd\s+["']?([^\s"';&]+)/.exec(command)?.[1] ?? str(raw.cwd),
+        agentFlag: /--agent[=\s]+["']?([\w.-]+)/.exec(command)?.[1],
+        sessionFlags: [],
+        indirect: true,
+        paths: commandPaths(text, base || undefined),
+      },
+    ];
+  }
   const out: SpawnCall[] = [];
   for (const inv of claudeInvocations(command)) {
     if (NO_SESSION.test(inv)) continue;
@@ -138,12 +197,27 @@ export function scoreSpawn(child: ChildInfo, call: SpawnCall): { score: number; 
     }
   }
   if (call.agentFlag || child.agentSetting) {
-    if (call.agentFlag && call.agentFlag === child.agentSetting) {
+    if ((call.agentFlag && call.agentFlag === child.agentSetting) || (call.indirect && !call.agentFlag && child.agentSetting && call.words.has(child.agentSetting.toLowerCase()))) {
       score += 15;
       evidence.push('agent');
-    } else {
+    } else if (!call.indirect || call.agentFlag) {
+      // ein Startskript setzt den Agenten oft selbst; dann fehlt er im Befehl, ohne zu widersprechen
       score -= 25;
     }
+  }
+  // Name (`--name`) und Ordner des Kindes im Befehl – bei Startskripten oft die einzigen Indizien
+  const name = child.name ? normalize(child.name) : '';
+  if (name.length >= 4 && call.normCommand.includes(name)) {
+    score += 30;
+    evidence.push('name');
+  }
+  const dir = child.cwd ? normalize(child.cwd).replace(/[\\/]+$/, '') : '';
+  const dirInCommand =
+    (!!child.cwd && !!call.paths?.includes(trimDir(child.cwd))) ||
+    (dir.length >= 8 && new RegExp(`${dir.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}(?![\\w.-])`).test(call.normCommand));
+  if (dirInCommand && call.indirect) {
+    score += 25;
+    evidence.push('directory in command');
   }
   if (child.startTs !== undefined) {
     const dt = (child.startTs - call.ts) / 1000;
@@ -155,7 +229,7 @@ export function scoreSpawn(child: ChildInfo, call: SpawnCall): { score: number; 
       evidence.push('time (rough)');
     }
   }
-  if (child.cwd && call.cwd && child.cwd.replace(/[\\/]+$/, '') === call.cwd.replace(/[\\/]+$/, '')) {
+  if (!(dirInCommand && call.indirect) && child.cwd && call.cwd && child.cwd.replace(/[\\/]+$/, '') === call.cwd.replace(/[\\/]+$/, '')) {
     score += 5;
     evidence.push('directory');
   }
@@ -226,7 +300,7 @@ export class SpawnIndex {
     try {
       // in Stücken lesen, damit große Dateien nicht komplett im Speicher landen
       for (let more = true; more; ) {
-        const r = await st.tail.readNew((t) => t.includes('"Bash"') && t.includes('claude'), 8 * 1024 * 1024);
+        const r = await st.tail.readNew((t) => t.includes('"Bash"') && (t.includes('claude') || LAUNCHER.test(t)), 8 * 1024 * 1024);
         more = r.more;
         if (r.reset) st.calls = [];
         for (const l of r.lines) {
@@ -256,6 +330,8 @@ export class SpawnIndex {
       for (const raw of head) {
         if (!isObj(raw)) continue;
         if (raw.type === 'agent-setting') info.agentSetting ??= str(raw.agentSetting);
+        if (raw.type === 'custom-title') info.name ??= str(raw.customTitle);
+        if (raw.type === 'agent-name') info.name ??= str(raw.agentName);
         const ts = Date.parse(str(raw.timestamp) ?? '');
         if (!Number.isNaN(ts) && (info.startTs === undefined || ts < info.startTs)) info.startTs = ts;
         if (raw.type === 'queue-operation' && raw.operation === 'enqueue' && info.prompt === undefined) info.prompt = str(raw.content);
@@ -266,7 +342,8 @@ export class SpawnIndex {
           const c = obj(raw.message)?.content;
           const text = typeof c === 'string' ? c : Array.isArray(c) ? c.map((b) => (isObj(b) && b.type === 'text' ? str(b.text) : '')).join('\n') : '';
           if (text && !text.startsWith('<') && (info.prompt === undefined || info.promptSource === 'sdk')) info.prompt = text;
-          if (info.entrypoint) break;
+          // Titel stehen oft erst nach dem ersten Prompt; danach reicht es
+          if (info.entrypoint && info.prompt !== undefined && info.name !== undefined) break;
         }
       }
     } catch {
@@ -282,13 +359,14 @@ export class SpawnIndex {
     const links = new Map<string, SpawnLink>();
 
     for (const { info: child } of this.children.values()) {
-      // Nur Sitzungen, die nicht interaktiv gestartet wurden, kommen als Kind in Frage.
+      // Kinder: nicht interaktiv gestartete Sitzungen, laufende Kind-Prozesse – und interaktive
+      // Sitzungen, die ein Startskript in einem Terminal geöffnet hat (nur über indirekte Aufrufe).
       const proc = processes.find((p) => p.alive && p.sessionId === child.sessionId);
       const parentProc = proc?.parentPid ? byPid.get(proc.parentPid) : undefined;
       const isSdk = child.promptSource === 'sdk' || child.entrypoint?.startsWith('sdk');
-      if (!isSdk && !parentProc) continue;
+      const viaTerminal = !isSdk && !parentProc;
 
-      let candidates = allCalls.filter((c) => c.sessionId !== child.sessionId);
+      let candidates = allCalls.filter((c) => c.sessionId !== child.sessionId && (!viaTerminal || c.indirect));
       if (parentProc) {
         const own = candidates.filter((c) => c.sessionId === parentProc.sessionId);
         if (own.length) candidates = own;
@@ -317,7 +395,7 @@ export class SpawnIndex {
         });
         continue;
       }
-      if (!best || best.score < 40) continue;
+      if (!best || best.score < (viaTerminal ? INTERACTIVE_MIN : 40)) continue;
       const confidence: SpawnConfidence = best.score >= 1000 ? 'exact' : best.score >= 70 ? 'high' : 'likely';
       links.set(child.sessionId, {
         childSessionId: child.sessionId,

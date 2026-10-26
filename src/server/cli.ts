@@ -55,6 +55,7 @@ Options:
 
 Data directory: $CLAUDE_CONFIG_DIR or ~/.claude (read only)
 Search index:   $CLAUDE_INSPECT_DATA_DIR/search-index (default: the platform's app data directory)
+Digests:        $CLAUDE_INSPECT_DATA_DIR/digests (figures per transcript for timeline and cost)
 CPU log:        $CLAUDE_INSPECT_DATA_DIR/cpu
 Analyses:       $CLAUDE_INSPECT_DATA_DIR/reviews`;
 

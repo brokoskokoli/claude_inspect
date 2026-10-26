@@ -86,7 +86,7 @@
     <Sessions />
   {:else if r.name === 'session'}
     {#key r.id}
-      <Session id={r.id} agent={r.agent} tab={r.tab} tool={r.tool} line={r.line} />
+      <Session id={r.id} agent={r.agent} tab={r.tab} tool={r.tool} line={r.line} from={r.from} to={r.to} />
     {/key}
   {:else if r.name === 'stats'}
     <Stats />

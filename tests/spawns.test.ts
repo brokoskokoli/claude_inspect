@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { homedir } from 'node:os';
 import { test } from 'node:test';
 import { claudeInvocations, parseCall, scoreSpawn, type ChildInfo } from '../src/server/sources/spawns.js';
 
@@ -54,4 +55,41 @@ test('a short prompt only counts as the exact -p argument', () => {
 test('a session id in the command is exact', () => {
   const [c] = call('claude --resume 12345678-1234-1234-1234-123456789abc -p "weiter"');
   assert.equal(scoreSpawn(child({ sessionId: '12345678-1234-1234-1234-123456789abc' }), c).score, 1000);
+});
+
+test('indirect start via a script that opens a terminal: name, directory and prompt in the command', () => {
+  const prompt = 'Implement WP12: docs/work-packages/WP12-export.md. Worktree /home/me/shop-wt/wp12, branch wp/12-export.';
+  const command = [
+    'cd ~/shop && git worktree add -q ../shop-wt/wp12 -b wp/12-export main',
+    `cat > ../shop-wt/handoff/wp12-prompt.md <<'EOF'\n${prompt}\nEOF`,
+    '~/.claude/skills/dev-supervisor/scripts/start-wp-session.sh /home/me/shop-wt/wp12 "WP12 Export" ../shop-wt/handoff/wp12-prompt.md 2>&1 | tail -1',
+  ].join('\n');
+  const [c] = call(command, '2026-09-28T10:00:00.000Z', '/home/me/shop');
+  assert.equal(c?.indirect, true);
+  const interactive = child({ entrypoint: 'cli', promptSource: undefined, cwd: '/home/me/shop-wt/wp12', agentSetting: 'wp-supervisor', name: 'WP12 Export', prompt });
+  const r = scoreSpawn(interactive, c);
+  assert.ok(r.score >= 70, JSON.stringify(r));
+  for (const e of ['name', 'directory in command', 'prompt', 'time']) assert.ok(r.evidence.includes(e), e);
+  // die Agent-Definition setzt das Skript selbst – fehlt sie im Befehl, ist das kein Widerspruch
+  assert.ok(!r.evidence.includes('agent'));
+});
+
+test('indirect start: directory and time alone are not enough for an interactive session', () => {
+  const [c] = call('osascript -e \'tell application "Terminal" to do script "cd /home/me/shop-wt/wp13"\'');
+  const r = scoreSpawn(child({ entrypoint: 'cli', promptSource: undefined, cwd: '/home/me/shop-wt/wp13', prompt: 'something entirely different typed by hand' }), c);
+  assert.ok(r.score < 60, JSON.stringify(r));
+  // a sibling directory must not count as the same directory
+  assert.ok(!scoreSpawn(child({ cwd: '/home/me/shop-wt/wp1' }), c).evidence.includes('directory in command'));
+});
+
+test('ordinary commands are no launch candidates', () => {
+  assert.equal(call('ls ~/.claude/projects && cat ~/.claude/settings.json').length, 0);
+  assert.equal(call('npm test').length, 0);
+});
+
+test('indirect start with a relative worktree path and the agent as a plain script argument', () => {
+  const [c] = call('cd ~/proj && ~/.claude/skills/x/scripts/start-wp-session.sh ../proj-wt/r4 "proj R4 Bench" ../proj-wt/handoff/r4.md bypassPermissions research-supervisor', '2026-09-28T10:00:00.000Z', '/elsewhere');
+  const r = scoreSpawn(child({ entrypoint: 'cli', promptSource: undefined, cwd: `${homedir()}/proj-wt/r4`, agentSetting: 'research-supervisor', name: 'proj R4 Bench', prompt: 'Work on R4 as described in the handoff.' }), c);
+  for (const e of ['name', 'directory in command', 'agent', 'time']) assert.ok(r.evidence.includes(e), `${e}: ${JSON.stringify(r)}`);
+  assert.ok(r.score >= 70);
 });

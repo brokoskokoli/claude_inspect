@@ -7,8 +7,11 @@
   import { clock } from '../lib/live.svelte';
   import { href } from '../lib/router.svelte';
   import StatusDot from './StatusDot.svelte';
+  import { tick } from 'svelte';
 
-  let { flow }: { flow: Flow } = $props();
+  /** focus: Zeitfenster (ms) hervorheben und hineinzoomen, z. B. aus der Kostenansicht */
+  let { flow, focus }: { flow: Flow; focus?: { from: number; to: number } } = $props();
+  let scroller = $state<HTMLDivElement>();
 
   const ROW = 30;
   const AXIS = 26;
@@ -98,6 +101,18 @@
     segments.slice(1).map((s, i) => ({ x: x(segments[i].to) + GAP_PX / 2, pause: s.from - segments[i].to })),
   );
 
+  // Fenster füllt etwa drei Viertel der Breite und steht links mit etwas Rand
+  let focused = '';
+  $effect(() => {
+    const f = focus;
+    if (!f || !scroller || viewportW < 100) return;
+    const key = `${f.from}-${f.to}`;
+    if (key === focused) return;
+    focused = key;
+    zoom = Math.min(256, Math.max(1, (viewportW * 0.75) / (Math.max(f.to - f.from, 1000) * fitPxPerMs)));
+    void tick().then(() => scroller?.scrollTo({ left: Math.max(0, x(f.from) - viewportW * 0.12) }));
+  });
+
   function open(lane: FlowLane, span?: FlowSpan) {
     location.hash = href.session(lane.sessionId, lane.agentId, span ? { tool: span.toolUseId } : {});
   }
@@ -129,13 +144,16 @@
       </button>
     {/each}
   </div>
-  <div class="scroller" bind:clientWidth={viewportW}>
+  <div class="scroller" bind:clientWidth={viewportW} bind:this={scroller}>
     <svg width={totalW} height={AXIS + lanes.length * ROW + 6} onmouseleave={() => (hover = null)} role="img" aria-label="Agent timeline">
       <!-- Zeitachse -->
       {#each ticks as tk, i (i)}
         <line x1={x(tk.t)} x2={x(tk.t)} y1={AXIS - 4} y2={AXIS + lanes.length * ROW} class="grid" />
         {#if tk.show}<text x={x(tk.t) + 3} y={AXIS - 9} class="tick">{tk.label}</text>{/if}
       {/each}
+      {#if focus}
+        <rect x={x(focus.from)} y={AXIS - 4} width={Math.max(2, x(focus.to) - x(focus.from))} height={lanes.length * ROW + 6} class="focus" />
+      {/if}
       {#each gapMarks as g, i (i)}
         <g transform="translate({g.x},0)">
           <rect x={-GAP_PX / 2 + 3} y={AXIS - 2} width={GAP_PX - 6} height={lanes.length * ROW + 4} class="gap" />
@@ -194,6 +212,11 @@
 {/if}
 
 <style>
+  .focus {
+    fill: var(--accent-soft);
+    stroke: var(--accent);
+    stroke-dasharray: 3 3;
+  }
   .toolbar {
     display: flex;
     justify-content: space-between;

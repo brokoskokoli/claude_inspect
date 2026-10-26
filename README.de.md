@@ -17,7 +17,7 @@ npx claude-inspect --open          # Node.js ≥ 22 · macOS, Linux, Windows
 ```
 
 Liest **passiv** die Dateien unter `~/.claude`, ohne Hooks und ohne Konfigurationsänderung.
-Geschrieben wird nur ins eigene Datenverzeichnis: Suchindex (siehe *Search*), CPU-Protokoll (siehe *CPU*) und Analysen.
+Geschrieben wird nur ins eigene Datenverzeichnis: Suchindex (siehe *Search*), Kennzahlen je Transcript für Zeitleiste und Kosten (`digests/`, wenige KB je Transcript), CPU-Protokoll (siehe *CPU*) und Analysen.
 
 > English: [README.md](https://github.com/brokoskokoli/claude_inspect/blob/main/README.md) · Website: [brokoskokoli.github.io/claude_inspect](https://brokoskokoli.github.io/claude_inspect/) · Mitmachen: [CONTRIBUTING.md](https://github.com/brokoskokoli/claude_inspect/blob/main/CONTRIBUTING.md)
 >
@@ -66,7 +66,10 @@ Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
   MCP-Server …) als gestapelter Verlauf je Programmname, dazu die Prozesse mit der meisten CPU-Zeit
   - *Cost*: geschätzte Kosten (API-Listenpreis) der Session samt aller Subagenten und per
   `claude` gestarteten Sitzungen, je Agent und je Modell mit Tokens (Input, Output, Cache)
-  und als Zeitleiste mit den teuersten Momenten
+  und als Zeitleiste mit den teuersten Momenten. Klick auf eine Spalte (oder Ziehen über mehrere)
+  zeigt, was in dieser Zeit Geld gekostet hat: Kontext erneut lesen, neuer Kontext, Antworten,
+  Cache-Neuaufbauten, Kosten je Tool und je Agent (mit Sprung in dessen Verlauf an dieser Stelle),
+  die größten Zugänge zum Kontext samt Folgekosten und jede einzelne Anfrage
   - Beim Hochscrollen blendet sich eine kompakte Kopfzeile mit Sprung nach oben/unten ein
 - **CPU**: alle 3 s aus der Prozesstabelle gemessen (100 % = ein Kern), Verlaufslinie auf der
   Dashboard-Karte. Pro Session eine CSV-Datei im App-Datenverzeichnis (macOS
@@ -117,6 +120,10 @@ Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
   - *exakt*: Prozessbaum (laufendes Kind → Shell → Eltern-Prozess) oder `--session-id` im Befehl
   - *sicher*: erster Prompt des Kindes steht im Befehl, dazu Zeit, `--agent` und Verzeichnis
   - *wahrscheinlich*: schwächere Indizien, z. B. nur kurzer Prompt und Zeitfenster
+
+  Auch Sitzungen, die ein Skript in einem neuen Terminal öffnet (`osascript`, tmux, Startskript),
+  auch interaktive: Sie werden zugeordnet, wenn der Befehl ihren Ordner (auch relativ zum `cd`),
+  ihren `--name` oder ihren ersten Prompt nennt und sie kurz danach starten
   (siehe `src/server/sources/spawns.ts`)
 - **Formats**: registrierte Decoder mit Trefferzahlen und alle Felder, die noch kein
   Decoder kennt (Schema-Drift)

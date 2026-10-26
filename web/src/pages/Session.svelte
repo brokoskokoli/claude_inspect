@@ -23,7 +23,7 @@
   import { clock, live, onReconnect, onReview, onTranscript } from '../lib/live.svelte';
   import { href, type SessionTab } from '../lib/router.svelte';
 
-  let { id, agent, tab, tool, line }: { id: string; agent?: string; tab: SessionTab; tool?: string; line?: number } = $props();
+  let { id, agent, tab, tool, line, from, to }: { id: string; agent?: string; tab: SessionTab; tool?: string; line?: number; from?: number; to?: number } = $props();
 
   let flow = $state<Flow | null>(null);
   let flowTimer: ReturnType<typeof setTimeout> | undefined;
@@ -89,8 +89,9 @@
     if (tab !== 'cost') return;
     void agent;
     untrack(() => void loadCost());
-    const off = onTranscript(() => {
-      if (costTimer) return;
+    // nur, wenn eine Session aus diesem Baum schreibt – nicht bei jeder anderen laufenden Session
+    const off = onTranscript((ev) => {
+      if (costTimer || (cost && !cost.rows.some((r) => r.sessionId === ev.sessionId))) return;
       costTimer = setTimeout(() => {
         costTimer = undefined;
         void loadCost();
@@ -335,7 +336,7 @@
   </nav>
 
   {#if tab === 'timeline'}
-    {#if flow}<Timeline {flow} />{:else}<p class="muted"><Spinner /> Loading flow …</p>{/if}
+    {#if flow}<Timeline {flow} focus={from !== undefined && to !== undefined ? { from, to } : undefined} />{:else}<p class="muted"><Spinner /> Loading flow …</p>{/if}
   {:else if tab === 'graph'}
     {#if flow}<FlowGraph {flow} />{:else}<p class="muted"><Spinner /> Loading flow …</p>{/if}
   {:else if tab === 'tasks'}
@@ -343,7 +344,7 @@
   {:else if tab === 'analysis'}
     <ReviewView {review} onanalyze={openAnalyze} />
   {:else if tab === 'cost'}
-    {#if cost}<CostView {cost} />{:else}<p class="muted"><Spinner /> Loading cost …</p>{/if}
+    {#if cost}<CostView {cost} sessionId={id} {agent} />{:else}<p class="muted"><Spinner /> Loading cost …</p>{/if}
   {:else if tab === 'cpu'}
     {#if sel}<p class="faint small">CPU is measured per process – subagents run inside the session's process, so this is the whole session.</p>{/if}
     {#if !cpu}

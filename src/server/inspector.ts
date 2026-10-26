@@ -19,6 +19,7 @@ import type {
   SessionCost,
   CostBucket,
   CostRow,
+  CostWindow,
   SessionDetail,
   SessionLive,
   SessionSummary,
@@ -41,7 +42,8 @@ import { openInTerminal } from './launch.js';
 import { emptyTotals, estimateCost, mergeTotals } from '../shared/pricing.js';
 import { search, type SearchFile } from './history/search.js';
 import { SearchIndex } from './history/search-index.js';
-import { analyze } from './model/analyze.js';
+import { analyze, type TranscriptAnalysis } from './model/analyze.js';
+import { costWindow } from './model/cost-window.js';
 import { laneData } from './model/flow.js';
 import { readPlan } from './sources/plan.js';
 import { readTasks } from './sources/tasks.js';
@@ -50,7 +52,8 @@ import { readProcesses } from './sources/processes.js';
 import { ProjectIndex, type TranscriptFile } from './sources/projects.js';
 import { SpawnIndex } from './sources/spawns.js';
 import { agentCallIds, listSubagents, type SubagentFile } from './sources/subagents.js';
-import { TranscriptStore, type Transcript } from './sources/transcripts.js';
+import { Transcript, TranscriptStore } from './sources/transcripts.js';
+import { DigestCache } from './sources/digests.js';
 
 /**
  * IDE-Erweiterungen und SDK-Hosts (VS Code, JetBrains ACP …) halten claude-Prozesse am Leben,
@@ -415,6 +418,32 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
    * Baut SubagentInfo inkl. Eltern-Zuordnung. `load` = Transcripts laden, um
    * Status und aktuelle Aktivität zu bestimmen (für Dashboard und Detailansicht).
    */
+  /**
+   * Kennzahlen eines Transcripts für Subagenten-Liste, Zeitleiste, Graph und Kosten – je Datei
+   * zwischengespeichert, solange sie nicht gewachsen ist. Große Bäume (Hunderte Transcripts,
+   * mehr als der Transcript-Cache fasst) müssen so nicht bei jedem Aufruf neu eingelesen werden.
+   */
+  private digests = new DigestCache<{ analysis: Omit<TranscriptAnalysis, 'pendingTools' | 'lastPrompt'>; lane: ReturnType<typeof laneData> }>(
+    join(DATA_DIR, 'digests', createHash('sha1').update(CLAUDE_DIR).digest('hex').slice(0, 12)),
+  );
+  private async digest(path: string, sessionId: string, agentId?: string, size?: number) {
+    size ??= await stat(path).then((st) => st.size, () => -1);
+    const hit = await this.digests.read(path);
+    if (hit?.bytes === size) return hit.data;
+    // Eine Datei, die seit dem letzten Mal gewachsen ist, läuft vermutlich noch: im Transcript-Cache
+    // halten und nur Neues nachlesen. Sonst nur kurz einlesen, ohne den Cache mit Dateien zu füllen,
+    // die niemand ansieht.
+    const t = hit ? await this.store.get(path, sessionId, agentId) : (this.store.peek(path) ?? new Transcript(path, sessionId, agentId));
+    if (t.bytes < size) await t.refresh();
+    // nichts Vollständiges dazugekommen (z. B. die letzte Zeile wird gerade geschrieben)
+    if (hit?.bytes === t.bytes) return hit.data;
+    const { pendingTools: _p, lastPrompt: _l, ...analysis } = analyze(t.entries);
+    const d = { analysis, lane: laneData(t.entries) };
+    await this.digests.set(path, t.bytes, d);
+    return d;
+  }
+
+
   private async resolveSubagents(sessionPath: string, files: SubagentFile[], load: boolean): Promise<SubagentInfo[]> {
     const sessionId = basename(sessionPath, '.jsonl');
     const out: SubagentInfo[] = [];
@@ -426,8 +455,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
         lastActivityAt: new Date(sf.mtime).toISOString(),
       };
       if (load) {
-        const t = await this.store.get(sf.path, sessionId, sf.agentId);
-        const a = analyze(t.entries);
+        const a = (await this.digest(sf.path, sessionId, sf.agentId, sf.size)).analysis;
         const fresh = Date.now() - sf.mtime < SUBAGENT_STALE_MS;
         info.status = a.errored ? 'error' : a.finished ? 'done' : fresh ? 'running' : 'stale';
         info.model = a.model;
@@ -467,6 +495,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       for (const sf of await listSubagents(f.path)) paths.push(sf.path);
     }
     await this.searchIndex.update(paths, full);
+    if (full) await this.digests.prune(paths);
   }
 
   // -------------------------------------------------------------------------
@@ -678,8 +707,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
     ) => {
       if (visited.has(f.sessionId) || depth > 6) return;
       visited.add(f.sessionId);
-      const t = await this.store.get(f.path, f.sessionId);
-      const a = analyze(t.entries);
+      const { analysis: a, lane: data } = await this.digest(f.path, f.sessionId);
       const sum = await this.index.summary(f);
       const proc = this.processes.find((p) => p.alive && p.sessionId === f.sessionId);
       const mainId = f.sessionId;
@@ -694,7 +722,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
         confidence: parent?.confidence,
         depth,
         status: proc ? (proc.status === 'idle' ? 'idle' : 'running') : a.errored ? 'error' : 'done',
-        ...laneData(t.entries),
+        ...data,
       });
 
       const subFiles = await listSubagents(f.path);
@@ -703,7 +731,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       const depthOf = (x: (typeof subs)[number]) => (x.spawnDepth ?? 1);
       for (const sub of [...subs].sort((x, y) => depthOf(x) - depthOf(y))) {
         const sf = subFiles.find((x) => x.agentId === sub.agentId)!;
-        const st = await this.store.get(sf.path, f.sessionId, sub.agentId);
+        const { lane: data } = await this.digest(sf.path, f.sessionId, sub.agentId, sf.size);
         lanes.push({
           id: `${f.sessionId}/${sub.agentId}`,
           sessionId: f.sessionId,
@@ -715,7 +743,7 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
           viaToolUseId: sub.toolUseId,
           depth: depth + depthOf(sub),
           status: sub.status,
-          ...laneData(st.entries),
+          ...data,
         });
       }
       for (const link of this.spawns.childrenOf(f.sessionId)) {
@@ -805,6 +833,29 @@ export class Inspector extends EventEmitter<{ event: [StreamEvent] }> {
       reportedCostUSD: rootFile && !agentId ? (await this.index.summary(rootFile)).costUSD : undefined,
       timeline: costTimeline(points),
     };
+  }
+
+  /** Was im Zeitfenster [from, to) Geld gekostet hat – gleicher Agentenbaum wie sessionCost. */
+  async costWindow(rootSessionId: string, agentId: string | undefined, from: number, to: number): Promise<CostWindow | undefined> {
+    const flow = await this.flow(rootSessionId, agentId);
+    if (!flow) return undefined;
+    for (const sid of new Set(flow.lanes.map((l) => l.sessionId))) {
+      const f = this.index.get(sid);
+      if (f) await this.history.ensureSession(f, await this.projectOf(f));
+    }
+    // nur Agenten einlesen, die im Fenster Anfragen hatten – die Anfragen je Agent samt Zeit
+    // kennt die Statistik schon; bei großen Bäumen sind das wenige von Hunderten Transcripts
+    const lanes = [];
+    for (const lane of flow.lanes) {
+      let inside = false;
+      this.history.usageOf(lane.sessionId, lane.agentId, new Set(), (_m, ts) => {
+        if (ts >= from && ts < to) inside = true;
+      });
+      if (!inside) continue;
+      const t = await this.transcriptFor(lane.sessionId, lane.agentId);
+      if (t) lanes.push({ lane, entries: t.entries });
+    }
+    return costWindow(lanes, from, to);
   }
 
   formats() {

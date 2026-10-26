@@ -224,6 +224,15 @@ export function startServer(inspector: Inspector, opts: ServerOptions) {
         return cost ? json(res, 200, cost) : json(res, 404, { error: 'unknown session' });
       }
 
+      m = /^\/api\/cost-window\/([\w-]+)$/.exec(p);
+      if (m) {
+        const from = Number(url.searchParams.get('from'));
+        const to = Number(url.searchParams.get('to'));
+        if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from) return json(res, 400, { error: 'from < to expected (ms)' });
+        const w = await inspector.costWindow(m[1], url.searchParams.get('agent') || undefined, from, to);
+        return w ? json(res, 200, w) : json(res, 404, { error: 'unknown session' });
+      }
+
       m = /^\/api\/review\/([\w-]+)$/.exec(p);
       if (m) {
         const st = await inspector.reviewState(m[1], url.searchParams.get('agent') || undefined);

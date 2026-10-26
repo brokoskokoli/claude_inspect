@@ -576,6 +576,76 @@ export interface SessionCost {
   timeline: { bucketMs: number; buckets: CostBucket[] };
 }
 
+/** Kosten einer Modell-Anfrage, aufgeteilt nach Herkunft. */
+export interface CostSplit {
+  /** bisherigen Kontext aus dem Cache lesen */
+  context: number;
+  /** neu hinzugekommener Kontext (Cache schreiben und ungecachter Input) */
+  added: number;
+  /** die Antwort selbst */
+  output: number;
+}
+
+/** Was zwischen zwei Anfragen eines Agenten neu in seinen Kontext kam. */
+export interface CostInput {
+  kind: 'tool-result' | 'prompt' | 'other';
+  /** Tool-Name bei Tool-Ergebnissen */
+  name?: string;
+  summary: string;
+  chars: number;
+  /** geschätzte Tokens (Zeichen / 3,5) */
+  tokens: number;
+  toolUseId?: string;
+  line: number;
+  /** wie oft danach bis zur nächsten Komprimierung mitgelesen, und was das kostete */
+  rereads: number;
+  rereadUSD: number;
+}
+
+/** Eine Modell-Anfrage (eine Antwort) im Kostenfenster. */
+export interface CostRequest {
+  laneId: string;
+  sessionId: string;
+  agentId?: string;
+  ts: string;
+  model: string;
+  costUSD: number;
+  split: CostSplit;
+  tokens: CostSplit;
+  /** was die Antwort getan hat: Tool-Aufrufe, sonst der Anfang des Texts */
+  actions: { name?: string; summary: string; toolUseId?: string }[];
+  /** was seit der letzten Anfrage dieses Agenten in den Kontext kam, größtes zuerst */
+  inputs: CostInput[];
+  /** Zeile der Antwort im Transcript */
+  line: number;
+  /**
+   * Weit mehr neuer Kontext, als seit der letzten Anfrage hinzukam: Der Cache wurde neu
+   * aufgebaut (abgelaufen nach einer Pause, oder Tools/Systemprompt haben sich geändert).
+   */
+  cacheRebuild?: boolean;
+}
+
+/** Was in einem Zeitfenster der Kosten-Zeitleiste Geld gekostet hat. */
+export interface CostWindow {
+  from: number;
+  to: number;
+  costUSD: number;
+  requests: number;
+  split: CostSplit;
+  /** Tokens je Anteil, summiert über alle Anfragen */
+  tokens: CostSplit;
+  /** Anfragen mit neu aufgebautem Cache und was ihr neuer Kontext kostete */
+  rebuilds: { count: number; costUSD: number };
+  /** `line`: erste Anfrage des Agenten im Fenster – Sprungziel in seinen Verlauf */
+  byAgent: { id: string; sessionId: string; agentId?: string; label: string; sublabel?: string; kind: CostRow['kind']; costUSD: number; requests: number; line: number; ts: string }[];
+  /** Kosten nach dem, was die Antwort getan hat (Tool-Name bzw. "Text") */
+  byAction: { name: string; costUSD: number; requests: number }[];
+  /** größte Zugänge zum Kontext im Fenster, mit ihren Folgekosten */
+  topInputs: (CostInput & { laneId: string; sessionId: string; agentId?: string; label: string })[];
+  /** teuerste Anfragen zuerst (höchstens 200) */
+  items: CostRequest[];
+}
+
 export interface DayStat {
   day: string; // YYYY-MM-DD (lokal)
   byModel: Record<string, { output: number; costUSD: number }>;

@@ -7,8 +7,30 @@
   import StackedColumns from './charts/StackedColumns.svelte';
   import BudgetSettings from './BudgetSettings.svelte';
   import { activePlan, pct } from '../lib/budget.svelte';
+  import CostWindowView from './CostWindowView.svelte';
 
-  let { cost }: { cost: SessionCost } = $props();
+  let { cost, sessionId, agent }: { cost: SessionCost; sessionId: string; agent?: string } = $props();
+
+  /**
+   * Ausgewähltes Zeitfenster (Klick oder Ziehen über Spalten) → Details darunter. Gespeichert als
+   * Zeitspanne, nicht als Spaltennummern: Beim Nachladen einer laufenden Session entstehen neue
+   * Spalten-Objekte (und evtl. eine andere Spaltenbreite), die Auswahl bleibt trotzdem dieselbe.
+   */
+  let win = $state<{ from: number; to: number } | null>(null);
+  const sel = $derived.by((): [number, number] | null => {
+    if (!win) return null;
+    const { buckets, bucketMs } = cost.timeline;
+    const a = buckets.findIndex((b) => b.start + bucketMs > win!.from);
+    const b = buckets.findLastIndex((x) => x.start < win!.to);
+    return a >= 0 && b >= a ? [a, b] : null;
+  });
+  let detailsEl = $state<HTMLElement>();
+  function select(a: number, b: number) {
+    const { buckets, bucketMs } = cost.timeline;
+    const next = { from: buckets[a].start, to: buckets[b].start + bucketMs };
+    win = win && win.from === next.from && win.to === next.to ? null : next;
+    if (win) requestAnimationFrame(() => detailsEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+  }
 
   const cacheWrite = (r: { tokens: { cacheWrite5m: number; cacheWrite1h: number } }) => r.tokens.cacheWrite5m + r.tokens.cacheWrite1h;
   const maxCost = $derived(Math.max(0, ...cost.rows.map((r) => r.costUSD)));
@@ -136,15 +158,24 @@
         labelOf={(k) => (stackBy === 'kind' ? KIND_LABEL[k] : modelName(k))}
         format={asWeek ? fmtPct : fmtUsd}
         ariaLabel={asWeek ? `Share of the ${plan?.label} weekly budget over time` : 'Estimated cost over time'}
+        selected={sel}
+        onselect={select}
       />
     {/key}
+    {#if win}
+      <div bind:this={detailsEl}>
+        <CostWindowView {sessionId} {agent} from={win.from} to={win.to} label={win.to - win.from <= cost.timeline.bucketMs ? range(win.from) : `${range(win.from).split('–')[0]}–${range(win.to - cost.timeline.bucketMs).split('–')[1]}`} onclose={() => (win = null)} />
+      </div>
+    {:else}
+      <p class="faint small">Click a column to see what cost money in that time, or drag across several.</p>
+    {/if}
 
     {#if peaks.length}
       <h4>Most expensive moments</h4>
       <ol class="peaks">
         {#each peaks as b (b.start)}
           <li>
-            <span class="when">{range(b.start)}</span>
+            <button class="when linkish" title="Show what cost money in this time" onclick={() => { const i = tl.buckets.indexOf(b); select(i, i); }}>{range(b.start)}</button>
             <span class="strong">{usd(b.costUSD)}</span>
             {#if plan}<span class="muted">≈ {pct(b.costUSD, plan.weekUSD)} of week · {pct(b.costUSD, plan.sessionUSD)} of 5 h</span>{/if}
             <span class="faint small">{b.requests} requests · {tokens(b.outputTokens)} output</span>
@@ -362,6 +393,18 @@
   .when {
     font-variant-numeric: tabular-nums;
     min-width: 120px;
+  }
+  .linkish {
+    border: none;
+    background: none;
+    padding: 0;
+    text-align: left;
+    color: var(--link, var(--accent));
+    cursor: pointer;
+    font: inherit;
+  }
+  .linkish:hover {
+    text-decoration: underline;
   }
   .who {
     display: flex;

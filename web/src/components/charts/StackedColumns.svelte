@@ -15,6 +15,8 @@
     format,
     height = 220,
     ariaLabel,
+    selected = null,
+    onselect,
   }: {
     columns: Column[];
     keys: string[];
@@ -23,7 +25,20 @@
     format: (v: number) => string;
     height?: number;
     ariaLabel: string;
+    /** markierte Spalten [von, bis] (Indizes, inklusive) */
+    selected?: [number, number] | null;
+    /** Klick auf eine Spalte oder Ziehen über mehrere: Auswahl melden */
+    onselect?: (from: number, to: number) => void;
   } = $props();
+
+  let drag = $state<{ a: number; b: number } | null>(null);
+  const range = $derived(drag ? ([Math.min(drag.a, drag.b), Math.max(drag.a, drag.b)] as [number, number]) : selected);
+  function endDrag() {
+    if (!drag) return;
+    const [a, b] = [Math.min(drag.a, drag.b), Math.max(drag.a, drag.b)];
+    drag = null;
+    onselect?.(a, b);
+  }
 
   let width = $state(600);
   let hover = $state<{ i: number; x: number; y: number } | null>(null);
@@ -69,13 +84,18 @@
   );
 </script>
 
-<div class="chart" bind:clientWidth={width}>
+<svelte:window onmouseup={endDrag} />
+
+<div class="chart" class:selectable={!!onselect} bind:clientWidth={width}>
   <svg {width} {height} role="img" aria-label={ariaLabel} onmouseleave={() => (hover = null)}>
     <g transform="translate({pad.left},{pad.top})">
       {#each ticks as t (t)}
         <line x1="0" x2={plotW} y1={y(t)} y2={y(t)} class="grid" />
         <text x="-8" y={y(t)} class="tick" text-anchor="end" dominant-baseline="middle">{format(t)}</text>
       {/each}
+      {#if range}
+        <rect x={range[0] * band} y="0" width={(range[1] - range[0] + 1) * band} height={plotH} class="sel" />
+      {/if}
       {#each stacks as s, i (i)}
         <!-- Trefferfläche: ganze Spalte -->
         <rect
@@ -85,7 +105,15 @@
           height={plotH}
           fill="transparent"
           role="presentation"
-          onmousemove={(e) => (hover = { i, x: e.clientX, y: e.clientY })}
+          onmousemove={(e) => {
+            hover = { i, x: e.clientX, y: e.clientY };
+            if (drag) drag.b = i;
+          }}
+          onmousedown={(e) => {
+            if (!onselect || e.button !== 0) return;
+            e.preventDefault();
+            drag = { a: i, b: i };
+          }}
         />
         {#each s.segs as seg (seg.key)}
           {#if seg.top}
@@ -105,6 +133,7 @@
     {@const c = columns[hover.i]}
     <div class="tip" use:tipAt={{ x: hover.x, y: hover.y }}>
       <div class="tip-title">{c.title ?? c.label} · {format(totals[hover.i])}</div>
+      {#if onselect && !drag}<div class="tip-hint">Click for details, drag to select a range</div>{/if}
       {#each keys.filter((k) => c.segments.some((s) => s.key === k && s.value > 0)) as k (k)}
         <div class="tip-row">
           <span class="swatch" style:background={colorOf(k)}></span>
@@ -136,6 +165,20 @@
     font-size: 11px;
     fill: var(--faint);
     font-variant-numeric: tabular-nums;
+  }
+  .selectable rect[role='presentation'] {
+    cursor: pointer;
+  }
+  .sel {
+    fill: var(--accent-soft);
+    stroke: var(--accent);
+    stroke-width: 1;
+    rx: 4;
+  }
+  .tip-hint {
+    font-size: 11.5px;
+    opacity: 0.7;
+    margin-bottom: 4px;
   }
   .tip-title {
     font-weight: 600;

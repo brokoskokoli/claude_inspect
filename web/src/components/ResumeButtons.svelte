@@ -77,7 +77,7 @@
         </div>
       {/each}
       {#if error}<div class="badge error">{error}</div>{/if}
-      <div class="faint small">{commands[0].hint}. {canLaunch ? 'Opens in a new terminal window, or copy the command.' : 'Paste into a terminal.'}</div>
+      <div class="faint small">{commands[0].hint.replace(/\.$/, '')}. {canLaunch ? 'Opens in a new terminal window, or copy the command.' : 'Paste into a terminal.'}</div>
     </div>
   {/if}
 {/if}
