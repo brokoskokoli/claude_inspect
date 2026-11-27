@@ -7,6 +7,7 @@ import { search } from '../src/server/history/search.js';
 import { SearchIndex } from '../src/server/history/search-index.js';
 import { queryTrigrams, Trigrams } from '../src/server/history/trigrams.js';
 import { sessionName } from '../src/shared/names.js';
+import { parseQuery } from '../src/shared/search-query.js';
 
 const T = (s: number) => new Date(Date.UTC(2026, 9, 25, 10, 0, s)).toISOString();
 const long = 'x'.repeat(30_000);
@@ -137,4 +138,65 @@ test('trigram filter skips files that cannot contain the term', () => {
   assert.equal(t.mayContain(queryTrigrams('WORLD')), true);
   assert.equal(t.mayContain(queryTrigrams('zebra')), false);
   assert.deepEqual(queryTrigrams('ab'), [], 'two characters: no filter');
+});
+
+test('query syntax: words, "phrases" and ~N', () => {
+  const pick = (q: string) => (({ terms, window, min }) => ({ terms, window, min }))(parseQuery(q));
+  assert.deepEqual(pick('Docker  compose'), { terms: ['docker', 'compose'], window: 1, min: 2 });
+  assert.deepEqual(pick('"Docker   compose" up ~3'), { terms: ['docker compose', 'up'], window: 3, min: 2 });
+  assert.deepEqual(pick('"offen bis zum Ende'), { terms: ['offen bis zum ende'], window: 1, min: 1 });
+  assert.deepEqual(pick('~/ai/x ~0'), { terms: ['~/ai/x'], window: 1, min: 1 });
+  assert.equal(pick('a b c').min, 2, 'from three terms on: partial hits');
+  assert.equal(pick('a b c d').min, 3);
+  assert.equal(parseQuery('Docker Compose up').literal, 'docker compose up');
+});
+
+const msg = (i: number, role: 'user' | 'assistant', text: string) =>
+  role === 'user'
+    ? { type: 'user', uuid: `u${i}`, timestamp: T(i), message: { role, content: text } }
+    : { type: 'assistant', uuid: `a${i}`, timestamp: T(i), message: { id: `m${i}`, model: 'claude-opus-5-5', content: [{ type: 'text', text }] } };
+
+async function indexed(texts: string[]) {
+  const dir = mkdtempSync(join(tmpdir(), 'ci-query-'));
+  const path = join(dir, 's1.jsonl');
+  writeFileSync(path, texts.map((t, i) => JSON.stringify(msg(i, i % 2 ? 'assistant' : 'user', t))).join('\n') + '\n');
+  const index = new SearchIndex(join(dir, 'index'));
+  await index.update([path], true);
+  return async (query: string, names?: string[]) => (await find(query, index, [file(path, names)])).hits;
+}
+
+test('several words must appear in the same entry, phrases exactly, ~N in neighbouring entries', async () => {
+  const search = await indexed(['Starte compose mit Docker', 'Erst docker compose up, dann warten', 'Apfel', 'nichts', 'Birne', 'Kirsche']);
+  const q = async (query: string) => (await search(query)).map((h) => [h.line, h.span]);
+
+  assert.deepEqual(await q('DOCKER compose'), [[1, undefined], [0, undefined]], 'any order, same entry; literal first');
+  assert.deepEqual(await q('"docker compose"'), [[1, undefined]], 'phrase only where it stands exactly');
+  assert.deepEqual(await q('"compose docker"'), []);
+  assert.deepEqual(await q('apfel birne'), [], 'different entries');
+  assert.deepEqual(await q('apfel birne ~2'), [], 'two entries apart');
+  assert.deepEqual(await q('apfel birne ~3'), [[2, 3]]);
+  assert.deepEqual(await q('birne apfel ~3'), [[2, 3]], 'order does not matter');
+  assert.deepEqual(await q('kirsche birne ~2'), [[4, 2]]);
+  assert.deepEqual(await q('apfel zebra ~6'), [], 'two terms: both needed');
+});
+
+test('ranking: all terms before partial, literal, tight, frequent; names before text', async () => {
+  const search = await indexed([
+    'rot und blau, aber kein gelb', // 0: 3 von 4
+    'rot ' + 'x '.repeat(200) + 'blau gelb grün', // 1: alle vier, weit auseinander
+    'rot blau gelb grün', // 2: alle vier, wortwörtlich
+    'grün gelb blau rot', // 3: alle vier, nah, andere Reihenfolge
+    'nur rot', // 4: 1 von 4 – kein Treffer
+    'grün gelb blau rot grün gelb blau rot', // 5: alle vier, nah, doppelt so oft
+  ]);
+  const hits = await search('rot blau gelb grün');
+  assert.deepEqual(hits.map((h) => [h.line, h.matched]), [[2, 4], [5, 4], [3, 4], [1, 4], [0, 3]]);
+  // Ausschnitt zeigt alle Begriffe, auch wenn sie weit auseinander stehen
+  for (const t of ['rot', 'blau', 'gelb', 'grün']) assert.ok(hits.find((h) => h.line === 1)!.snippet.includes(t), t);
+
+  const named = await search('rot blau gelb grün', ['Rot Blau Gelb Grün']);
+  assert.equal(named[0].kind, 'name', 'title beats text');
+
+  const span = await indexed(['alpha', 'beta', 'x', 'alpha', 'x', 'x', 'beta']);
+  assert.deepEqual((await span('alpha beta ~4')).map((h) => [h.line, h.span]), [[0, 2], [3, 4]], 'closer entries first');
 });

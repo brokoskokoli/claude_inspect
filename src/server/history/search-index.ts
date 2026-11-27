@@ -6,6 +6,7 @@ import { toolSummary } from '../../shared/tools.js';
 import { registry } from '../formats/index.js';
 import type { DecodedEntry } from '../formats/transcript/common.js';
 import { JsonlTail } from '../util/jsonl.js';
+import { fragments, score, tightest, type MatchFacts, type Pos, type SearchQuery } from '../../shared/search-query.js';
 import { Trigrams } from './trigrams.js';
 
 /**
@@ -44,6 +45,11 @@ export interface IndexedHit {
   toolName?: string;
   toolUseId?: string;
   snippet: string;
+  /** Treffer über mehrere Einträge (Suche mit ~N): so viele, ab diesem */
+  span?: number;
+  /** wie viele Begriffe der Anfrage getroffen sind */
+  matched: number;
+  score: number;
 }
 
 /** Leerzeichen, Zeilenumbrüche und Tabs zu einem Leerzeichen; Trennzeichen des Index entfernen. */
@@ -76,12 +82,6 @@ export function searchable(e: Entry): string | undefined {
     default:
       return undefined;
   }
-}
-
-function snippet(text: string, at: number, len: number, radius = 90): string {
-  const start = Math.max(0, at - radius);
-  const end = Math.min(text.length, at + len + radius);
-  return (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '');
 }
 
 export class SearchIndex {
@@ -295,41 +295,140 @@ export class SearchIndex {
   }
 
   /**
-   * Treffer in einem Transcript, höchstens einer je Eintrag. `trigrams` (aus queryTrigrams):
-   * Dateien, die nicht alle enthalten, gar nicht erst lesen. `re` braucht das Flag `g`;
-   * Suchbegriffe ohne Trennzeichen (siehe normalize), damit kein Treffer zwei Einträge überspannt.
+   * Die besten `max` Treffer in einem Transcript für eine Anfrage (siehe shared/search-query.ts):
+   * Bereiche von höchstens `q.window` aufeinanderfolgenden Einträgen mit mindestens `q.min`
+   * Begriffen, ohne Überlappung, nach `score` sortiert. Ein Treffer zeigt auf seinen ersten Eintrag.
+   * `trigrams` (aus queryTrigrams, je Begriff): Dateien, in denen nicht genug Begriffe stehen
+   * können, gar nicht erst lesen.
    */
-  async search(path: string, re: RegExp, max: number, trigrams: number[] = []): Promise<IndexedHit[]> {
+  async search(path: string, q: SearchQuery, max: number, trigrams: number[][] = []): Promise<IndexedHit[]> {
     const s = this.segments.get(path);
-    if (!s || !s.bytes) return [];
-    if (trigrams.length && this.tri.get(path)?.mayContain(trigrams) === false) return [];
+    if (!s || !s.bytes || !q.terms.length) return [];
+    const tri = this.tri.get(path);
+    if (tri && trigrams.length && trigrams.filter((t) => tri.mayContain(t)).length < q.min) return [];
     let text: string;
     try {
       text = await readFile(this.segPath(s), 'utf8');
     } catch {
       return [];
     }
-    const hits: IndexedHit[] = [];
-    re.lastIndex = 0;
-    for (let m = re.exec(text); m && hits.length < max; m = re.exec(text)) {
-      const start = text.lastIndexOf(RS, m.index);
-      const sep = text.indexOf(US, start);
-      if (start < 0 || sep < 0) break;
-      if (m.index < sep) {
-        // Treffer in den Metadaten
-        re.lastIndex = sep + 1;
-        continue;
+    // Beginn (RS) und Ende der Metadaten (US) jedes Eintrags
+    const starts: number[] = [];
+    const seps: number[] = [];
+    for (let i = text.indexOf(RS); i !== -1; i = text.indexOf(RS, i + 1)) {
+      const sep = text.indexOf(US, i);
+      if (sep === -1) break;
+      starts.push(i);
+      seps.push(sep);
+    }
+    const entryAt = (pos: number) => {
+      let lo = 0;
+      let hi = starts.length - 1;
+      while (lo < hi) {
+        const mid = (lo + hi + 1) >> 1;
+        if (starts[mid] <= pos) lo = mid;
+        else hi = mid - 1;
       }
-      let end = text.indexOf(RS, sep);
-      if (end < 0) end = text.length;
+      return lo;
+    };
+    const bodyEnd = (k: number) => (k + 1 < starts.length ? starts[k + 1] : text.length);
+    const body = (k: number) => text.slice(seps[k] + 1, bodyEnd(k));
+
+    // Fundstellen je Eintrag (relativ zum Text des Eintrags), höchstens CAP je Begriff und Eintrag
+    const CAP = 200;
+    const found = new Map<number, Pos[]>();
+    /** je Begriff: Einträge, in denen er steht, aufsteigend */
+    const lists: number[][] = q.terms.map(() => []);
+    q.terms.forEach((term, t) => {
+      const re = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+      let k = -1;
+      let n = 0;
+      for (let m = re.exec(text); m; m = re.exec(text)) {
+        const e = entryAt(m.index);
+        if (m.index < seps[e]) {
+          // Treffer in den Metadaten
+          re.lastIndex = seps[e] + 1;
+          continue;
+        }
+        if (e !== k) {
+          k = e;
+          n = 0;
+          lists[t].push(e);
+        }
+        let ps = found.get(e);
+        if (!ps) found.set(e, (ps = []));
+        ps.push({ at: m.index - seps[e] - 1, t, len: m[0].length });
+        if (++n >= CAP) re.lastIndex = bodyEnd(e);
+      }
+    });
+    for (const ps of found.values()) ps.sort((a, b) => a.at - b.at);
+    if (lists.filter((l) => l.length).length < q.min) return [];
+
+    // Kandidaten: ab jedem Eintrag mit Fundstelle das Fenster [s, s + window - 1]
+    interface Cand {
+      first: number;
+      last: number;
+      score: number;
+      facts: MatchFacts;
+      /** je getroffenem Begriff der Eintrag, in dem er (zuerst) steht */
+      at: Map<number, number>;
+    }
+    const cands: Cand[] = [];
+    const ptr = q.terms.map(() => 0);
+    for (const first of [...found.keys()].sort((a, b) => a - b)) {
+      const at = new Map<number, number>();
+      lists.forEach((l, t) => {
+        while (ptr[t] < l.length && l[ptr[t]] < first) ptr[t]++;
+        if (ptr[t] < l.length && l[ptr[t]] < first + q.window) at.set(t, l[ptr[t]]);
+      });
+      if (at.size < q.min) continue;
+      const last = Math.max(...at.values());
+      let occurrences = 0;
+      for (let k = first; k <= last; k++) for (const p of found.get(k) ?? []) if (at.has(p.t)) occurrences++;
+      const facts: MatchFacts = { matched: at.size, span: last - first + 1, occurrences, phrase: false };
+      if (facts.span === 1 && at.size > 1) {
+        facts.gap = tightest(found.get(first)!)?.gap;
+        facts.phrase = at.size === q.terms.length && body(first).toLowerCase().includes(q.literal);
+      }
+      cands.push({ first, last, score: score(q, facts, 'text'), facts, at });
+    }
+
+    // die besten, ohne Überlappung
+    cands.sort((a, b) => b.score - a.score || a.first - b.first);
+    const taken: Cand[] = [];
+    for (const c of cands) {
+      if (taken.length >= max) break;
+      if (taken.some((o) => c.first <= o.last && o.first <= c.last)) continue;
+      taken.push(c);
+    }
+
+    const hits: IndexedHit[] = [];
+    for (const c of taken) {
       try {
-        const [line, kind, ts, toolName, toolUseId] = JSON.parse(text.slice(start + 1, sep)) as Meta;
-        const body = text.slice(sep + 1, end);
-        hits.push({ line, kind, ts: ts ?? undefined, toolName: toolName ?? undefined, toolUseId: toolUseId ?? undefined, snippet: snippet(body, m.index - sep - 1, m[0].length) });
+        const [line, kind, ts, toolName, toolUseId] = JSON.parse(text.slice(starts[c.first] + 1, seps[c.first])) as Meta;
+        // Ausschnitt: alle getroffenen Begriffe, je Eintrag des Bereichs
+        const parts: string[] = [];
+        for (let k = c.first; k <= c.last; k++) {
+          const ps = (found.get(k) ?? []).filter((p) => c.at.get(p.t) === k);
+          if (!ps.length) continue;
+          const tight = tightest(ps);
+          const marks = tight && tight.end - tight.start <= 240 ? [{ at: tight.start, len: tight.end - tight.start }] : [...new Map(ps.map((p) => [p.t, p])).values()];
+          parts.push(fragments(body(k), marks));
+        }
+        hits.push({
+          line,
+          kind,
+          ts: ts ?? undefined,
+          toolName: toolName ?? undefined,
+          toolUseId: toolUseId ?? undefined,
+          snippet: parts.join(' ⋯ '),
+          span: c.facts.span > 1 ? c.facts.span : undefined,
+          matched: c.facts.matched,
+          score: c.score,
+        });
       } catch {
         /* angeschnittener Eintrag */
       }
-      re.lastIndex = end;
     }
     return hits;
   }

@@ -111,7 +111,9 @@ Aus den Quellen: `git clone …`, `npm install`, `npm run build`, `npm start`
 - **Tools**: alle Tool-Aufrufe aller Sessions, filterbar; Klick springt an die Stelle im Verlauf
 - **Files**: welche Dateien Agenten gelesen/geändert haben
 - **Search**: Volltext über alle Verläufe, Subagenten und die Eingabe-Historie sowie Session- und Agent-Namen;
-  durchsucht immer alle Dateien, ohne Rücksicht auf Groß-/Kleinschreibung, Zeilenumbrüche und Tabs. Dafür liegt ein
+  durchsucht immer alle Dateien, ohne Rücksicht auf Groß-/Kleinschreibung, Zeilenumbrüche und Tabs. Mehrere Wörter müssen alle im selben Eintrag stehen (Prompt, Antwort,
+  Thinking, Tool-Aufruf oder -Ergebnis), in beliebiger Reihenfolge; `"…"` sucht eine exakte Phrase; mit `~3` dürfen sich
+  die Begriffe auf 3 aufeinanderfolgende Einträge verteilen. Dafür liegt ein
   Suchindex im Datenverzeichnis (`search-index/`, etwa ein Sechstel von `~/.claude/projects`), der einmalig beim
   ersten Start aufgebaut (rund 40 s für 2,7 GB) und danach nur um neue Zeilen ergänzt wird
 - **Claude-Aufrufe**: Sitzungen, die ein Agent per Bash startet (`claude -p …`,

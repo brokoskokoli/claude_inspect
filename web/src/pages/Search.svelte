@@ -1,5 +1,6 @@
 <script lang="ts" module>
   import type { SearchAgent, SearchHit, SearchResult } from '$shared/types';
+  import { parseQuery } from '$shared/search-query';
 
   /** Ergebnisse überleben das Verlassen der Seite (Zurück zu den Treffern), nur die letzten Suchen. */
   interface Cached {
@@ -37,7 +38,7 @@
     file: 'File name',
     name: 'Name',
   };
-  /** Treffer, die zur Session als Ganzes gehören, stehen in ihrer Gruppe oben */
+  /** Treffer, die zur Session als Ganzes gehören (öffnen das Transcript statt einer Stelle) */
   const isTop = (h: SearchHit) => h.kind === 'file' || h.kind === 'name';
 
   let current = '';
@@ -105,13 +106,21 @@
     if (c) c.scrollY = window.scrollY;
   });
 
-  function mark(snippet: string, query: string): string {
+  /** Alle Begriffe der Anfrage markieren (wie auf dem Server: Groß-/Kleinschreibung egal) */
+  function mark(snippet: string, query: string, file = false): string {
     const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    // wie auf dem Server: Leerzeichen und Zeilenumbrüche zählen als ein Leerzeichen
-    const needle = query.replace(/\s+/g, ' ').trim();
-    const i = snippet.toLowerCase().indexOf(needle.toLowerCase());
-    if (i < 0) return esc(snippet);
-    return esc(snippet.slice(0, i)) + '<mark>' + esc(snippet.slice(i, i + needle.length)) + '</mark>' + esc(snippet.slice(i + needle.length));
+    const terms = parseQuery(query).terms.map((t) => (file ? t.replace(/^~/, '') : t)).filter(Boolean);
+    const lower = snippet.toLowerCase();
+    const marked = new Array<boolean>(snippet.length).fill(false);
+    for (const t of terms) for (let i = lower.indexOf(t); i >= 0; i = lower.indexOf(t, i + t.length)) marked.fill(true, i, i + t.length);
+    let out = '';
+    for (let i = 0; i < snippet.length; ) {
+      let j = i;
+      while (j < snippet.length && marked[j] === marked[i]) j++;
+      out += marked[i] ? '<mark>' + esc(snippet.slice(i, j)) + '</mark>' : esc(snippet.slice(i, j));
+      i = j;
+    }
+    return out;
   }
 
   function target(h: SearchHit): string | undefined {
@@ -128,13 +137,15 @@
     hits: SearchHit[];
     children: Node[];
     latest: number;
+    /** bester Treffer in diesem Agenten und darunter */
+    best: number;
   }
   const tree = $derived.by(() => {
     const roots: Node[] = [];
     const orphans: SearchHit[] = [];
     if (!result) return { roots, orphans };
     const nodes = new Map<string, Node>();
-    for (const [k, agent] of Object.entries(result.agents ?? {})) nodes.set(k, { agent, hits: [], children: [], latest: 0 });
+    for (const [k, agent] of Object.entries(result.agents ?? {})) nodes.set(k, { agent, hits: [], children: [], latest: 0, best: -1 });
     for (const h of result.hits) {
       const n = h.kind === 'history-prompt' ? undefined : nodes.get(h.agentId ? `${h.sessionId}/${h.agentId}` : h.sessionId);
       if (n) n.hits.push(h);
@@ -145,29 +156,35 @@
       if (p) p.children.push(n);
       else roots.push(n);
     }
-    // neueste Treffer zuerst, Namens- und Dateinamen-Treffer oben
-    const order = (n: Node): number => {
-      n.hits.sort((a, b) => Number(isTop(b)) - Number(isTop(a)) || (b.ts ?? '').localeCompare(a.ts ?? ''));
-      let latest = Math.max(0, ...n.hits.map((h) => (isTop(h) ? Infinity : h.ts ? Date.parse(h.ts) : 0)));
-      for (const c of n.children) latest = Math.max(latest, order(c));
-      n.children.sort((a, b) => b.latest - a.latest);
-      return (n.latest = latest);
+    // beste Treffer zuerst (siehe score auf dem Server), bei Gleichstand die neuesten
+    const byRank = (a: Node, b: Node) => b.best - a.best || b.latest - a.latest;
+    const order = (n: Node) => {
+      n.hits.sort((a, b) => b.score - a.score || (b.ts ?? '').localeCompare(a.ts ?? ''));
+      n.best = Math.max(-1, ...n.hits.map((h) => h.score));
+      n.latest = Math.max(0, ...n.hits.map((h) => (h.ts ? Date.parse(h.ts) : 0)));
+      for (const c of n.children) {
+        order(c);
+        n.best = Math.max(n.best, c.best);
+        n.latest = Math.max(n.latest, c.latest);
+      }
+      n.children.sort(byRank);
     };
     roots.forEach(order);
-    roots.sort((a, b) => b.latest - a.latest);
+    roots.sort(byRank);
+    orphans.sort((a, b) => b.score - a.score || (b.ts ?? '').localeCompare(a.ts ?? ''));
     return { roots, orphans };
   });
 </script>
 
 <div class="page-head">
   <h2>Search</h2>
-  <span class="muted">Full text, session and agent names and file names across all transcripts, subagents and the prompt history · ignores case and line breaks · grouped by agent · at most 5 hits per file</span>
+  <span class="muted">Full text, session and agent names and file names across all transcripts, subagents and the prompt history · ignores case and line breaks · several words: all in the same entry · <code>"…"</code> exact phrase · <code>~3</code> within 3 consecutive entries · from 3 terms on also partial hits · best hits first · grouped by agent · at most 5 hits per file</span>
 </div>
 <form class="filters bar" onsubmit={(e) => (e.preventDefault(), run(true))}>
-  <input type="search" placeholder="Search term (at least 2 characters) …" bind:value={q} />
+  <input type="search" placeholder={'Words, "exact phrase", ~3 for neighbouring entries …'} bind:value={q} />
   <button class="btn" type="submit" disabled={loading}>{#if loading}<Spinner /> Searching …{:else}Search{/if}</button>
   {#if result}
-    <span class="faint">{result.hits.length} hits · {result.totalFiles} files · {(result.ms / 1000).toFixed(1)} s{result.truncated ? ` · hit limit reached, ${result.moreFiles ?? 'more'} more files contain the term – refine it to see them` : ''}</span>
+    <span class="faint">{result.hits.length} hits · {result.totalFiles} files · {(result.ms / 1000).toFixed(1)} s{result.truncated ? ` · hit limit reached, ${result.moreFiles ?? 'more'} more transcripts have weaker hits – refine the search to see them` : ''}</span>
   {/if}
 </form>
 {#if result?.indexing}
@@ -191,7 +208,7 @@
     <div class="card group">
       {#each tree.orphans as h, i (i)}
         <div class="hit">
-          <div class="meta"><span class="badge">{KIND[h.kind] ?? h.kind}</span><strong>{h.project}</strong><span class="faint when">{dateTime(h.ts)}</span></div>
+          <div class="meta"><span class="badge">{KIND[h.kind] ?? h.kind}</span>{@render partial(h)}<strong>{h.project}</strong><span class="faint when">{dateTime(h.ts)}</span></div>
           <div class="snip">{@html mark(h.snippet, result.query)}</div>
         </div>
       {/each}
@@ -199,6 +216,10 @@
   {/if}
   {#if !result.hits.length}<p class="muted">No hits.</p>{/if}
 {/if}
+
+{#snippet partial(h: SearchHit)}
+  {#if result?.terms && h.matched < result.terms}<span class="badge info" title="Not all search terms appear here – ranked below hits with all terms">{h.matched}/{result.terms} terms</span>{/if}
+{/snippet}
 
 {#snippet agentNode(n: Node, depth: number)}
   <div class="agent" class:nested={depth > 0}>
@@ -215,9 +236,11 @@
           <a class="hit" href={target(h)}>
             <div class="meta">
               <span class="badge">{KIND[h.kind] ?? h.kind}{h.toolName ? ` · ${h.toolName}` : ''}</span>
+              {@render partial(h)}
+              {#if h.span}<span class="faint" title="The terms appear within this entry and the following ones">across {h.span} entries</span>{/if}
               <span class="faint when">{dateTime(h.ts)}</span>
             </div>
-            <div class="snip" class:mono={h.kind === 'file'} class:name={h.kind === 'name'}>{@html mark(h.snippet, h.kind === 'file' ? result!.query.replace(/^~/, '') : result!.query)}</div>
+            <div class="snip" class:mono={h.kind === 'file'} class:name={h.kind === 'name'}>{@html mark(h.snippet, result!.query, h.kind === 'file')}</div>
           </a>
         {/each}
       </div>

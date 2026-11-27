@@ -722,6 +722,12 @@ export interface SearchHit {
   toolUseId?: string;
   ts?: string;
   snippet: string;
+  /** Suche mit ~N: der Treffer reicht über so viele Einträge, ab diesem */
+  span?: number;
+  /** wie viele Begriffe der Anfrage getroffen sind (ab drei Begriffen auch weniger als alle) */
+  matched: number;
+  /** Rangfolge, höher ist besser (siehe shared/search-query.ts) */
+  score: number;
 }
 
 /** Agent, in dessen Transcript Treffer liegen – oder ein Vorfahr davon (für die Baumansicht). */
@@ -743,11 +749,13 @@ export interface SearchAgent {
 export interface SearchResult {
   query: string;
   hits: SearchHit[];
+  /** Anzahl der Begriffe der Anfrage */
+  terms?: number;
   /** Agenten der Treffer und ihre Vorfahren, nach `key` */
   agents: Record<string, SearchAgent>;
   scannedFiles: number;
   totalFiles: number;
-  /** Trefferlimit erreicht; in `moreFiles` weiteren Dateien steht der Begriff auch */
+  /** Trefferlimit erreicht; in `moreFiles` weiteren Transcripts gibt es schwächere Treffer */
   truncated: boolean;
   moreFiles?: number;
   /** Suchindex wird noch aufgebaut: Ergebnis unvollständig */
